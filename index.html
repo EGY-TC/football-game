@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>⚽ مزايدة النجوم — FC Auction</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--bg:#070b09;--card:#10160f;--card2:#18211a;--line:#26332a;--txt:#e7efe9;--dim:#8fa398;--green:#4ade80;--gold:#fbbf24;--red:#f87171;--sky:#38bdf8}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(900px 420px at 50% -120px,#0f2418,transparent),repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 44px,transparent 44px 88px),var(--bg);min-height:100vh;color:var(--txt);padding:10px}
+button{touch-action:manipulation;font-family:'Cairo'}
+.screen{max-width:660px;margin:0 auto}
+.hidden{display:none!important}
+.hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.back{background:var(--card2);border:1px solid var(--line);color:var(--dim);border-radius:10px;padding:6px 12px;font-weight:900;cursor:pointer;font-size:13px}
+h1{flex:1;text-align:center;font-weight:900;font-size:24px;background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .ball{display:inline-block;-webkit-text-fill-color:initial;animation:bnc 1.6s infinite}
+@keyframes bnc{50%{transform:translateY(-7px) rotate(20deg)}}
+h2{text-align:center;font-weight:900;font-size:19px;margin:6px 0;color:var(--green)}
+.desc{color:var(--dim);text-align:center;line-height:1.9;font-size:12.5px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+label{display:block;font-size:13px;color:var(--dim);margin:8px 0 4px;font-weight:700}
+input{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:16px;width:100%}
+input:focus{outline:none;border-color:var(--green)}
+.modes{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.mode-btn{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);color:var(--txt);border-radius:14px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:right}
+.mode-btn:active{transform:scale(.97)}
+.mode-btn .num{color:var(--gold);font-weight:900;font-size:12px;opacity:.8}
+.mode-btn .ic{font-size:22px}
+.big-btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:17px;font-weight:900;cursor:pointer}
+.big-btn:active{transform:scale(.97)}
+.green{background:#14532d;color:#bbf7d0;border:1px solid #166534}
+.gold{background:linear-gradient(180deg,#fbbf24,#d97706);color:#231303;box-shadow:0 4px 16px rgba(251,191,36,.25)}
+.or{text-align:center;color:var(--dim);margin:12px 0;font-weight:700}
+#codeShow{font-size:36px;letter-spacing:10px;text-align:center;color:var(--gold);font-weight:900;background:var(--card2);border:2px dashed var(--gold);border-radius:14px;padding:6px;margin:8px 0}
+.status{margin-top:10px;text-align:center;color:var(--dim);min-height:24px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.chips button{flex:1;min-width:60px;background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:9px 4px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12.5px}
+.chips button.sel{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.08)}
+.opt-lbl{font-weight:900;margin:8px 0 6px;font-size:14px}
+.center{text-align:center}
+.spin{font-size:44px;animation:sp 2s infinite linear}
+@keyframes sp{50%{transform:rotate(180deg)}100%{transform:rotate(360deg)}}
+.top-bar{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:10px;font-weight:800;font-size:12.5px;gap:6px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tabs button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--dim);font-weight:900;font-size:14px;cursor:pointer}
+.tabs button.sel{background:var(--card2);color:var(--gold);border-color:var(--gold)}
+.teams{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px}
+@media(min-width:640px){.teams{grid-template-columns:1fr 1fr}}
+.team{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;transition:.3s}
+.team.turn{border-color:var(--gold);box-shadow:0 0 16px rgba(251,191,36,.25)}
+.team h3{color:var(--green);margin-bottom:2px;font-size:15px}
+.team .stats{font-size:12px;color:var(--dim);margin-bottom:6px}
+.team .stats b{color:var(--gold)}
+.squad{display:flex;flex-wrap:wrap;gap:5px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11px}
+.chip b{color:var(--gold)}
+/* بطاقة فيفا */
+.fut{width:215px;margin:0 auto 10px;border-radius:14px 14px 80px 80px/14px 14px 52px 52px;padding:12px 12px 16px;text-align:center;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.fut::after{content:'';position:absolute;top:-40%;left:-70%;width:45%;height:200%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);transform:rotate(18deg)}
+.fut.gold{background:linear-gradient(165deg,#f8e38b,#d4a017 55%,#a87b10);color:#4a3208}
+.fut.silver{background:linear-gradient(165deg,#f5f7fa,#aeb6bd 55%,#7d858d);color:#20242a}
+.fut.bronze{background:linear-gradient(165deg,#eab489,#a05f2c 55%,#6e3e18);color:#3a2008}
+.fut.enter{animation:enter .5s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes enter{from{transform:translateY(18px) scale(.88);opacity:0}}
+.fut-top{display:flex;justify-content:center;align-items:center;gap:12px;font-weight:900}
+.fut-rate{font-size:30px;line-height:1}
+.fut-pos{font-size:13px;letter-spacing:1px}
+.fut-flag{font-size:17px}
+.fut img{width:112px;height:112px;object-fit:cover;border-radius:12px;margin:6px auto;display:block;border:3px solid rgba(255,255,255,.55);background:#0004}
+.fut-name{font-weight:900;font-size:16px}
+.fut-club{font-size:10.5px;font-weight:700;opacity:.8}
+.bid-panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.bid-lbl{text-align:center;font-size:12.5px;color:var(--dim);font-weight:700}
+.bid-num{text-align:center;font-size:34px;font-weight:900;color:var(--gold);line-height:1.1}
+.bid-num.pop{animation:pop .3s}
+@keyframes pop{50%{transform:scale(1.2);color:#fff}}
+.time{text-align:center;font-size:15px;font-weight:900;color:var(--green)}
+.time.low{color:var(--red);animation:pu 1s infinite}
+@keyframes pu{50%{opacity:.4}}
+#turnLbl{text-align:center;font-size:14.5px;font-weight:900;background:var(--card2);border-radius:10px;padding:7px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.controls button{padding:14px 4px;border:none;border-radius:12px;font-size:14.5px;font-weight:900;cursor:pointer;min-height:52px}
+#raiseBtn{background:linear-gradient(180deg,#22c55e,#15803d);color:#052e16;box-shadow:0 4px 14px rgba(34,197,94,.25)}
+#passBtn{background:linear-gradient(180deg,#ef4444,#b91c1c);color:#fff}
+.controls button:disabled{opacity:.4;cursor:not-allowed}
+.custom{display:flex;gap:8px}
+.custom input{flex:1;min-width:0}
+.custom button{padding:10px 14px;border:none;border-radius:12px;background:linear-gradient(180deg,var(--sky),#0369a1);color:#082f49;font-weight:900;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.custom button:disabled{opacity:.4}
+.log{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;max-height:110px;overflow:auto;font-size:12px;line-height:1.9;color:var(--dim)}
+.log div{border-bottom:1px dashed var(--line);padding:2px 0}
+/* الملعب والتشكيلات */
+.pitch{background:linear-gradient(180deg,#0d3a15,#0a2e11 60%,#0d3a15);border:2px solid rgba(255,255,255,.22);border-radius:16px;padding:12px 6px;margin-bottom:12px;position:relative}
+.pitch::before{content:'';position:absolute;inset:10px;border:1px solid rgba(255,255,255,.15);border-radius:10px;pointer-events:none}
+.pitch h4{text-align:center;color:#d1fae5;font-size:14px;margin-bottom:8px}
+.prow{display:flex;justify-content:space-around;align-items:flex-end;min-height:64px;margin:4px 0;border-top:1px dashed rgba(255,255,255,.12);padding-top:6px}
+.prow:last-child{border-top:none}
+.mp{width:66px;text-align:center}
+.mp .r{width:34px;height:34px;border-radius:50%;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#231303;border:2px solid rgba(255,255,255,.5)}
+.mp .n{font-size:9.5px;color:#d1fae5;font-weight:700;line-height:1.3}
+.good{background:var(--gold)}.okc{background:#cbd5e1;color:#20242a}.bad{background:#e0a37a}
+.rgood{color:var(--green)}.rokc{color:var(--gold)}.rbad{color:var(--red)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#7f1d1d;color:#fff;padding:10px 20px;border-radius:12px;z-index:150;display:none;font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.5);font-size:13.5px;max-width:90%}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:12px;z-index:99}
+.obox{background:var(--card);border:1px solid var(--gold);border-radius:20px;padding:18px;max-width:600px;width:100%;max-height:92vh;overflow:auto;text-align:center}
+.obox h2{color:var(--gold);margin-bottom:10px}
+.reveal{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
+@media(min-width:560px){.reveal{grid-template-columns:1fr 1fr}}
+.rcard{border-radius:14px;padding:12px;line-height:1.8;font-size:13.5px}
+.rcard.win{background:rgba(251,191,36,.08);border:1px solid var(--gold)}
+.rcard.rand{background:var(--card2);border:1px solid var(--line)}
+.big-rate{font-size:36px;font-weight:900}
+.stat-t{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px}
+.stat-t td{border:1px solid var(--line);padding:6px;background:var(--card2)}
+.stat-t td:first-child{color:var(--dim);font-weight:700}
+.stat-t b{color:var(--gold)}
+.squad-end{text-align:right;background:var(--card2);border-radius:12px;padding:10px 12px;margin:8px 0;line-height:2;font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div id="home" class="screen">
+<div class="hdr"><h1><span class="ball">⚽</span> مزايدة النجوم</h1></div>
+<p class="desc">مزاد لايف بكروت FIFA وتقييمات FC 26 الحقيقية 🔥<br>اللي بيستسلم بياخد لاعب حقيقي عشوائي.. واللي بيصمد بياخد النجم ويدفع<br>كوّن تشكيلتك على الملعب والأقوى مجموعًا يفوز 🏆</p>
+<div class="card">
+<label>اسمك / اللاعب الأول</label><input id="name1" value="أحمد">
+<label>اسم اللاعب التاني (نفس الجهاز)</label><input id="name2" value="كريم">
+<div class="modes">
+<button class="mode-btn" onclick="pickMode(1)"><span class="ic">🤖</span><span class="num">01</span> وضع السولو — ضد الكمبيوتر</button>
+<button class="mode-btn" onclick="pickMode(2)"><span class="ic">👥</span><span class="num">02</span> الوضع الكلاسيكي — لاعبان نفس الجهاز</button>
+<button class="mode-btn" onclick="pickMode(3)"><span class="ic">🌐</span><span class="num">03</span> غرفة أونلاين — العب مع صاحبك</button>
+</div>
+</div>
+</div>
+
+<div id="room" class="screen hidden">
+<div class="hdr"><button class="back" onclick="show('home')">↩ رجوع</button><h1>🌐 غرفة أونلاين</h1></div>
+<div class="card">
+<button class="big-btn green" onclick="createRoom()">🏠 إنشاء غرفة</button>
+<div id="codeBox" class="hidden">كود الغرفة:<div id="codeShow">----</div><small style="color:var(--dim)">قُول الكود لصاحبك يكتبه في تلفونه 👇</small></div>
+<div class="or">— أو ادخل بكود —</div>
+<input id="joinCode" placeholder="اكتب كود الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
+<button class="big-btn gold" style="margin-top:8px" onclick="joinRoom()">🚪 دخول الغرفة</button>
+<div id="roomStatus" class="status"></div>
+</div>
+</div>
+
+<div id="settings" class="screen hidden">
+<div class="hdr"><button class="back" onclick="show('home')">↩ رجوع</button><h1>⚙️ الإعدادات</h1></div>
+<div class="card">
+<div class="opt-lbl">💰 ميزانية كل فريق</div>
+<div class="chips"><button onclick="setOpt('budget',500,this)">500 مليون</button><button class="sel" onclick="setOpt('budget',1000,this)">1 مليار</button><button onclick="setOpt('budget',1500,this)">1.5 مليار</button><button onclick="setOpt('budget',2000,this)">2 مليار</button></div>
+<div class="opt-lbl">➕ قيمة الزيادة السريعة</div>
+<div class="chips"><button onclick="setOpt('step',50,this)">50 مليون</button><button class="sel" onclick="setOpt('step',100,this)">100 مليون</button><button onclick="setOpt('step',150,this)">150 مليون</button><button onclick="setOpt('step',200,this)">200 مليون</button></div>
+<div class="opt-lbl">⏱️ وقت التفكير لكل دور</div>
+<div class="chips"><button onclick="setOpt('timer',0,this)">بدون</button><button onclick="setOpt('timer',10,this)">10 ث</button><button class="sel" onclick="setOpt('timer',20,this)">20 ث</button><button onclick="setOpt('timer',30,this)">30 ث</button></div>
+<div class="opt-lbl">🔢 عدد الجولات</div>
+<div class="chips"><button onclick="setOpt('rounds',4,this)">4</button><button onclick="setOpt('rounds',6,this)">6</button><button class="sel" onclick="setOpt('rounds',8,this)">8</button><button onclick="setOpt('rounds',12,this)">12</button></div>
+<div class="opt-lbl">🤖 صعوبة الكمبيوتر (وضع السولو)</div>
+<div class="chips"><button onclick="setOpt('ai',1,this)">سهل</button><button class="sel" onclick="setOpt('ai',2,this)">عادي</button><button onclick="setOpt('ai',3,this)">وحش</button></div>
+<button class="big-btn gold" id="startBtn" onclick="startFromSettings()">🚀 ابدأ المزايدة</button>
+</div>
+</div>
+
+<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveToHome()">↩ رجوع</button><h1>⏳ استنى</h1></div><div class="card center"><div class="spin">⚽</div><p style="margin-top:10px">تم دخول الغرفة! ✅<br>بانتظار المضيف يبدأ المزايدة...</p></div></div>
+
+<div id="game" class="screen hidden">
+<div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 style="font-size:18px">⚽ مزايدة النجوم</h1></div>
+<div class="top-bar"><span id="roundLbl"></span><span id="cfgLbl"></span></div>
+<div class="tabs"><button id="tabBid" class="sel" onclick="setView('bid')">🎯 المزايدة</button><button id="tabSq" onclick="setView('squads')">🏟️ التشكيلات</button></div>
+<div id="viewBid">
+<div class="teams">
+<div class="team" id="team0"><h3 id="tname0"></h3><div class="stats" id="tstats0"></div><div class="squad" id="squad0"></div></div>
+<div class="team" id="team1"><h3 id="tname1"></h3><div class="stats" id="tstats1"></div><div class="squad" id="squad1"></div></div>
+</div>
+<div id="futBox"></div>
+<div class="bid-panel">
+<div class="bid-lbl">المزايدة الحالية</div>
+<div class="bid-num" id="bidNum">0</div>
+<div class="time hidden" id="timeLbl"></div>
+<div id="turnLbl"></div>
+<div class="controls">
+<button id="raiseBtn" onclick="humanRaise()">➕ زايد</button>
+<button id="passBtn" onclick="humanPass()">🏳️ أعطيها للخصم</button>
+</div>
+<div class="custom">
+<input id="customBid" type="number" inputmode="numeric" placeholder="اكتب مزايدة على مزاجك (بالمليون)">
+<button id="customBtn" onclick="humanCustom()">🖊️ زايد بيها</button>
+</div>
+</div>
+<div class="log" id="log"></div>
+</div>
+<div id="viewSquads" class="hidden"></div>
+</div>
+
+<div id="overlay" class="overlay hidden"><div class="obox" id="obox"></div></div>
+<div id="toast"></div>
+
+<script>
+const STARS=[
+{name:"محمد صلاح",pos:"RW",flag:"🇪",club:"ليفربول",rating:91,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_%28cropped%29.jpg/500px-Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_%28cropped%29.jpg"},
+{name:"كيليان مبابي",pos:"ST",flag:"🇫",club:"ريال مدريد",rating:91,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg/500px-Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg"},
+{name:"إيرلينج هالاند",pos:"ST",flag:"🇳🇴",club:"مان سيتي",rating:90,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Erling_Haaland_France_v_Norway_26_June_26-008.jpg/500px-Erling_Haaland_France_v_Norway_26_June_26-008.jpg"},
+{name:"عثمان ديمبيلي",pos:"ST",flag:"🇫🇷",club:"باريس سان جيرمان",rating:90,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Ousmane_Dembele_France_v_Senegal_16_June_2026-341_%28cropped%29.jpg/500px-Ousmane_Dembele_France_v_Senegal_16_June_2026-341_%28cropped%29.jpg"},
+{name:"رودري",pos:"CDM",flag:"🇪🇸",club:"مان سيتي",rating:90,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Rodri_Argentina_v_Spain_19_July_2026-187_%28cropped%29.jpg/500px-Rodri_Argentina_v_Spain_19_July_2026-187_%28cropped%29.jpg"},
+{name:"فيرجيل فان دايك",pos:"CB",flag:"🇳🇱",club:"ليفربول",rating:90,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/500px-20160604_AUT_NED_8876_%28cropped%29.jpg"},
+{name:"جود بيلينجهام",pos:"CAM",flag:"🏴󠁢󠁮",club:"ريال مدريد",rating:90,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Jude_Bellingham_England_v_Panama_27_June_26-160_%28cropped%29.jpg/500px-Jude_Bellingham_England_v_Panama_27_June_26-160_%28cropped%29.jpg"},
+{name:"لامين يامال",pos:"RW",flag:"🇪🇸",club:"برشلونة",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Lamine_Yamal_France_v_Spain_7.24.26-142.jpg/500px-Lamine_Yamal_France_v_Spain_7.24.26-142.jpg"},
+{name:"أشرف حكيمي",pos:"RB",flag:"🇲🇦",club:"باريس سان جيرمان",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Achraf_Hakimi_Morocco_v_Norway_7_June_2026-16.jpg/500px-Achraf_Hakimi_Morocco_v_Norway_7_June_2026-16.jpg"},
+{name:"دوناروما",pos:"GK",flag:"🇮🇹",club:"مان سيتي",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Norway_Italy_-_June_2025_A_17_%28Gianluigi_Donnarumma%29.jpg/500px-Norway_Italy_-_June_2025_A_17_%28Gianluigi_Donnarumma%29.jpg"},
+{name:"هاري كين",pos:"ST",flag:"🏴󠁢󠁮",club:"بايرن ميونخ",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg/500px-Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg"},
+{name:"فينيسيوس جونيور",pos:"LW",flag:"🇧",club:"ريال مدريد",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_%28cropped%29.jpg/500px-Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_%28cropped%29.jpg"},
+{name:"فلوريان فيرتز",pos:"CAM",flag:"🇩🇪",club:"ليفربول",rating:89,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_%28cropped%29.jpg/500px-Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_%28cropped%29.jpg"},
+{name:"ليونيل ميسي",pos:"ST",flag:"🇦🇷",club:"إنتر ميامي",rating:88,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/500px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg"},
+{name:"كيفين دي بروين",pos:"CM",flag:"🇧🇪",club:"مان سيتي",rating:87,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg/500px-Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg"},
+{name:"فيل فودين",pos:"CAM",flag:"🏴󠁧󠁥󠁮",club:"مان سيتي",rating:87,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2613%2C_Phil_Foden.jpg/500px-2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2613%2C_Phil_Foden.jpg"},
+{name:"لاوتارو مارتينيز",pos:"ST",flag:"🇦",club:"إنتر",rating:87,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Lautaro_Martinez_Argentina_v_Spain_19_July_2026-049_%28cropped%29.jpg/500px-Lautaro_Martinez_Argentina_v_Spain_19_July_2026-049_%28cropped%29.jpg"},
+{name:"جمال موسيالا",pos:"CAM",flag:"🇩🇪",club:"بايرن ميونخ",rating:87,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_%28cropped%29.jpg/500px-Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_%28cropped%29.jpg"},
+{name:"بوكايو ساكا",pos:"RW",flag:"🏴󠁢󠁮",club:"أرسنال",rating:86,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bukayo_Saka_England_v_Panama_27_June_26-108_%28cropped%29.jpg/500px-Bukayo_Saka_England_v_Panama_27_June_26-108_%28cropped%29.jpg"},
+{name:"ليفاندوفسكي",pos:"ST",flag:"🇵🇱",club:"برشلونة",rating:86,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg/500px-2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"},
+{name:"أرنولد",pos:"RB",flag:"🏴󠁢󠁮",club:"ريال مدريد",rating:86,img:"https://upload.wikimedia.org/wikipedia/commons/5/5d/Trent_Alexander-Arnold_2018_%28cropped%29.jpg"},
+{name:"كريستيانو رونالدو",pos:"ST",flag:"🇵🇹",club:"النصر",rating:86,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/500px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg"},
+{name:"جريزمان",pos:"ST",flag:"🇫🇷",club:"أتلتيكو مدريد",rating:85,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/FRA-ARG_%2810%29_%28cropped%29.jpg/500px-FRA-ARG_%2810%29_%28cropped%29.jpg"},
+{name:"نيمار",pos:"LW",flag:"🇧🇷",club:"سانتوس",rating:84,img:"https://commons.wikimedia.org/wiki/Special:FilePath/2025-02-12_-_Jogador_Neymar_joga_seu_primeiro_cl%C3%A1ssico_ap%C3%B3s_retorno_ao_futebol_brasileiro._Lance_de_jogo_entre_Corinthians_e_Santos_pelo_Campeonato_Paulista_(cropped).jpg?width=500"},
+{name:"سون هيونج مين",pos:"LW",flag:"🇰🇷",club:"LAFC",rating:84,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg/500px-BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg"},
+{name:"بنزيما",pos:"ST",flag:"🇫🇷",club:"الاتحاد",rating:84,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Karim_Benzema_Pick.jpg/500px-Karim_Benzema_Pick.jpg"},
+{name:"ياسين بونو",pos:"GK",flag:"🇲🇦",club:"الهلال",rating:84,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Yassine_Bounou_Brazil_V_Morocco_13_June_2026-169.jpg/500px-Yassine_Bounou_Brazil_V_Morocco_13_June_2026-169.jpg"},
+{name:"عمر مرموش",pos:"ST",flag:"🇪🇬",club:"مان سيتي",rating:84,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Omar_Marmoush_Argentina_v_Egypt_7_July_2026-018.jpg/500px-Omar_Marmoush_Argentina_v_Egypt_7_July_2026-018.jpg"},
+{name:"مودريتش",pos:"CM",flag:"🇭",club:"ميلان",rating:83,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg/500px-Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg"},
+{name:"رياض محرز",pos:"RW",flag:"🇩🇿",club:"الأهلي السعودي",rating:82,img:"https://upload.wikimedia.org/wikipedia/commons/4/45/Mahrez_2021.jpg"},
+{name:"ساديو ماني",pos:"LW",flag:"🇸",club:"النصر",rating:80,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Sadio_Mane_France_v_Senegal_16_June_2026-450.jpg/500px-Sadio_Mane_France_v_Senegal_16_June_2026-450.jpg"},
+{name:"سالم الدوسري",pos:"LW",flag:"🇸🇦",club:"الهلال",rating:78,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Salem_Al-Dawsari_%28Saudi_Arabia_v_Uruguay%2C_June_2026%29_%28cropped%29.jpg/500px-Salem_Al-Dawsari_%28Saudi_Arabia_v_Uruguay%2C_June_2026%29_%28cropped%29.jpg"},
+{name:"مصطفى محمد",pos:"ST",flag:"🇪🇬",club:"نانت",rating:76,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Mostafa_Mohamed.jpg/500px-Mostafa_Mohamed.jpg"},
+{name:"محمد الشناوي",pos:"GK",flag:"🇪🇬",club:"الأهلي",rating:76,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Mohamed_El_Shenawy_Argentina_v_Egypt_7_July_2026-015.jpg/500px-Mohamed_El_Shenawy_Argentina_v_Egypt_7_July_2026-015.jpg"},
+{name:"إمام عاشور",pos:"CM",flag:"🇪🇬",club:"الأهلي",rating:76,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Emam_Ashour_Argentina_v_Egypt_7_July_2026-099.jpg/500px-Emam_Ashour_Argentina_v_Egypt_7_July_2026-099.jpg"},
+{name:"حسين الشحات",pos:"RW",flag:"🇪🇬",club:"الأهلي",rating:74,img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/El_Shahat.jpg/500px-El_Shahat.jpg"}
+];
+const POOL=[
+{name:"ماك أليستر",pos:"CM",flag:"🇦🇷",rating:82,desc:"وسط ليفربول.. صفقة تخطفها"},
+{name:"محمد عبد المنعم",pos:"CB",flag:"🇪🇬",rating:80,desc:"صخرة دفاع منتخب مصر"},
+{name:"طارق حامد",pos:"CDM",flag:"🇪🇬",rating:75,desc:"ارتكاز.. بيفُك أي هجمة"},
+{name:"أحمد فتوح",pos:"LB",flag:"🇪",rating:74,desc:"ظهير أيسب بسرعة صاروخ"},
+{name:"عمرو السولية",pos:"CM",flag:"🇪🇬",rating:70,desc:"وسط الأهلي.. خبرة سنين"},
+{name:"كهربا",pos:"ST",flag:"🇪🇬",rating:68,desc:"مهاجم.. بس مشاغب شوية"},
+{name:"أفشة",pos:"CAM",flag:"🇪",rating:66,desc:"قاضية ممكن 😄"},
+{name:"بالوتيلي",pos:"ST",flag:"🇮🇹",rating:60,desc:"موهبة حقيقية.. بس المزاج مش مزاج"},
+{name:"هازارد (معتزل)",pos:"LW",flag:"🇧",rating:55,desc:"راجع من الاعتزال مخصوص عشانك 😴"},
+{name:"شيكابالا (معتزل)",pos:"RW",flag:"🇪🇬",rating:52,desc:"الساحر.. بس معتزل بقى"},
+{name:"بيكيه (معتزل)",pos:"CB",flag:"🇪",rating:50,desc:"معتزل.. بس لسه بياخد فلوسه"},
+{name:"إبراهيموفيتش (معتزل)",pos:"ST",flag:"🇸🇪",rating:48,desc:"بيقول إنه أسد.. بس أسد معتزل"},
+{name:"رونالدينيو (معتزل)",pos:"LW",flag:"🇧🇷",rating:46,desc:"الساحر الأصلي.. جاي يبتسم بس"},
+{name:"دييجو كوستا (معتزل)",pos:"ST",flag:"🇪🇸",rating:45,desc:"بيخبط في كل حاجة.. ماعدا الكورة"},
+{name:"عصام الحضري (معتزل)",pos:"GK",flag:"🇪🇬",rating:35,desc:"عنده 50 سنة ولسه بيطير"},
+{name:"عماد متعب (معتزل)",pos:"ST",flag:"🇪",rating:30,desc:"معتزل.. بس جاهز ينزل في أي لحظة 😂"}
+];
+let mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid';
+let CFG={budget:1000,step:100,timer:20,rounds:8,ai:2};
+let P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,prevKey='';
+const $=id=>document.getElementById(id);
+const FALLBACK='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#141a16"/><text x="100" y="125" font-size="90" text-anchor="middle">⚽</text></svg>');
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmt(n){if(n>=1000){const v=n/1000;return (Number.isInteger(v)?v:v.toFixed(1))+' مليار';}return n+' مليون';}
+function show(id){['home','room','settings','wait','game'].forEach(s=>$(s).classList.add('hidden'));$(id).classList.remove('hidden');}
+function setOpt(k,v,el){CFG[k]=v;el.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function pickMode(m){mode=m;online=(m===3);show(m===3?'room':'settings');}
+function myName(){return $('name1').value.trim()||'اللاعب 1';}
+function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0};}
+function setStatus(t){$('roomStatus').textContent=t;}
+function makeCode(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2200);}
+function leaveToHome(){if(peer){try{peer.destroy();}catch(e){}}peer=null;conn=null;show('home');}
+function exitGame(){if(!confirm('هتخرج من المزايدة.. متأكد؟'))return;clearInterval(timerInt);leaveToHome();}
+function setView(v){view=v;$('tabBid').classList.toggle('sel',v==='bid');$('tabSq').classList.toggle('sel',v==='squads');$('viewBid').classList.toggle('hidden',v!=='bid');$('viewSquads').classList.toggle('hidden',v!=='squads');if(v==='squads')renderSquads();}
+
+/* ===== الغرف ===== */
+function createRoom(){
+ setStatus('⏳ بنجهز الغرفة...');isHost=true;mySeat=0;roomCode=makeCode();
+ peer=new Peer('mzaida-'+roomCode);
+ peer.on('open',()=>{$('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');setStatus('✅ الغرفة جاهزة! بانتظار دخول صاحبك...');});
+ peer.on('connection',c=>{conn=c;wireConn();});
+ peer.on('error',e=>setStatus('❌ خطأ: '+e.type));
+}
+function joinRoom(){
+ const code=$('joinCode').value.trim().toUpperCase();
+ if(code.length<4)return setStatus('اكتب الكود (4 حروف)');
+ isHost=false;mySeat=1;setStatus('⏳ بنوصل بالغرفة...');
+ peer=new Peer();
+ peer.on('open',()=>{conn=peer.connect('mzaida-'+code,{reliable:true});wireConn();});
+ peer.on('error',e=>{show('room');setStatus('❌ معرفناش نلاقي الغرفة ('+e.type+')');});
+}
+function wireConn(){
+ conn.on('open',()=>{if(!isHost){conn.send({type:'hello',name:myName()});show('wait');}});
+ conn.on('data',d=>handleData(d));
+ conn.on('close',()=>toast('💔 انقطع الاتصال'));
+}
+function handleData(d){
+ if(d.type==='hello'&&isHost){guestName=d.name;show('settings');$('startBtn').textContent='🚀 بدء المزايدة مع '+guestName;}
+ else if(d.type==='start'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;curStar=null;show('game');render();}
+ else if(d.type==='S'&&!isHost){applySnap(d.s);}
+ else if(d.type==='act'&&isHost&&phase==='bid'&&turn===1){
+  if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget)doRaise(d.v);}else doRaise();}
+  else doPass();
+ }
+}
+function snap(){return{phase,round,bid,turn,timeLeft,P,star:curStar,log:logArr,ovH,ovG,endH};}
+function broadcast(){if(online&&isHost&&conn)conn.send({type:'S',s:snap()});}
+function applySnap(s){phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.p;curStar=s.star;logArr=s.log;ovH=s.ovH;ovG=s.ovG;endH=s.endH;render();}
+
+/* ===== اللعبة ===== */
+function startFromSettings(){
+ if(online&&isHost){
+  P=[mkP(myName()),mkP(guestName||'الضيف')];stars=shuffle(STARS).slice(0,CFG.rounds);pool=shuffle(POOL);
+  conn.send({type:'start',cfg:CFG,p:P,stars:stars,pool:pool});
+  initGame();
+ }else{
+  P=[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الكمبيوتر'):($('name2').value.trim()||'اللاعب 2'))];
+  stars=shuffle(STARS).slice(0,CFG.rounds);pool=shuffle(POOL);
+  initGame();
+ }
+}
+function initGame(){round=0;logArr=[];prevBid=-1;prevKey='';view='bid';setView('bid');show('game');nextRound();}
+function nextRound(){
+ clearInterval(timerInt);
+ if(round>=stars.length)return endGame();
+ bid=0;turn=round%2;phase='bid';curStar=stars[round];
+ log('📢 جولة '+(round+1)+': مزاد على 【'+curStar.name+'】 ('+curStar.rating+') — بيبدأ: '+P[turn].name);
+ render();broadcast();startTimer();maybeAI();
+}
+function startTimer(){
+ clearInterval(timerInt);
+ if(CFG.timer>0&&phase==='bid'){timeLeft=CFG.timer;timerInt=setInterval(()=>{timeLeft--;if(online&&isHost)broadcast();else render();if(timeLeft<=0){clearInterval(timerInt);log('⏰ انتهى وقت '+P[turn].name+' — اتحسمت تلقائيًا!');resolveRound(1-turn,turn);}},1000);}
+}
+function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
+function canAct(){return phase==='bid'&&!busy&&(mode===3?turn===mySeat:(mode===1?turn===0:true));}
+function humanRaise(){if(!canAct()||bid+CFG.step>P[turn].budget)return;if(online&&!isHost)return conn.send({type:'act',a:'raise'});doRaise();}
+function humanPass(){if(!canAct())return;if(online&&!isHost)return conn.send({type:'act',a:'pass'});doPass();}
+function humanCustom(){
+ if(!canAct())return;
+ const v=parseInt($('customBid').value);
+ if(!v||v<=bid){toast('اكتب مبلغ أكبر من المزايدة الحالية ('+fmt(bid)+')');return;}
+ if(v>P[turn].budget){toast('ميزانيتك مش قد كده! الباقي '+fmt(P[turn].budget));return;}
+ if(online&&!isHost)return conn.send({type:'act',a:'raise',v:v});
+ doRaise(v);
+}
+function doRaise(v){if(phase!=='bid')return;bid=v||bid+CFG.step;log(P[turn].name+' زايد '+fmt(bid)+'! 🔥');$('customBid').value='';turn=1-turn;render();broadcast();startTimer();maybeAI();}
+function doPass(){if(phase!=='bid')return;log('🏳️ '+P[turn].name+' أعطى الصفقة للخصم!');resolveRound(1-turn,turn);}
+function maybeAI(){if(mode===1&&!online&&turn===1&&phase==='bid'){busy=true;render();setTimeout(()=>{busy=false;aiMove();},900+Math.random()*800);}}
+function aiMove(){const s=curStar,mult=[0.7,1,1.25][CFG.ai-1];let w=((s.rating-70)/22)*CFG.budget*(0.25+Math.random()*0.2)*mult;w=Math.min(w,CFG.budget*0.6);w=Math.floor(w/CFG.step)*CFG.step;
+ if(bid+CFG.step<=P[1].budget&&bid+CFG.step<=w)doRaise();else doPass();}
+function rateTxt(r){return r>=75?'rgood':r>=55?'rokc':'rbad';}
+function futCard(p){
+ const cls=p.rating>=85?'gold':p.rating>=75?'silver':'bronze';
+ const key=p.name+round;
+ return '<div class="fut '+cls+(key!==prevKey?' enter':'')+'"><div class="fut-top"><span class="fut-rate">'+p.rating+'</span><span class="fut-pos">'+p.pos+'</span><span class="fut-flag">'+p.flag+'</span></div><img src="'+p.img+'" onerror="this.onerror=null;this.src=FALLBACK" alt=""><div class="fut-name">'+p.name+'</div><div class="fut-club">'+p.club+'</div></div>';
+}
+function rowOf(pos){if(pos==='GK')return 3;if(['CB','LB','RB','RWB','LWB'].includes(pos))return 2;if(['CDM','CM','CAM','RM','LM'].includes(pos))return 1;return 0;}
+function pitchHTML(pi,title){
+ const rows=[[],[],[],[]];
+ P[pi].squad.forEach(p=>rows[rowOf(p.pos)||0].push(p));
+ const mp=p=>'<div class="mp"><div class="r '+(p.rating>=85?'good':p.rating>=75?'okc':'bad')+'">'+p.rating+'</div><div class="n">'+p.name+'</div></div>';
+ const lab=['⚔️ هجوم','🎯 وسط','🛡️ دفاع','🧤 حراسة'];
+ return '<div class="pitch"><h4>'+title+'</h4>'+[0,1,2,3].map(i=>'<div class="prow">'+(rows[i].map(mp).join('')||'<span style="color:#ffffff33;font-size:10px">فاضي</span>')+'</div>').reverse().map((h,i)=>h.replace('<div class="prow">','<div class="prow" title="'+lab[3-i]+'">')).join('')+'</div>';
+}
+function renderSquads(){
+ const me=online?mySeat:0,other=1-me;
+ $('viewSquads').innerHTML=pitchHTML(me,'🏟️ تشكيلة '+P[me].name+' (انت)')+pitchHTML(other,'🏟️ تشكيلة '+P[other].name);
+}
+function resolveRound(win,passer){
+ clearInterval(timerInt);phase='reveal';
+ const s=curStar,price=bid;
+ P[win].squad.push({name:s.name,rating:s.rating,pos:s.pos,flag:s.flag});P[win].budget-=price;P[win].spent+=price;
+ const rp=pool.length?pool.pop():{name:'لاعب مجهول',pos:'CM',flag:'❓',rating:50,desc:'لاعب غامض'};
+ P[passer].squad.push(rp);
+ log('✅ '+P[win].name+' ضم '+s.name+' بـ '+fmt(price)+' — 🎁 '+P[passer].name+' جه له '+rp.name);
+ const emo=rp.rating>=80?'🤩':rp.rating>=70?'😎':rp.rating>=60?'🙂':rp.rating>=50?'😬':'😂';
+ const comment=rp.rating>=75?'يا حظك! لاعب حقيقي جوكر 🔥':rp.rating>=55?'ماشي حاله 🙂':'كارثة يا عم! 😂';
+ const content='<h2>📦 نتيجة الجولة '+(round+1)+'</h2><div class="reveal">'+
+ '<div class="rcard win">🏆 <b>'+P[win].name+'</b><br>ضم النجم <b>'+s.name+'</b> ('+s.rating+')<br>مقابل <b>'+fmt(price)+'</b></div>'+
+ '<div class="rcard rand">🎁 <b>'+P[passer].name+'</b> جه له لاعب حقيقي:<br>'+emo+' <b>'+rp.name+'</b> '+rp.flag+'<br><small>'+rp.desc+'</small><br><span class="big-rate '+rateTxt(rp.rating)+'">'+rp.rating+'</span><br>'+comment+'</div></div>';
+ ovH=content+'<button class="big-btn gold" onclick="closeOverlay()">الجولة الجاية ⬅️</button>';
+ ovG=content+'<div class="status">⏳ بانتظار المضيف...</div>';
+ render();broadcast();
+}
+function closeOverlay(){round++;nextRound();}
+function stats(i){
+ const sq=P[i].squad,tot=sq.reduce((t,p)=>t+p.rating,0);
+ const best=sq.length?sq.reduce((a,b)=>a.rating>=b.rating?a:b):null;
+ return{tot,avg:sq.length?(tot/sq.length).toFixed(1):0,best:best?best.name:'—',stars:sq.filter(p=>p.rating>=85).length};
+}
+function endGame(){
+ phase='end';clearInterval(timerInt);
+ const s0=stats(0),s1=stats(1);
+ const winner=s0.tot===s1.tot?(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)):(s0.tot>s1.tot?0:1);
+ const sq=i=>P[i].squad.map(p=>'<span class="chip">'+p.flag+' '+p.name+' <b>'+p.rating+'</b></span>').join(' ');
+ endH='<h2>🎊 النتيجة النهائية الدقيقة</h2>'+
+ '<p style="font-size:19px;margin-bottom:10px">'+(winner===-1?'🤝 تعادل!':'🏆 الفائز: <b style="color:var(--gold)">'+P[winner].name+'</b> بتشكيلة أقوى!')+'</p>'+
+ '<table class="stat-t"><tr><td></td><td><b>'+P[0].name+'</b></td><td><b>'+P[1].name+'</b></td></tr>'+
+ '<tr><td>⭐ إجمالي القوة</td><td><b>'+s0.tot+'</b></td><td><b>'+s1.tot+'</b></td></tr>'+
+ '<tr><td>📊 متوسط التقييم</td><td>'+s0.avg+'</td><td>'+s1.avg+'</td></tr>'+
+ '<tr><td>💪 أقوى لاعب</td><td>'+s0.best+'</td><td>'+s1.best+'</td></tr>'+
+ '<tr><td>🌟 لاعبين 85+</td><td>'+s0.stars+'</td><td>'+s1.stars+'</td></tr>'+
+ '<tr><td>💰 المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
+ '<tr><td>🏦 الباقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr></table>'+
+ [0,1].map(i=>'<div class="squad-end"><b style="color:var(--green)">'+P[i].name+':</b><br>'+sq(i)+'</div>').join('')+
+ '<button class="big-btn gold" onclick="location.reload()">🔄 العب تاني</button>';
+ render();broadcast();
+}
+function render(){
+ if(phase==='reveal'){$('overlay').classList.remove('hidden');$('obox').innerHTML=(online&&!isHost)?ovG:ovH;return;}
+ if(phase==='end'){$('overlay').classList.remove('hidden');$('obox').innerHTML=endH;return;}
+ $('overlay').classList.add('hidden');
+ if(!curStar)return;
+ $('roundLbl').textContent='الجولة '+(round+1)+' / '+stars.length;
+ $('cfgLbl').textContent='➕ '+fmt(CFG.step)+(CFG.timer?' • ⏱️ '+CFG.timer+'ث':'');
+ prevKey=curStar.name+round;
+ $('futBox').innerHTML=futCard(curStar);
+ const bn=$('bidNum');bn.textContent=bid===0?'0':fmt(bid);
+ if(bid!==prevBid){prevBid=bid;bn.classList.remove('pop');void bn.offsetWidth;bn.classList.add('pop');}
+ for(let i=0;i<2;i++){
+  $('tname'+i).textContent=(i===turn?'🎙️ ':'')+P[i].name;
+  const tot=P[i].squad.reduce((t,p)=>t+p.rating,0);
+  $('tstats'+i).innerHTML='💰 الباقي: <b>'+fmt(P[i].budget)+'</b> — ⭐ القوة: <b>'+tot+'</b>';
+  $('squad'+i).innerHTML=P[i].squad.map(p=>'<span class="chip">'+p.name+' <b>'+p.rating+'</b></span>').join('')||'<span class="chip">لسه مفيش لاعبين</span>';
+  $('team'+i).classList.toggle('turn',i===turn);
+ }
+ const tl=$('timeLbl');
+ if(CFG.timer>0){tl.classList.remove('hidden');tl.textContent='⏱️ باقي '+timeLeft+' ثانية';tl.classList.toggle('low',timeLeft<=5);}else tl.classList.add('hidden');
+ const humanCan=canAct();
+ $('raiseBtn').disabled=!(humanCan&&bid+CFG.step<=P[turn].budget);
+ $('raiseBtn').textContent='➕ زايد لـ '+fmt(bid+CFG.step);
+ $('passBtn').disabled=!humanCan;
+ $('passBtn').textContent=bid===0?'🏳️ أعطيها للخصم (ببلاش!)':'🏳️ أعطيها للخصم';
+ $('customBid').disabled=!humanCan;$('customBtn').disabled=!humanCan;
+ $('turnLbl').textContent='🎙️ الدور: '+P[turn].name+(busy?' (بيفكر...) 🤔':(online&&turn!==mySeat?'...⏳':''));
+ $('log').innerHTML=logArr.map(l=>'<div>'+l+'</div>').join('');
+ if(view==='squads')renderSquads();
+}
+</script>
+</body>
+</html>
