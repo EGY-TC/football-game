@@ -11,8 +11,7 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);min-height:100vh;color:var(--txt);padding:12px}
 button{touch-action:manipulation;font-family:'Cairo'}
-.screen{max-width:640px;margin:0 auto}
-.hidden{display:none!important}
+.screen{max-width:640px;margin:0 auto}.hidden{display:none!important}
 .hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .back{background:var(--card);border:1px solid var(--line);color:var(--dim);border-radius:10px;padding:7px 12px;font-weight:800;cursor:pointer;font-size:13px}
 h1{flex:1;text-align:center;font-weight:900;font-size:20px}
@@ -30,9 +29,7 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .mode-btn .ic{font-size:20px}
 .big-btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:16px;font-weight:900;cursor:pointer}
 .big-btn:active{transform:scale(.97)}
-.green{background:var(--acc);color:#04180a}
-.blue{background:var(--blue);color:#04101c}
-.red{background:var(--red);color:#1c0407}
+.green{background:var(--acc);color:#04180a}.blue{background:var(--blue);color:#04101c}.red{background:var(--red);color:#1c0407}
 .or{text-align:center;color:var(--dim);margin:12px 0;font-weight:700}
 #codeShow{font-size:32px;letter-spacing:8px;text-align:center;color:var(--gold);font-weight:900;background:var(--card2);border:2px dashed var(--gold);border-radius:12px;padding:8px;margin:8px 0}
 .status{margin-top:10px;text-align:center;color:var(--dim);min-height:22px;font-size:13px}
@@ -66,17 +63,22 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .rt.gold{background:rgba(210,153,34,.15);color:var(--gold);border:1px solid var(--gold)}
 .rt.silver{background:rgba(139,148,158,.12);color:#c9d1d9;border:1px solid var(--dim)}
 .rt.bronze{background:rgba(210,122,74,.12);color:#e3906b;border:1px solid #b36a3d}
+.mv{text-align:center;font-size:12px;color:var(--gold);font-weight:800;margin:-6px auto 10px}
 .bid-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .bid-num{text-align:center;font-size:30px;font-weight:900;color:var(--gold);line-height:1.2}
 .bid-num.pop{animation:pop .3s}
 @keyframes pop{50%{transform:scale(1.15)}}
+.tbar{height:6px;background:var(--card2);border-radius:6px;overflow:hidden}
+#tfill{height:100%;background:var(--acc);width:100%;transition:width 1s linear}
+#tfill.low{background:var(--red)}
 .time{text-align:center;font-size:15px;font-weight:900;color:var(--acc)}
 .time.low{color:var(--red);animation:pu 1s infinite}
 @keyframes pu{50%{opacity:.4}}
 #turnLbl{text-align:center;font-size:14px;font-weight:900;background:var(--card2);border-radius:10px;padding:7px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.controls button{padding:14px 4px;border:none;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;min-height:50px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.controls button{padding:13px 2px;border:none;border-radius:12px;font-size:13.5px;font-weight:900;cursor:pointer;min-height:50px}
 #raiseBtn{background:var(--acc);color:#04180a}
+#raise5Btn{background:var(--gold);color:#231303}
 #passBtn{background:var(--red);color:#1c0407}
 .controls button:disabled{opacity:.35;cursor:not-allowed}
 .custom{display:flex;gap:8px}
@@ -107,8 +109,10 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .reveal{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
 .reveal .pcard{margin:0}
 .match{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
-.sb{display:flex;align-items:center;justify-content:center;gap:14px;font-weight:900;font-size:15px;margin-bottom:8px}
-.sb .sc{font-size:26px;color:var(--gold)}
+.sb{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px}
+.sb .col{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:14px;min-width:90px}
+.sb .col b{font-size:32px;color:var(--gold);line-height:1}
+.sb .dash{font-size:22px;color:var(--dim);font-weight:900}
 .evts{text-align:right;font-size:12.5px;line-height:2;color:var(--dim);max-height:150px;overflow:auto}
 .motm{margin-top:8px;font-size:13px;font-weight:800;color:var(--gold)}
 .stat-t{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
@@ -120,10 +124,9 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 </style>
 </head>
 <body>
-
 <div id="home" class="screen">
 <div class="hdr"><h1>⚽ مزاد النجوم</h1></div>
-<p class="desc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب عشوائي.<br>في النهاية تُحاكى مباراة بين الفريقين والأقوى يفوز.</p>
+<p class="desc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>في النهاية تُحاكى مباراة بين الفريقين والفائز بها يتوَّج باللقب.</p>
 <div class="card">
 <label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك">
 <label>اسم اللاعب الثاني (نفس الجهاز)</label><input id="name2" placeholder="اكتب الاسم">
@@ -135,7 +138,6 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <div id="homeErr" class="status"></div>
 </div>
 </div>
-
 <div id="room" class="screen hidden">
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>غرفة أونلاين</h1></div>
 <div class="card">
@@ -147,7 +149,6 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <div id="roomStatus" class="status"></div>
 </div>
 </div>
-
 <div id="settings" class="screen hidden">
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>الإعدادات</h1></div>
 <div class="card">
@@ -158,9 +159,7 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
 </div>
 </div>
-
 <div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p>تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
-
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1>⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
@@ -171,12 +170,15 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <div class="team" id="team1"><h3 id="tname1"></h3><div class="stats" id="tstats1"></div><div class="squad" id="squad1"></div></div>
 </div>
 <div id="futBox"></div>
+<div class="mv" id="mvLbl"></div>
 <div class="bid-panel">
 <div class="bid-num" id="bidNum">0</div>
+<div class="tbar hidden" id="tbarBox"><div id="tfill"></div></div>
 <div class="time hidden" id="timeLbl"></div>
 <div id="turnLbl"></div>
 <div class="controls">
 <button id="raiseBtn" onclick="humanRaise()">➕ زيادة مليون</button>
+<button id="raise5Btn" onclick="humanRaise5()">➕ زيادة 5</button>
 <button id="passBtn" onclick="humanPass()">🏳️ تسليم للخصم</button>
 </div>
 <div class="custom">
@@ -189,84 +191,77 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 </div>
 <div id="viewSquads" class="hidden"></div>
 </div>
-
 <div id="overlay" class="overlay hidden"><div class="obox" id="obox"></div></div>
+<div id="reconn" class="overlay hidden"><div class="obox"><h2>⚠️ انقطع الاتصال</h2><p style="color:var(--dim);font-size:13px;margin-bottom:12px">اضغط إعادة الاتصال لاستكمال نفس اللعبة من حيث توقفت.</p><button class="big-btn green" onclick="retryConn()">🔄 إعادة الاتصال</button><button class="big-btn red" style="margin-top:8px" onclick="giveUp()">العودة للرئيسية</button></div></div>
 <div id="toast"></div>
-
 <script>
 window.addEventListener('error',function(e){try{toast('خطأ: '+e.message);}catch(_){}});
 function $(id){return document.getElementById(id);}
 function toast(t){var el=$('toast');if(!el)return;el.textContent=t;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},2500);}
-
-/* [الاسم, ويكيبيديا, المركز, العلم, النادي, التقييم] */
 var D=[
-/* حراس */
-['أليسون بيكر','Alisson','GK','🇧🇷','ليفربول',89],['إيدرسون','Ederson','GK','🇧🇷','مانشستر سيتي',87],['تيبو كورتوا','Thibaut Courtois','GK','🇧🇪','ريال مدريد',89],['مانويل نوير','Manuel Neuer','GK','🇩🇪','بايرن ميونخ',84],['تير شتيجن','Marc-André ter Stegen','GK','🇩🇪','برشلونة',86],['جانلويجي دوناروما','Gianluigi Donnarumma','GK','🇮🇹','مانشستر سيتي',89],['يان أوبلاك','Jan Oblak','GK','🇸🇮','أتلتيكو مدريد',87],['دافيد دي خيا','David de Gea','GK','🇪🇸','فيورنتينا',84],['جوردان بيكفورد','Jordan Pickford','GK','🏴󠁧󠁢󠁥󠁮󠁧󠁿','إيفرتون',82],['مايك ماينان','Mike Maignan','GK','🇫🇷','ميلان',87],
-['ديوجو كوستا','Diogo Costa','GK','🇵🇹','بورتو',86],['فويتشيك تشيزني','Wojciech Szczęsny','GK','🇵🇱','برشلونة',83],['إيميليانو مارتينيز','Emiliano Martínez','GK','🇦🇷','أستون فيلا',85],['ياسين بونو','Yassine Bounou','GK','🇲🇦','الهلال',84],['إدوارد ميندي','Édouard Mendy','GK','🇸🇳','الأهلي السعودي',82],['أندريه أونانا','André Onana','GK','🇨🇲','مانشستر يونايتد',83],['جولييلمو فيكاريو','Guglielmo Vicario','GK','🇮🇹','توتنهام',82],['نيك بوب','Nick Pope','GK','🏴󠁧󠁢󠁥󠁮󠁧󠁿','نيوكاسل',81],['آرون رامسديل','Aaron Ramsdale','GK','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ساوثهامبتون',80],['كيبا أريزابالاجا','Kepa Arrizabalaga','GK','🇪🇸','بورنموث',80],
-['أوناي سيمون','Unai Simón','GK','🇪🇸','أتلتيك بلباو',84],['دافيد رايا','David Raya','GK','🇪🇸','أرسنال',84],['جريجور كوبل','Gregor Kobel','GK','🇨🇭','دورتموند',85],['يان سومر','Yann Sommer','GK','🇨🇭','إنتر',83],['إيفان بروفيدل','Ivan Provedel','GK','🇮🇹','لاتسيو',80],['أليكس ميريت','Alex Meret','GK','🇮🇹','نابولي',81],['ماركو كارنيسيكي','Marco Carnesecchi','GK','🇮🇹','أتالانتا',82],['لوكاس شوفالييه','Lucas Chevalier','GK','🇫🇷','ليل',84],['جيورجي مامارداشفيلي','Giorgi Mamardashvili','GK','🇬🇪','ليفربول',85],['محمد الشناوي','Mohamed El Shenawy','GK','🇪🇬','الأهلي',76],
-['مصطفى شوبير','Mostafa Shobeir','GK','🇪🇬','الأهلي',72],['محمد عوض','Mohamed Awad','GK','🇪🇬','الزمالك',70],['محمد العويس','Mohammed Al-Owais','GK','🇸🇦','الهلال',74],['أحمد الكسار','Ahmed Al-Kassar','GK','🇸🇦','الخليج',70],['كيلور نافاس','Keylor Navas','GK','🇨🇷','نيويلز',80],['بيرند لينو','Bernd Leno','GK','🇩🇪','فولهام',82],['كيفن تراب','Kevin Trapp','GK','🇩🇪','فرانكفورت',82],['فرناندو موسليرا','Fernando Muslera','GK','🇺🇾','غلطة سراي',79],['دافيد أوسبينا','David Ospina','GK','🇨🇴','أتلتيكو ناسيونال',78],['روي باتريسيو','Rui Patrício','GK','🇵🇹','العين',78],
-['كاميل جرابة','Kamil Grabara','GK','🇵🇱','فولفسبورج',79],['بارت فيربروجن','Bart Verbruggen','GK','🇧🇪','برايتون',81],['ماتس سيلس','Matz Sels','GK','🇧🇪','نوتنجهام',79],['مادس هيرمانسن','Mads Hermansen','GK','🇩🇰','ليستر سيتي',78],['زيون سوزوكي','Zion Suzuki','GK','🇯🇵','بارما',80],['وكاش فابيانسكي','Łukasz Fabiański','GK','🇵🇱','وست هام',76],['دين هندرسون','Dean Henderson','GK','🏴󠁧󠁢󠁥󠁮󠁧󠁿','كريستال بالاس',79],['شتيفان أورتيجا','Stefan Ortega','GK','🇩🇪','مانشستر سيتي',80],['جافين بازونو','Gavin Bazunu','GK','🇮🇪','ساوثهامبتون',76],['كاويمين كيليهير','Caoimhín Kelleher','GK','🇮🇪','برينتفورد',78],
-['أندريه لونين','Andriy Lunin','GK','🇺🇦','ريال مدريد',84],['أليكس ريميرو','Álex Remiro','GK','🇪🇸','ريال سوسيداد',82],['ماتيا بيرين','Mattia Perin','GK','🇮🇹','يوفنتوس',79],['بريس سامبا','Brice Samba','GK','🇫🇷','رين',80],['ماركو بيزوت','Marco Bizot','GK','🇳🇱','أستون فيلا',78],['يوناس أوملين','Jonas Omlin','GK','🇨🇭','مونشنجلادباخ',77],
-/* قلب دفاع */
+['أليسون بيكر','Alisson','GK','🇧🇷','ليفربول',89],['إيدرسون','Ederson','GK','🇧🇷','مانشستر سيتي',87],['تيبو كورتوا','Thibaut Courtois','GK','🇧🇪','ريال مدريد',89],['مانويل نوير','Manuel Neuer','GK','🇩🇪','بايرن ميونخ',84],['تير شتيجن','Marc-André ter Stegen','GK','🇩🇪','برشلونة',86],['جانلويجي دوناروما','Gianluigi Donnarumma','GK','🇮🇹','مانشستر سيتي',89],['يان أوبلاك','Jan Oblak','GK','🇸🇮','أتلتيكو مدريد',87],['دافيد دي خيا','David de Gea','GK','🇪🇸','فيورنتينا',84],['جوردان بيكفورد','Jordan Pickford','GK','🇬🇧','إيفرتون',82],['مايك ماينان','Mike Maignan','GK','🇫🇷','ميلان',87],
+['ديوجو كوستا','Diogo Costa','GK','🇵🇹','بورتو',86],['فويتشيك تشيزني','Wojciech Szczęsny','GK','🇵🇱','برشلونة',83],['إيميليانو مارتينيز','Emiliano Martínez','GK','🇦','أستون فيلا',85],['ياسين بونو','Yassine Bounou','GK','🇲🇦','الهلال',84],['إدوارد ميندي','Édouard Mendy','GK','🇸🇳','الأهلي السعودي',82],['أندريه أونانا','André Onana','GK','🇨','مانشستر يونايتد',83],['جولييلمو فيكاريو','Guglielmo Vicario','GK','🇮','توتنهام',82],['نيك بوب','Nick Pope','GK','🇬🇧','نيوكاسل',81],['آرون رامسديل','Aaron Ramsdale','GK','🇬','ساوثهامبتون',80],['كيبا أريزابالاجا','Kepa Arrizabalaga','GK','🇪🇸','بورنموث',80],
+['أوناي سيمون','Unai Simón','GK','🇪🇸','أتلتيك بلباو',84],['دافيد رايا','David Raya','GK','🇪🇸','أرسنال',84],['جريجور كوبل','Gregor Kobel','GK','🇨','دورتموند',85],['يان سومر','Yann Sommer','GK','🇨','إنتر',83],['إيفان بروفيدل','Ivan Provedel','GK','🇮🇹','لاتسيو',80],['أليكس ميريت','Alex Meret','GK','🇮🇹','نابولي',81],['ماركو كارنيسيكي','Marco Carnesecchi','GK','🇮🇹','أتالانتا',82],['لوكاس شوفالييه','Lucas Chevalier','GK','🇫🇷','ليل',84],['جيورجي مامارداشفيلي','Giorgi Mamardashvili','GK','🇬🇪','ليفربول',85],['محمد الشناوي','Mohamed El Shenawy','GK','🇪🇬','الأهلي',76],
+['مصطفى شوبير','Mostafa Shobeir','GK','🇪🇬','الأهلي',72],['محمد العويس','Mohammed Al-Owais','GK','🇸🇦','الهلال',74],['كيلور نافاس','Keylor Navas','GK','🇨🇷','نيويلز',80],['بيرند لينو','Bernd Leno','GK','🇩🇪','فولهام',82],['كيفن تراب','Kevin Trapp','GK','🇩🇪','فرانكفورت',82],['فرناندو موسليرا','Fernando Muslera','GK','🇺🇾','غلطة سراي',79],['دافيد أوسبينا','David Ospina','GK','🇨🇴','أتلتيكو ناسيونال',78],['روي باتريسيو','Rui Patrício','GK','🇵🇹','العين',78],
+['بارت فيربروجن','Bart Verbruggen','GK','🇧🇪','برايتون',81],['ماتس سيلس','Matz Sels','GK','🇧🇪','نوتنجهام',79],['مادس هيرمانسن','Mads Hermansen','GK','🇩🇰','ليستر سيتي',78],['زيون سوزوكي','Zion Suzuki','GK','🇯🇵','بارما',80],['وكاش فابيانسكي','Łukasz Fabiański','GK','🇵🇱','وست هام',76],['دين هندرسون','Dean Henderson','GK','🇬🇧','كريستال بالاس',79],['شتيفان أورتيجا','Stefan Ortega','GK','🇩🇪','مانشستر سيتي',80],['جافين بازونو','Gavin Bazunu','GK','🇮🇪','ساوثهامبتون',76],['كاويمين كيليهير','Caoimhín Kelleher','GK','🇮🇪','برينتفورد',78],
+['أندريه لونين','Andriy Lunin','GK','🇺🇦','ريال مدريد',84],['أليكس ريميرو','Álex Remiro','GK','🇪🇸','ريال سوسيداد',82],['ماتيا بيرين','Mattia Perin','GK','🇮🇹','يوفنتوس',79],['بريس سامبا','Brice Samba','GK','🇫🇷','رين',80],
 ['فيرجيل فان دايك','Virgil van Dijk','CB','🇳🇱','ليفربول',90],['ويليام ساليبا','William Saliba','CB','🇫🇷','أرسنال',88],['جابرييل ماجاليس','Gabriel Magalhães','CB','🇧🇷','أرسنال',87],['أنطونيو روديجر','Antonio Rüdiger','CB','🇩🇪','ريال مدريد',88],['إيدير ميليتاو','Éder Militão','CB','🇧🇷','ريال مدريد',86],['دايو أوباميكانو','Dayot Upamecano','CB','🇫🇷','بايرن ميونخ',84],['كيم مين جاي','Kim Min-jae','CB','🇰🇷','بايرن ميونخ',84],['ماتيس دي ليخت','Matthijs de Ligt','CB','🇳🇱','مانشستر يونايتد',85],['أليساندرو باستوني','Alessandro Bastoni','CB','🇮🇹','إنتر',87],['جليسون بريمر','Gleison Bremer','CB','🇧🇷','يوفنتوس',86],
-['رونالد أراوخو','Ronald Araújo','CB','🇺🇾','برشلونة',85],['باو كوبارسي','Pau Cubarsí','CB','🇪🇸','برشلونة',84],['باو توريس','Pau Torres','CB','🇪🇸','أستون فيلا',84],['إيمريك لابورت','Aymeric Laporte','CB','🇪🇸','النصر',83],['روبن لو نورماند','Robin Le Normand','CB','🇪🇸','أتلتيكو مدريد',84],['ناتشو فيرنانديز','Nacho Fernández','CB','🇪🇸','القادسية',81],['إينيجو مارتينيز','Iñigo Martínez','CB','🇪🇸','برشلونة',81],['أندرياس كريستنسن','Andreas Christensen','CB','🇩🇰','برشلونة',82],['تياجو سيلفا','Thiago Silva','CB','🇧🇷','فلومينينسي',80],['ماركينيوس','Marquinhos','CB','🇧🇷','باريس سان جيرمان',86],
-['ميلان شكرينيار','Milan Škriniar','CB','🇸🇰','فنربخشة',83],['فيكايو توموري','Fikayo Tomori','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ميلان',83],['بيير كالولو','Pierre Kalulu','CB','🇫🇷','يوفنتوس',80],['جيورجيو سكالفيني','Giorgio Scalvini','CB','🇮🇹','أتالانتا',82],['ريكاردو كالافيوري','Riccardo Calafiori','CB','🇮🇹','أرسنال',84],['أليساندرو بونجورنو','Alessandro Buongiorno','CB','🇮🇹','نابولي',83],['جانلوكا مانشيني','Gianluca Mancini','CB','🇮🇹','روما',83],['كريس سمولينج','Chris Smalling','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','روما',79],['جوناثان تاه','Jonathan Tah','CB','🇩🇪','بايرن ميونخ',85],['نيكو شلوتربيك','Nico Schlotterbeck','CB','🇩🇪','دورتموند',83],
+['رونالد أراوخو','Ronald Araújo','CB','🇺🇾','برشلونة',85],['باو كوبارسي','Pau Cubarsí','CB','🇪','برشلونة',84],['باو توريس','Pau Torres','CB','🇪🇸','أستون فيلا',84],['إيمريك لابورت','Aymeric Laporte','CB','🇪🇸','النصر',83],['روبن لو نورماند','Robin Le Normand','CB','🇪🇸','أتلتيكو مدريد',84],['ناتشو فيرنانديز','Nacho Fernández','CB','🇪🇸','القادسية',81],['إينيجو مارتينيز','Iñigo Martínez','CB','🇪🇸','برشلونة',81],['أندرياس كريستنسن','Andreas Christensen','CB','🇩🇰','برشلونة',82],['تياجو سيلفا','Thiago Silva','CB','🇧🇷','فلومينينسي',80],['ماركينيوس','Marquinhos','CB','🇧🇷','باريس سان جيرمان',86],
+['ميلان شكرينيار','Milan Škriniar','CB','🇸🇰','فنربخشة',83],['فيكايو توموري','Fikayo Tomori','CB','🇬🇧','ميلان',83],['بيير كالولو','Pierre Kalulu','CB','🇫🇷','يوفنتوس',80],['جيورجيو سكالفيني','Giorgio Scalvini','CB','🇮🇹','أتالانتا',82],['ريكاردو كالافيوري','Riccardo Calafiori','CB','🇮🇹','أرسنال',84],['أليساندرو بونجورنو','Alessandro Buongiorno','CB','🇮🇹','نابولي',83],['جانلوكا مانشيني','Gianluca Mancini','CB','🇮🇹','روما',83],['كريس سمولينج','Chris Smalling','CB','🇬🇧','روما',79],['جوناثان تاه','Jonathan Tah','CB','🇩🇪','بايرن ميونخ',85],['نيكو شلوتربيك','Nico Schlotterbeck','CB','🇩🇪','دورتموند',83],
 ['نيكلاس زوله','Niklas Süle','CB','🇩🇪','دورتموند',81],['فالديمار أنطون','Waldemar Anton','CB','🇩🇪','دورتموند',81],['ماليك ثياو','Malick Thiaw','CB','🇩🇪','ميلان',81],['كريستيان روميرو','Cristian Romero','CB','🇦🇷','توتنهام',86],['ليساندرو مارتينيز','Lisandro Martínez','CB','🇦🇷','مانشستر يونايتد',85],['نيكولاس أوتاميندي','Nicolás Otamendi','CB','🇦🇷','بنفيكا',81],['ماركوس سينيسي','Marcos Senesi','CB','🇦🇷','بورنموث',78],['جون لوكومي','Jhon Lucumí','CB','🇨🇴','بولونيا',78],['دافينسون سانشيز','Davinson Sánchez','CB','🇨🇴','غلطة سراي',78],['ييري مينا','Yerry Mina','CB','🇨🇴','كالياري',77],
-['أبدوكودير خوسانوف','Abdukodir Khusanov','CB','🇺🇿','مانشستر سيتي',80],['إبراهيما كوناتي','Ibrahima Konaté','CB','🇫🇷','ليفربول',85],['جو جوميز','Joe Gomez','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليفربول',81],['جاريل كوانساه','Jarell Quansah','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليفركوزن',78],['مارك جيهي','Marc Guéhi','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','كريستال بالاس',83],['إزري كونسا','Ezri Konsa','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أستون فيلا',82],['لويس دنك','Lewis Dunk','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','برايتون',80],['يان بول فان هيكي','Jan Paul van Hecke','CB','🇳🇱','برايتون',79],['ناثان أكي','Nathan Aké','CB','🇳🇱','مانشستر سيتي',82],['ستيفان دي فري','Stefan de Vrij','CB','🇳🇱','إنتر',82],
-['يوريين تيمبر','Jurriën Timber','CB','🇳🇱','أرسنال',83],['ميكي فان دي فين','Micky van de Ven','CB','🇳🇱','توتنهام',84],['راؤول ألبيول','Raúl Albiol','CB','🇪🇸','فياريال',78],['ماريو هيرموسو','Mario Hermoso','CB','🇪🇸','روما',80],['كليمنت لونجليه','Clément Lenglet','CB','🇫🇷','أتلتيكو مدريد',78],['لوكاس بيرالدو','Lucas Beraldo','CB','🇧🇷','باريس سان جيرمان',81],['موريلو','Murillo','CB','🇧🇷','نوتنجهام',80],['أنطونيو سيلفا','António Silva','CB','🇵🇹','بنفيكا',82],['جونزالو إيناسيو','Gonçalo Inácio','CB','🇵🇹','سبورتنج',84],['روبن دياس','Rúben Dias','CB','🇵🇹','مانشستر سيتي',87],
-['خاليدو كوليبالي','Kalidou Koulibaly','CB','🇸🇳','الهلال',82],['عبدو ديالو','Abdou Diallo','CB','🇸🇳','العربي',77],['موسى نياخاتي','Moussa Niakhaté','CB','🇸🇳','ليون',78],['إيفان نديكا','Evan Ndicka','CB','🇨🇮','روما',82],['كالفين باسي','Calvin Bassey','CB','🇳🇬','فولهام',80],['محمد ساليسو','Mohamed Salisu','CB','🇬🇭','موناكو',79],['شانسيل مبيمبا','Chancel Mbemba','CB','🇨🇩','فنربخشة',78],['رومان سايس','Romain Saïss','CB','🇲🇦','الشباب',77],['نايف أكرد','Nayef Aguerd','CB','🇲🇦','وست هام',81],['شادي رياض','Chadi Riad','CB','🇲🇦','كريستال بالاس',76],
-['أحمد حجازي','Ahmed Hegazy','CB','🇪🇬','الاتحاد',76],['محمد عبد المنعم','Mohamed Abdelmonem','CB','🇪🇬','نيس',78],['ياسر إبراهيم','Yasser Ibrahim','CB','🇪🇬','الأهلي',72],['محمود الونش','Mahmoud El Wensh','CB','🇪🇬','الزمالك',71],['علي البليهي','Ali Al-Bulayhi','CB','🇸🇦','الهلال',74],['عبدالإله العمري','Abdulelah Al-Amri','CB','🇸🇦','النصر',73],['أحمد شراحيلي','Ahmed Sharahili','CB','🇸🇦','الاتحاد',72],['حسان تمبكتي','Hassan Tambakti','CB','🇸🇦','الهلال',74],['علي لاجامي','Ali Lajami','CB','🇸🇦','النصر',72],['سيرجيو راموس','Sergio Ramos','CB','🇪🇸','مونتيري',78],
-['بيبي','Pepe','CB','🇵🇹','بورتو',77],['دانيلو','Danilo','CB','🇧🇷','فلامنجو',78],['ماتس هوميلز','Mats Hummels','CB','🇩🇪','روما',81],['تيلو كيرير','Thilo Kehrer','CB','🇩🇪','موناكو',79],['بنوا بادياشيل','Benoît Badiashile','CB','🇫🇷','تشيلسي',79],['ويسلي فوفانا','Wesley Fofana','CB','🇫🇷','تشيلسي',80],['أكسل ديسازي','Axel Disasi','CB','🇫🇷','تشيلسي',79],['سفين بوتمان','Sven Botman','CB','🇳🇱','نيوكاسل',81],['إدموند تابسوبا','Edmond Tapsoba','CB','🇧🇫','ليفركوزن',82],['كاستيلو لوكيبا','Castello Lukeba','CB','🇫🇷','لايبزيج',81],
-['ماكسينس لاكروا','Maxence Lacroix','CB','🇫🇷','فولفسبورج',79],['جان-كلير توديبو','Jean-Clair Todibo','CB','🇫🇷','يوفنتوس',80],['محمد سيماكان','Mohamed Simakan','CB','🇫🇷','النصر',80],['ويلي أوربان','Willi Orban','CB','🇭🇺','لايبزيج',80],['إيريك داير','Eric Dier','CB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','موناكو',79],['ماركوس روخو','Marcos Rojo','CB','🇦🇷','راسينج',74],
-/* أظهرة */
-['ترينت ألكسندر أرنولد','Trent Alexander-Arnold','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ريال مدريد',86],['كايل ووكر','Kyle Walker','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','بيرنلي',82],['ريس جيمس','Reece James','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','تشيلسي',84],['بن وايت','Ben White','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أرسنال',83],['ديوجو دالوت','Diogo Dalot','RB','🇵🇹','مانشستر يونايتد',82],['نيلسون سيميدو','Nélson Semedo','RB','🇵🇹','فنربخشة',79],['بيدرو بورو','Pedro Porro','RB','🇪🇸','توتنهام',84],['دينزل دومفريس','Denzel Dumfries','RB','🇳🇱','إنتر',83],['أشرف حكيمي','Achraf Hakimi','RB','🇲🇦','باريس سان جيرمان',89],['نصير مزراوي','Noussair Mazraoui','RB','🇲🇦','مانشستر يونايتد',81],
-['يان كوتو','Yan Couto','RB','🇧🇷','دورتموند',79],['فانديرسون','Vanderson','RB','🇧🇷','موناكو',80],['بنجامين بافار','Benjamin Pavard','RB','🇫🇷','إنتر',83],['جوليس كوندي','Jules Koundé','RB','🇫🇷','برشلونة',86],['ماركوس يورينتي','Marcos Llorente','RB','🇪🇸','أتلتيكو مدريد',84],['داني كارفاخال','Dani Carvajal','RB','🇪🇸','ريال مدريد',85],['ناهويل مولينا','Nahuel Molina','RB','🇦🇷','أتلتيكو مدريد',83],['خوان فويث','Juan Foyth','RB','🇦🇷','فياريال',81],['جيوفاني دي لورينزو','Giovanni Di Lorenzo','RB','🇮🇹','نابولي',83],['أندريا كامبياسو','Andrea Cambiaso','RB','🇮🇹','يوفنتوس',82],
-['راؤول بيلانوفا','Raoul Bellanova','RB','🇮🇹','أتالانتا',79],['دودو','Dodô','RB','🇧🇷','فيورنتينا',79],['ماتي كاش','Matty Cash','RB','🇵🇱','أستون فيلا',79],['كيران تريبيير','Kieran Trippier','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','نيوكاسل',81],['آرون وان بيساكا','Aaron Wan-Bissaka','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','وست هام',79],['إيمرسون رويال','Emerson Royal','RB','🇧🇷','ميلان',78],['زكي شيليك','Zeki Çelik','RB','🇹🇷','روما',77],['سيرجينيو ديست','Sergiño Dest','RB','🇺🇸','آيندهوفن',78],['سلطان الغنام','Sultan Al-Ghannam','RB','🇸🇦','النصر',74],['سعود عبدالحميد','Saud Abdulhamid','RB','🇸🇦','روما',75],
-['محمد هاني','Mohamed Hany','RB','🇪🇬','الأهلي',73],['عمر كمال','Omar Kamal','RB','🇪🇬','الأهلي',72],['محمد البريك','Mohammed Al-Breik','RB','🇸🇦','الهلال',74],['جيريمي فريمبونج','Jeremie Frimpong','RB','🇳🇱','ليفركوزن',83],['جواو كانسيلو','João Cancelo','RB','🇵🇹','الهلال',84],['تينو ليفرامنتو','Tino Livramento','RB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','نيوكاسل',80],['مالو جوستو','Malo Gusto','RB','🇫🇷','تشيلسي',79],['جوناثان كلاوس','Jonathan Clauss','RB','🇫🇷','مرسيليا',77],['بنجامين هنريتش','Benjamin Henrichs','RB','🇩🇪','لايبزيج',80],['لوكاس فاسكيز','Lucas Vázquez','RB','🇪🇸','ريال مدريد',80],
-['سيزار أزبيليكويتا','César Azpilicueta','RB','🇪🇸','أتلتيكو مدريد',77],['ألفونسو ديفيز','Alphonso Davies','LB','🇨🇦','ريال مدريد',84],['أندرو روبرتسون','Andrew Robertson','LB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليفربول',84],['ثيو هيرنانديز','Theo Hernández','LB','🇫🇷','ميلان',86],['فيرلان ميندي','Ferland Mendy','LB','🇫🇷','ريال مدريد',82],['أليخاندرو بالدي','Alejandro Balde','LB','🇪🇸','برشلونة',83],['خوردي ألبا','Jordi Alba','LB','🇪🇸','إنتر ميامي',78],['نونو مينديز','Nuno Mendes','LB','🇵🇹','باريس سان جيرمان',85],['لوكاس دين','Lucas Digne','LB','🇫🇷','أستون فيلا',79],['مارك كوكوريلا','Marc Cucurella','LB','🇪🇸','تشيلسي',84],
-['بن تشيلويل','Ben Chilwell','LB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','تشيلسي',80],['لوك شو','Luke Shaw','LB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مانشستر يونايتد',81],['تيريل مالاسيا','Tyrell Malacia','LB','🇳🇱','مانشستر يونايتد',78],['بييرو هينكابي','Piero Hincapié','LB','🇪🇨','ليفركوزن',83],['أليخاندرو جريمالدو','Alejandro Grimaldo','LB','🇪🇸','ليفركوزن',85],['نيكولاس تاليافيكو','Nicolás Tagliafico','LB','🇦🇷','ليون',79],['ماركوس أكونيا','Marcos Acuña','LB','🇦🇷','ريفر بليت',80],['ماتياس أوليفيرا','Mathías Olivera','LB','🇺🇾','نابولي',79],['أنتوني روبنسون','Antonee Robinson','LB','🇺🇸','فولهام',80],['فيكتور كريستيانسن','Victor Kristiansen','LB','🇩🇰','بولونيا',78],
-['معتز هاربي','Moteb Al-Harbi','LB','🇸🇦','الهلال',74],['ياسر الشهراني','Yasser Al-Shahrani','LB','🇸🇦','الهلال',76],['أحمد فتوح','Ahmed Fotouh','LB','🇪🇬','الزمالك',74],['ريان آيت نوري','Rayan Aït-Nouri','LB','🇩🇿','ولفرهامبتون',80],['علي معلول','Ali Maâloul','LB','🇹🇳','الأهلي',75],['أليكس ساندرو','Alex Sandro','LB','🇧🇷','فلامنجو',77],['رينان لودي','Renan Lodi','LB','🇧🇷','الهلال',78],['مارسيلو','Marcelo','LB','🇧🇷','فلومينينسي',75],['خوان بيرنات','Juan Bernat','LB','🇪🇸','فياريال',76],['لويس هال','Lewis Hall','LB','🏴󠁧󠁢󠁥󠁮󠁧󠁿','نيوكاسل',78],['ديفيد راوم','David Raum','LB','🇩🇪','لايبزيج',80],
-/* وسط */
-['رودري','Rodri','CDM','🇪🇸','مانشستر سيتي',90],['فيدي فالفيردي','Federico Valverde','CM','🇺🇾','ريال مدريد',89],['فيتينيا','Vitinha','CM','🇵🇹','باريس سان جيرمان',89],['بيدري','Pedri','CM','🇪🇸','برشلونة',89],['كيفين دي بروين','Kevin De Bruyne','CM','🇧🇪','مانشستر سيتي',87],['برناردو سيلفا','Bernardo Silva','CM','🇵🇹','مانشستر سيتي',88],['ديكلان رايس','Declan Rice','CDM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أرسنال',88],['جوشوا كيميش','Joshua Kimmich','CDM','🇩🇪','بايرن ميونخ',89],['أوريلين تشواميني','Aurélien Tchouaméni','CDM','🇫🇷','ريال مدريد',86],['إدواردو كامافينجا','Eduardo Camavinga','CM','🇫🇷','ريال مدريد',85],
-['جافي','Gavi','CM','🇪🇸','برشلونة',86],['فرينكي دي يونج','Frenkie de Jong','CM','🇳🇱','برشلونة',85],['برونو جيمارايش','Bruno Guimarães','CM','🇧🇷','نيوكاسل',86],['أليكسيس ماك أليستر','Alexis Mac Allister','CM','🇦🇷','ليفربول',86],['دومينيك سوبوسلاي','Dominik Szoboszlai','CM','🇭🇺','ليفربول',85],['إنزو فيرنانديز','Enzo Fernández','CM','🇦🇷','تشيلسي',85],['مويسيس كايسيدو','Moisés Caicedo','CDM','🇪🇨','تشيلسي',86],['رودريجو بنتانكور','Rodrigo Bentancur','CM','🇺🇾','توتنهام',83],['إيف بيسوما','Yves Bissouma','CDM','🇲🇱','توتنهام',81],['بابي سار','Pape Sarr','CM','🇸🇳','توتنهام',80],
+['أبدوكودير خوسانوف','Abdukodir Khusanov','CB','🇺🇿','مانشستر سيتي',80],['إبراهيما كوناتي','Ibrahima Konaté','CB','🇫🇷','ليفربول',85],['جو جوميز','Joe Gomez','CB','🇬🇧','ليفربول',81],['جاريل كوانساه','Jarell Quansah','CB','🇬🇧','ليفركوزن',78],['مارك جيهي','Marc Guéhi','CB','🇬🇧','كريستال بالاس',83],['إزري كونسا','Ezri Konsa','CB','🇬🇧','أستون فيلا',82],['لويس دنك','Lewis Dunk','CB','🇬🇧','برايتون',80],['يان بول فان هيكي','Jan Paul van Hecke','CB','🇳','برايتون',79],['ناثان أكي','Nathan Aké','CB','🇳🇱','مانشستر سيتي',82],['ستيفان دي فري','Stefan de Vrij','CB','🇳🇱','إنتر',82],
+['يوريين تيمبر','Jurriën Timber','CB','🇳','أرسنال',83],['ميكي فان دي فين','Micky van de Ven','CB','🇳','توتنهام',84],['راؤول ألبيول','Raúl Albiol','CB','🇪🇸','فياريال',78],['ماريو هيرموسو','Mario Hermoso','CB','🇪🇸','روما',80],['كليمنت لونجليه','Clément Lenglet','CB','🇫🇷','أتلتيكو مدريد',78],['لوكاس بيرالدو','Lucas Beraldo','CB','🇧','باريس سان جيرمان',81],['موريلو','Murillo','CB','🇧🇷','نوتنجهام',80],['أنطونيو سيلفا','António Silva','CB','🇵🇹','بنفيكا',82],['جونزالو إيناسيو','Gonçalo Inácio','CB','🇵🇹','سبورتنج',84],['روبن دياس','Rúben Dias','CB','🇵','مانشستر سيتي',87],
+['خاليدو كوليبالي','Kalidou Koulibaly','CB','🇸🇳','الهلال',82],['عبدو ديالو','Abdou Diallo','CB','🇸🇳','العربي',77],['موسى نياخاتي','Moussa Niakhaté','CB','🇸🇳','ليون',78],['إيفان نديكا','Evan Ndicka','CB','🇨🇮','روما',82],['كالفين باسي','Calvin Bassey','CB','🇳🇬','فولهام',80],['محمد ساليسو','Mohamed Salisu','CB','🇬🇭','موناكو',79],['شانسيل مبيمبا','Chancel Mbemba','CB','🇨','فنربخشة',78],['رومان سايس','Romain Saïss','CB','🇲🇦','الشباب',77],['نايف أكرد','Nayef Aguerd','CB','🇲🇦','وست هام',81],['شادي رياض','Chadi Riad','CB','🇲🇦','كريستال بالاس',76],
+['أحمد حجازي','Ahmed Hegazy','CB','🇪🇬','الاتحاد',76],['محمد عبد المنعم','Mohamed Abdelmonem','CB','🇪🇬','نيس',78],['ياسر إبراهيم','Yasser Ibrahim','CB','🇪🇬','الأهلي',72],['محمود الونش','Mahmoud El Wensh','CB','🇪🇬','الزمالك',71],['علي البليهي','Ali Al-Bulayhi','CB','🇸🇦','الهلال',74],['عبدالإله العمري','Abdulelah Al-Amri','CB','🇸🇦','النصر',73],['حسان تمبكتي','Hassan Tambakti','CB','🇸🇦','الهلال',74],['سيرجيو راموس','Sergio Ramos','CB','🇪🇸','مونتيري',78],
+['بيبي','Pepe','CB','🇵🇹','بورتو',77],['ماتس هوميلز','Mats Hummels','CB','🇩🇪','روما',81],['تيلو كيرير','Thilo Kehrer','CB','🇩🇪','موناكو',79],['بنوا بادياشيل','Benoît Badiashile','CB','🇫🇷','تشيلسي',79],['ويسلي فوفانا','Wesley Fofana','CB','🇫🇷','تشيلسي',80],['سفين بوتمان','Sven Botman','CB','🇳🇱','نيوكاسل',81],['إدموند تابسوبا','Edmond Tapsoba','CB','🇧','ليفركوزن',82],['كاستيلو لوكيبا','Castello Lukeba','CB','🇫🇷','لايبزيج',81],
+['ماكسينس لاكروا','Maxence Lacroix','CB','🇫🇷','فولفسبورج',79],['جان-كلير توديبو','Jean-Clair Todibo','CB','🇫🇷','يوفنتوس',80],['محمد سيماكان','Mohamed Simakan','CB','🇫🇷','النصر',80],['إيريك داير','Eric Dier','CB','🇬🇧','موناكو',79],['هاري ماجواير','Harry Maguire','CB','🇬🇧','مانشستر يونايتد',78],
+['ترينت ألكسندر أرنولد','Trent Alexander-Arnold','RB','🇬🇧','ريال مدريد',86],['كايل ووكر','Kyle Walker','RB','🇬🇧','بيرنلي',82],['ريس جيمس','Reece James','RB','🇬🇧','تشيلسي',84],['بن وايت','Ben White','RB','🇬🇧','أرسنال',83],['ديوجو دالوت','Diogo Dalot','RB','🇵🇹','مانشستر يونايتد',82],['نيلسون سيميدو','Nélson Semedo','RB','🇵🇹','فنربخشة',79],['بيدرو بورو','Pedro Porro','RB','🇪','توتنهام',84],['دينزل دومفريس','Denzel Dumfries','RB','🇳🇱','إنتر',83],['أشرف حكيمي','Achraf Hakimi','RB','🇲🇦','باريس سان جيرمان',89],['نصير مزراوي','Noussair Mazraoui','RB','🇲🇦','مانشستر يونايتد',81],
+['يان كوتو','Yan Couto','RB','🇧🇷','دورتموند',79],['فانديرسون','Vanderson','RB','🇧','موناكو',80],['بنجامين بافار','Benjamin Pavard','RB','🇫🇷','إنتر',83],['جوليس كوندي','Jules Koundé','RB','🇫🇷','برشلونة',86],['ماركوس يورينتي','Marcos Llorente','RB','🇪','أتلتيكو مدريد',84],['داني كارفاخال','Dani Carvajal','RB','🇪🇸','ريال مدريد',85],['ناهويل مولينا','Nahuel Molina','RB','🇦🇷','أتلتيكو مدريد',83],['خوان فويث','Juan Foyth','RB','🇦🇷','فياريال',81],['جيوفاني دي لورينزو','Giovanni Di Lorenzo','RB','🇮','نابولي',83],['أندريا كامبياسو','Andrea Cambiaso','RB','🇮🇹','يوفنتوس',82],
+['راؤول بيلانوفا','Raoul Bellanova','RB','🇮🇹','أتالانتا',79],['دودو','Dodô','RB','🇧🇷','فيورنتينا',79],['ماتي كاش','Matty Cash','RB','🇵🇱','أستون فيلا',79],['كيران تريبيير','Kieran Trippier','RB','🇬🇧','نيوكاسل',81],['آرون وان بيساكا','Aaron Wan-Bissaka','RB','🇬🇧','وست هام',79],['إيمرسون رويال','Emerson Royal','RB','🇧🇷','ميلان',78],['زكي شيليك','Zeki Çelik','RB','🇹🇷','روما',77],['سيرجينيو ديست','Sergiño Dest','RB','🇺','آيندهوفن',78],['سلطان الغنام','Sultan Al-Ghannam','RB','🇸🇦','النصر',74],['سعود عبدالحميد','Saud Abdulhamid','RB','🇸','روما',75],
+['محمد هاني','Mohamed Hany','RB','🇪🇬','الأهلي',73],['عمر كمال','Omar Kamal','RB','🇪🇬','الأهلي',72],['محمد البريك','Mohammed Al-Breik','RB','🇸🇦','الهلال',74],['جيريمي فريمبونج','Jeremie Frimpong','RB','🇳🇱','ليفركوزن',83],['جواو كانسيلو','João Cancelo','RB','🇵🇹','الهلال',84],['تينو ليفرامنتو','Tino Livramento','RB','🇬','نيوكاسل',80],['مالو جوستو','Malo Gusto','RB','🇫🇷','تشيلسي',79],['لوكاس فاسكيز','Lucas Vázquez','RB','🇪🇸','ريال مدريد',80],
+['سيزار أزبيليكويتا','César Azpilicueta','RB','🇪🇸','أتلتيكو مدريد',77],['ألفونسو ديفيز','Alphonso Davies','LB','🇨','ريال مدريد',84],['أندرو روبرتسون','Andrew Robertson','LB','🇬🇧','ليفربول',84],['ثيو هيرنانديز','Theo Hernández','LB','🇫🇷','ميلان',86],['فيرلان ميندي','Ferland Mendy','LB','🇫🇷','ريال مدريد',82],['أليخاندرو بالدي','Alejandro Balde','LB','🇪','برشلونة',83],['خوردي ألبا','Jordi Alba','LB','🇪🇸','إنتر ميامي',78],['نونو مينديز','Nuno Mendes','LB','🇵🇹','باريس سان جيرمان',85],['لوكاس دين','Lucas Digne','LB','🇫🇷','أستون فيلا',79],['مارك كوكوريلا','Marc Cucurella','LB','🇪🇸','تشيلسي',84],
+['بن تشيلويل','Ben Chilwell','LB','🇬🇧','تشيلسي',80],['لوك شو','Luke Shaw','LB','🇬🇧','مانشستر يونايتد',81],['تيريل مالاسيا','Tyrell Malacia','LB','🇳🇱','مانشستر يونايتد',78],['بييرو هينكابي','Piero Hincapié','LB','🇪','ليفركوزن',83],['أليخاندرو جريمالدو','Alejandro Grimaldo','LB','🇪🇸','ليفركوزن',85],['نيكولاس تاليافيكو','Nicolás Tagliafico','LB','🇦🇷','ليون',79],['ماركوس أكونيا','Marcos Acuña','LB','🇦🇷','ريفر بليت',80],['ماتياس أوليفيرا','Mathías Olivera','LB','🇺🇾','نابولي',79],['أنتوني روبنسون','Antonee Robinson','LB','🇺🇸','فولهام',80],['فيكتور كريستيانسن','Victor Kristiansen','LB','🇩🇰','بولونيا',78],
+['ياسر الشهراني','Yasser Al-Shahrani','LB','🇸','الهلال',76],['أحمد فتوح','Ahmed Fotouh','LB','🇪🇬','الزمالك',74],['ريان آيت نوري','Rayan Aït-Nouri','LB','🇩🇿','ولفرهامبتون',80],['علي معلول','Ali Maâloul','LB','🇹🇳','الأهلي',75],['أليكس ساندرو','Alex Sandro','LB','🇧🇷','فلامنجو',77],['رينان لودي','Renan Lodi','LB','🇧🇷','الهلال',78],['مارسيلو','Marcelo','LB','🇧🇷','فلومينينسي',75],['ديفيد راوم','David Raum','LB','🇩🇪','لايبزيج',80],
+['رودري','Rodri','CDM','🇪🇸','مانشستر سيتي',90],['فيدي فالفيردي','Federico Valverde','CM','🇺🇾','ريال مدريد',89],['فيتينيا','Vitinha','CM','🇵🇹','باريس سان جيرمان',89],['بيدري','Pedri','CM','🇪🇸','برشلونة',89],['كيفين دي بروين','Kevin De Bruyne','CM','🇧🇪','مانشستر سيتي',87],['برناردو سيلفا','Bernardo Silva','CM','🇵🇹','مانشستر سيتي',88],['ديكلان رايس','Declan Rice','CDM','🇬','أرسنال',88],['جوشوا كيميش','Joshua Kimmich','CDM','🇩🇪','بايرن ميونخ',89],['أوريلين تشواميني','Aurélien Tchouaméni','CDM','🇫🇷','ريال مدريد',86],['إدواردو كامافينجا','Eduardo Camavinga','CM','🇫🇷','ريال مدريد',85],
+['جافي','Gavi','CM','🇪🇸','برشلونة',86],['فرينكي دي يونج','Frenkie de Jong','CM','🇳','برشلونة',85],['برونو جيمارايش','Bruno Guimarães','CM','🇧🇷','نيوكاسل',86],['أليكسيس ماك أليستر','Alexis Mac Allister','CM','🇦🇷','ليفربول',86],['دومينيك سوبوسلاي','Dominik Szoboszlai','CM','🇭🇺','ليفربول',85],['إنزو فيرنانديز','Enzo Fernández','CM','🇦🇷','تشيلسي',85],['مويسيس كايسيدو','Moisés Caicedo','CDM','🇪🇨','تشيلسي',86],['رودريجو بنتانكور','Rodrigo Bentancur','CM','🇺🇾','توتنهام',83],['إيف بيسوما','Yves Bissouma','CDM','🇲🇱','توتنهام',81],['بابي سار','Pape Sarr','CM','🇸','توتنهام',80],
 ['رودريجو دي بول','Rodrigo De Paul','CM','🇦🇷','إنتر ميامي',84],['نيكولو باريلا','Nicolò Barella','CM','🇮🇹','إنتر',87],['هاكان تشالهان أوجلو','Hakan Çalhanoğlu','CM','🇹🇷','إنتر',86],['دافيد فراتيسي','Davide Frattesi','CM','🇮🇹','إنتر',83],['لورينزو بيليجريني','Lorenzo Pellegrini','CAM','🇮🇹','روما',81],['مانويل لوكاتيلي','Manuel Locatelli','CDM','🇮🇹','يوفنتوس',82],['جورجينيو','Jorginho','CDM','🇮🇹','أرسنال',80],['ماركو فيراتي','Marco Verratti','CM','🇮🇹','الدحيل',80],['بيوتر زيلينسكي','Piotr Zielinski','CM','🇵🇱','إنتر',82],['هنريك مخيتاريان','Henrikh Mkhitaryan','CAM','🇦🇲','إنتر',80],
-['تياني رايندرز','Tijjani Reijnders','CM','🇳🇱','ميلان',84],['يردي شوتن','Jerdy Schouten','CDM','🇳🇱','آيندهوفن',81],['تيون كوبمينرس','Teun Koopmeiners','CM','🇳🇱','يوفنتوس',84],['أدريان رابيو','Adrien Rabiot','CM','🇫🇷','يوفنتوس',84],['ماتيو جندوزي','Mattéo Guendouzi','CM','🇫🇷','لاتسيو',82],['يوسف فوفانا','Youssouf Fofana','CDM','🇫🇷','ميلان',82],['مانو كوني','Manu Koné','CDM','🇫🇷','روما',82],['وارن زائير إيمري','Warren Zaïre-Emery','CM','🇫🇷','باريس سان جيرمان',83],['كيفرين تورام','Khéphren Thuram','CM','🇫🇷','يوفنتوس',82],['مارتن زوبيمندي','Martín Zubimendi','CDM','🇪🇸','أرسنال',86],
-['ميكيل ميرينو','Mikel Merino','CM','🇪🇸','أرسنال',84],['فابيان رويز','Fabián Ruiz','CM','🇪🇸','باريس سان جيرمان',84],['إيسكو','Isco','CAM','🇪🇸','بيتيس',80],['كونور جالاجر','Conor Gallagher','CM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أتلتيكو مدريد',82],['كوبي ماينو','Kobbie Mainoo','CM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مانشستر يونايتد',82],['ماسون ماونت','Mason Mount','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مانشستر يونايتد',80],['جوردان هندرسون','Jordan Henderson','CDM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أياكس',78],['كالين فيليبس','Kalvin Phillips','CDM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','إيبسويتش',76],['جيمس ماديسون','James Maddison','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','توتنهام',83],['يوري تيليمانس','Youri Tielemans','CM','🇧🇪','أستون فيلا',82],
-['أمادو أونانا','Amadou Onana','CDM','🇧🇪','أستون فيلا',81],['دوجلاس لويز','Douglas Luiz','CM','🇧🇷','يوفنتوس',81],['لياندرو باريديس','Leandro Paredes','CDM','🇦🇷','روما',79],['إيزيكيل بالاسيوس','Exequiel Palacios','CM','🇦🇷','ليفركوزن',80],['لوكاس باكيتا','Lucas Paquetá','CAM','🇧🇷','وست هام',84],['جيرسون','Gerson','CM','🇧🇷','فلامنجو',80],['أندريه ترينداد','André Trindade','CDM','🇧🇷','فلامنجو',80],['جواو جوميز','João Gomes','CDM','🇧🇷','ولفرهامبتون',81],['إيدرسون أتالانتا','Ederson','CM','🇧🇷','أتالانتا',82],['ماثيوس نونيس','Matheus Nunes','CM','🇵🇹','مانشستر سيتي',79],
-['روبن نيفيز','Rúben Neves','CDM','🇵🇹','الهلال',84],['سيرجي ميلينكوفيتش سافيتش','Sergej Milinković-Savić','CM','🇷🇸','الهلال',85],['نجولو كانتي','N\'Golo Kanté','CDM','🇫🇷','الاتحاد',84],['فابينيو','Fabinho','CDM','🇧🇷','الاتحاد',83],['مارسيلو بروزوفيتش','Marcelo Brozović','CDM','🇭🇷','النصر',83],['سيكو فوفانا','Seko Fofana','CM','🇨🇮','النصر',79],['فرانك كيسييه','Franck Kessié','CM','🇨🇮','الأهلي السعودي',79],['حكيم زياش','Hakim Ziyech','CAM','🇲🇦','غلطة سراي',80],['سفيان أمرابط','Sofyan Amrabat','CDM','🇲🇦','فنربخشة',80],['عز الدين أوناحي','Azzedine Ounahi','CM','🇲🇦','باناثينايكوس',77],
+['تياني رايندرز','Tijjani Reijnders','CM','🇳🇱','ميلان',84],['يردي شوتن','Jerdy Schouten','CDM','🇳🇱','آيندهوفن',81],['تيون كوبمينرس','Teun Koopmeiners','CM','🇳','يوفنتوس',84],['أدريان رابيو','Adrien Rabiot','CM','🇫🇷','يوفنتوس',84],['ماتيو جندوزي','Mattéo Guendouzi','CM','🇫🇷','لاتسيو',82],['يوسف فوفانا','Youssouf Fofana','CDM','🇫🇷','ميلان',82],['مانو كوني','Manu Koné','CDM','🇫🇷','روما',82],['وارن زائير إيمري','Warren Zaïre-Emery','CM','🇫🇷','باريس سان جيرمان',83],['كيفرين تورام','Khéphren Thuram','CM','🇫🇷','يوفنتوس',82],['مارتن زوبيمندي','Martín Zubimendi','CDM','🇪🇸','أرسنال',86],
+['ميكيل ميرينو','Mikel Merino','CM','🇪','أرسنال',84],['فابيان رويز','Fabián Ruiz','CM','🇪🇸','باريس سان جيرمان',84],['إيسكو','Isco','CAM','🇪🇸','بيتيس',80],['كونور جالاجر','Conor Gallagher','CM','🇬🇧','أتلتيكو مدريد',82],['كوبي ماينو','Kobbie Mainoo','CM','🇬🇧','مانشستر يونايتد',82],['ماسون ماونت','Mason Mount','CAM','🇬','مانشستر يونايتد',80],['جوردان هندرسون','Jordan Henderson','CDM','🇬🇧','أياكس',78],['كالين فيليبس','Kalvin Phillips','CDM','🇬🇧','إيبسويتش',76],['جيمس ماديسون','James Maddison','CAM','🇬🇧','توتنهام',83],['يوري تيليمانس','Youri Tielemans','CM','🇧','أستون فيلا',82],
+['أمادو أونانا','Amadou Onana','CDM','🇧🇪','أستون فيلا',81],['دوجلاس لويز','Douglas Luiz','CM','🇧🇷','يوفنتوس',81],['لياندرو باريديس','Leandro Paredes','CDM','🇦🇷','روما',79],['إيزيكيل بالاسيوس','Exequiel Palacios','CM','🇦🇷','ليفركوزن',80],['لوكاس باكيتا','Lucas Paquetá','CAM','🇧🇷','وست هام',84],['جيرسون','Gerson','CM','🇧🇷','فلامنجو',80],['جواو جوميز','João Gomes','CDM','🇧🇷','ولفرهامبتون',81],['إيدرسون أتالانتا','Ederson','CM','🇧🇷','أتالانتا',82],['ماثيوس نونيس','Matheus Nunes','CM','🇵🇹','مانشستر سيتي',79],
+['روبن نيفيز','Rúben Neves','CDM','🇵🇹','الهلال',84],['سيرجي ميلينكوفيتش سافيتش','Sergej Milinković-Savić','CM','🇷🇸','الهلال',85],['نجولو كانتي','N\'Golo Kanté','CDM','🇫🇷','الاتحاد',84],['فابينيو','Fabinho','CDM','🇧🇷','الاتحاد',83],['مارسيلو بروزوفيتش','Marcelo Brozović','CDM','🇭','النصر',83],['سيكو فوفانا','Seko Fofana','CM','🇨🇮','النصر',79],['فرانك كيسييه','Franck Kessié','CM','🇨🇮','الأهلي السعودي',79],['حكيم زياش','Hakim Ziyech','CAM','🇲🇦','غلطة سراي',80],['سفيان أمرابط','Sofyan Amrabat','CDM','🇲🇦','فنربخشة',80],['عز الدين أوناحي','Azzedine Ounahi','CM','🇲🇦','باناثينايكوس',77],
 ['أمين حارث','Amine Harit','CAM','🇲🇦','مرسيليا',76],['بلال الخنوس','Bilal El Khannouss','CAM','🇲🇦','ليستر سيتي',78],['واتارو إيندو','Wataru Endō','CDM','🇯🇵','ليفربول',82],['دايتشي كامادا','Daichi Kamada','CAM','🇯🇵','كريستال بالاس',80],['تاكومي مينامينو','Takumi Minamino','CAM','🇯🇵','موناكو',78],['أو تاناكا','Ao Tanaka','CDM','🇯🇵','ليدز',76],['لي كانج إن','Lee Kang-in','CAM','🇰🇷','باريس سان جيرمان',83],['جرانيت تشاكا','Granit Xhaka','CDM','🇨🇭','ليفركوزن',84],['ريمو فريلر','Remo Freuler','CM','🇨🇭','بولونيا',80],['دينيس زكريا','Denis Zakaria','CDM','🇨🇭','موناكو',81],
-['ماتيو كوفاسيتش','Mateo Kovačić','CM','🇭🇷','مانشستر سيتي',82],['أردا جولر','Arda Güler','CAM','🇹🇷','ريال مدريد',82],['أوركون كوكجو','Orkun Kökçü','CM','🇹🇷','فنربخشة',81],['جويدو رودريجيز','Guido Rodríguez','CDM','🇦🇷','وست هام',79],['ألان فاريلا','Alan Varela','CDM','🇦🇷','بورتو',79],['تايلر آدامز','Tyler Adams','CDM','🇺🇸','بورنموث',78],['ويستون ماكيني','Weston McKennie','CM','🇺🇸','يوفنتوس',78],['يونس موسى','Yunus Musah','CM','🇺🇸','ميلان',77],['إمام عاشور','Emam Ashour','CM','🇪🇬','الأهلي',76],['مروان عطية','Marwan Attia','CDM','🇪🇬','الأهلي',73],
-['حمدي فتحي','Hamdy Fathy','CDM','🇪🇬','الوكرة',74],['نبيل عماد دونجا','Nabil Emad Donia','CM','🇪🇬','الزمالك',72],['عمرو السولية','Amr El Solhia','CM','🇪🇬','الأهلي',70],['عبدالله السعيد','Abdallah El Said','CAM','🇪🇬','الزمالك',72],['محمد كنو','Mohamed Kanno','CM','🇸🇦','الهلال',74],['عبدالإله المالكي','Abdulellah Al-Malki','CDM','🇸🇦','الاتحاد',72],['عبدالله الخيبري','Abdullah Al-Khaibari','CDM','🇸🇦','النصر',73],['بول بوجبا','Paul Pogba','CM','🇫🇷','موناكو',78],['جورجينيو فينالدوم','Georginio Wijnaldum','CM','🇳🇱','الاتفاق',78],['إيفان راكيتيتش','Ivan Rakitić','CM','🇭🇷','هايدوك',77],
-['نيمانيا ماتيتش','Nemanja Matić','CDM','🇷🇸','ليون',77],['براين كريستانتي','Bryan Cristante','CM','🇮🇹','روما',80],['جيوفاني لو سيلسو','Giovani Lo Celso','CAM','🇦🇷','بيتيس',80],['روبن لوفتوس تشيك','Ruben Loftus-Cheek','CM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ميلان',81],['إسماعيل بن ناصر','Ismaël Bennacer','CM','🇩🇿','ميلان',80],['سامويل ريتشي','Samuele Ricci','CM','🇮🇹','تورينو',80],['نيكولو فاجيولي','Nicolò Fagioli','CM','🇮🇹','يوفنتوس',78],['مارك كاسادو','Marc Casadó','CM','🇪🇸','برشلونة',79],['فرجاني ساسي','Ferjani Sassi','CM','🇹🇳','الزمالك',74],['سوفيان فيجولي','Sofiane Feghouli','RW','🇩🇿','فاتح قرا جمرك',74],
-['توماس بارتي','Thomas Partey','CDM','🇬🇭','أرسنال',82],['ريان جرافينبيرخ','Ryan Gravenberch','CM','🇳🇱','ليفربول',82],['هارفي إليوت','Harvey Elliott','CM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليفربول',80],['كورتيس جونز','Curtis Jones','CM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليفربول',79],['إميل سميث رو','Emile Smith Rowe','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','فولهام',79],['فابيو كارفاليو','Fábio Carvalho','CAM','🇵🇹','برينتفورد',77],
-/* صانعو لعب وأجنحة */
-['جود بيلينجهام','Jude Bellingham','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ريال مدريد',90],['فلوريان فيرتز','Florian Wirtz','CAM','🇩🇪','ليفربول',89],['كول بالمر','Cole Palmer','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','تشيلسي',88],['مارتن أوديجارد','Martin Ødegaard','CAM','🇳🇴','أرسنال',88],['جمال موسيالا','Jamal Musiala','CAM','🇩🇪','بايرن ميونخ',87],['فيل فودين','Phil Foden','CAM','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مانشستر سيتي',87],['داني أولمو','Dani Olmo','CAM','🇪🇸','برشلونة',86],['تشافي سيمونز','Xavi Simons','CAM','🇳🇱','لايبزيج',84],['رايان شرقي','Rayan Cherki','CAM','🇫🇷','ليون',82],['فيرمين لوبيز','Fermín López','CAM','🇪🇸','برشلونة',82],
-['محمد صلاح','Mohamed Salah','RW','🇪🇬','ليفربول',91],['لامين يامال','Lamine Yamal','RW','🇪🇸','برشلونة',89],['عثمان ديمبيلي','Ousmane Dembélé','RW','🇫🇷','باريس سان جيرمان',90],['رافينيا','Raphinha','RW','🇧🇷','برشلونة',88],['بوكايو ساكا','Bukayo Saka','RW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أرسنال',86],['رودريجو','Rodrygo','RW','🇧🇷','ريال مدريد',86],['فينيسيوس جونيور','Vinícius Júnior','LW','🇧🇷','ريال مدريد',89],['خفيتشا كفاراتسخيليا','Khvicha Kvaratskhelia','LW','🇬🇪','باريس سان جيرمان',87],['رافائيل لياو','Rafael Leão','LW','🇵🇹','ميلان',85],['لويس دياز','Luis Díaz','LW','🇨🇴','ليفربول',85],
+['ماتيو كوفاسيتش','Mateo Kovačić','CM','🇭🇷','مانشستر سيتي',82],['أردا جولر','Arda Güler','CAM','🇹🇷','ريال مدريد',82],['أوركون كوكجو','Orkun Kökçü','CM','🇹🇷','فنربخشة',81],['جويدو رودريجيز','Guido Rodríguez','CDM','🇦🇷','وست هام',79],['ألان فاريلا','Alan Varela','CDM','🇦','بورتو',79],['تايلر آدامز','Tyler Adams','CDM','🇺','بورنموث',78],['ويستون ماكيني','Weston McKennie','CM','🇺🇸','يوفنتوس',78],['يونس موسى','Yunus Musah','CM','🇺','ميلان',77],['إمام عاشور','Emam Ashour','CM','🇪🇬','الأهلي',76],['مروان عطية','Marwan Attia','CDM','🇪🇬','الأهلي',73],
+['حمدي فتحي','Hamdy Fathy','CDM','🇪🇬','الوكرة',74],['عمرو السولية','Amr El Solhia','CM','🇪🇬','الأهلي',70],['عبدالله السعيد','Abdallah El Said','CAM','🇪🇬','الزمالك',72],['محمد كنو','Mohamed Kanno','CM','🇸🇦','الهلال',74],['بول بوجبا','Paul Pogba','CM','🇫🇷','موناكو',78],['جورجينيو فينالدوم','Georginio Wijnaldum','CM','🇳🇱','الاتفاق',78],['إيفان راكيتيتش','Ivan Rakitić','CM','🇭','هايدوك',77],
+['نيمانيا ماتيتش','Nemanja Matić','CDM','🇷🇸','ليون',77],['براين كريستانتي','Bryan Cristante','CM','🇮🇹','روما',80],['جيوفاني لو سيلسو','Giovani Lo Celso','CAM','🇦🇷','بيتيس',80],['روبن لوفتوس تشيك','Ruben Loftus-Cheek','CM','🇬🇧','ميلان',81],['إسماعيل بن ناصر','Ismaël Bennacer','CM','🇩🇿','ميلان',80],['سامويل ريتشي','Samuele Ricci','CM','🇮🇹','تورينو',80],['نيكولو فاجيولي','Nicolò Fagioli','CM','🇮🇹','يوفنتوس',78],['فرجاني ساسي','Ferjani Sassi','CM','🇹🇳','الزمالك',74],['سوفيان فيجولي','Sofiane Feghouli','RW','🇩🇿','فاتح قرا جمرك',74],
+['توماس بارتي','Thomas Partey','CDM','🇬🇭','أرسنال',82],['ريان جرافينبيرخ','Ryan Gravenberch','CM','🇳🇱','ليفربول',82],['هارفي إليوت','Harvey Elliott','CM','🇬','ليفربول',80],['كورتيس جونز','Curtis Jones','CM','🇬🇧','ليفربول',79],['إميل سميث رو','Emile Smith Rowe','CAM','🇬','فولهام',79],['فابيو كارفاليو','Fábio Carvalho','CAM','🇵🇹','برينتفورد',77],['كاسيميرو','Casemiro','CDM','🇧🇷','مانشستر يونايتد',80],['أرتورو فيدال','Arturo Vidal','CM','🇨🇱','كولو-كولو',74],['محمد النني','Mohamed Elneny','CM','🇪🇬','الجزيرة',74],['كريستيان إريكسن','Christian Eriksen','CAM','🇩🇰','برينتفورد',78],['أليكس أوكسليد تشامبرلين','Alex Oxlade-Chamberlain','CM','🇬🇧','بشكتاش',74],['مسعود أوزيل','Mesut Özil','CAM','🇩🇪','بدون نادٍ',72],['خاميس رودريجيز','James Rodríguez','CAM','🇨🇴','رايو فاليكانو',78],
+['جود بيلينجهام','Jude Bellingham','CAM','🇬🇧','ريال مدريد',90],['فلوريان فيرتز','Florian Wirtz','CAM','🇩🇪','ليفربول',89],['كول بالمر','Cole Palmer','CAM','🇬🇧','تشيلسي',88],['مارتن أوديجارد','Martin Ødegaard','CAM','🇳🇴','أرسنال',88],['جمال موسيالا','Jamal Musiala','CAM','🇩🇪','بايرن ميونخ',87],['فيل فودين','Phil Foden','CAM','🇬🇧','مانشستر سيتي',87],['داني أولمو','Dani Olmo','CAM','🇪','برشلونة',86],['تشافي سيمونز','Xavi Simons','CAM','🇳','لايبزيج',84],['رايان شرقي','Rayan Cherki','CAM','🇫🇷','ليون',82],['فيرمين لوبيز','Fermín López','CAM','🇪🇸','برشلونة',82],
+['محمد صلاح','Mohamed Salah','RW','🇪🇬','ليفربول',91],['لامين يامال','Lamine Yamal','RW','🇪🇸','برشلونة',89],['عثمان ديمبيلي','Ousmane Dembélé','RW','🇫🇷','باريس سان جيرمان',90],['رافينيا','Raphinha','RW','🇧🇷','برشلونة',88],['بوكايو ساكا','Bukayo Saka','RW','🇬🇧','أرسنال',86],['رودريجو','Rodrygo','RW','🇧🇷','ريال مدريد',86],['فينيسيوس جونيور','Vinícius Júnior','LW','🇧🇷','ريال مدريد',89],['خفيتشا كفاراتسخيليا','Khvicha Kvaratskhelia','LW','🇬🇪','باريس سان جيرمان',87],['رافائيل لياو','Rafael Leão','LW','🇵🇹','ميلان',85],['لويس دياز','Luis Díaz','LW','🇨🇴','ليفربول',85],
 ['نيكو ويليامز','Nico Williams','LW','🇪🇸','أتلتيك بلباو',85],['كينان يلديز','Kenan Yıldız','LW','🇹🇷','يوفنتوس',82],['كريستيان بوليسيتش','Christian Pulisic','RW','🇺🇸','ميلان',84],['مايكل أوليس','Michael Olise','RW','🇫🇷','بايرن ميونخ',84],['تاكيفوسا كوبو','Takefusa Kubo','RW','🇯🇵','ريال سوسيداد',84],['كاورو ميتوما','Kaoru Mitoma','LW','🇯🇵','برايتون',84],['ريتشو دوان','Ritsu Dōan','RW','🇯🇵','فرايبورج',80],['جونيا إيتو','Junya Ito','RW','🇯🇵','ستاد ريمس',77],['ليروي ساني','Leroy Sané','RW','🇩🇪','بايرن ميونخ',82],['كينجسلي كومان','Kingsley Coman','LW','🇫🇷','بايرن ميونخ',82],
-['سيرج جنابري','Serge Gnabry','RW','🇩🇪','بايرن ميونخ',81],['برادلي باركولا','Bradley Barcola','LW','🇫🇷','باريس سان جيرمان',84],['ديزيري دوي','Désiré Doué','LW','🇫🇷','باريس سان جيرمان',82],['ماركوس راشفورد','Marcus Rashford','LW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مانشستر يونايتد',82],['أليخاندرو جارناتشو','Alejandro Garnacho','LW','🇦🇷','مانشستر يونايتد',82],['نون مادويكي','Noni Madueke','RW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','تشيلسي',80],['بيدرو نيتو','Pedro Neto','RW','🇵🇹','تشيلسي',82],['رحيم سترلينج','Raheem Sterling','LW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','تشيلسي',80],['كودي جاكبو','Cody Gakpo','LW','🇳🇱','ليفربول',83],['دونييل مالين','Donyell Malen','RW','🇳🇱','دورتموند',81],
-['كريم أديمي','Karim Adeyemi','LW','🇩🇪','دورتموند',80],['جيمي جيتينز','Jamie Gittens','LW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','دورتموند',79],['رياض محرز','Riyad Mahrez','RW','🇩🇿','الأهلي السعودي',82],['نيمار','Neymar','LW','🇧🇷','سانتوس',84],['سون هيونج مين','Son Heung-min','LW','🇰🇷','لوس أنجلوس',84],['أنخيل دي ماريا','Ángel Di María','RW','🇦🇷','بنفيكا',80],['نيكولاس جونزاليس','Nicolás González','LW','🇦🇷','يوفنتوس',81],['يانيك كاراسكو','Yannick Carrasco','LW','🇧🇪','الشباب',79],['كيريم أكتوركوجلو','Kerem Aktürkoğlu','LW','🇹🇷','بنفيكا',80],['ريكاردو أورسوليني','Riccardo Orsolini','RW','🇮🇹','بولونيا',78],
+['سيرج جنابري','Serge Gnabry','RW','🇩','بايرن ميونخ',81],['برادلي باركولا','Bradley Barcola','LW','🇫🇷','باريس سان جيرمان',84],['ديزيري دوي','Désiré Doué','LW','🇫🇷','باريس سان جيرمان',82],['ماركوس راشفورد','Marcus Rashford','LW','🇬🇧','مانشستر يونايتد',82],['أليخاندرو جارناتشو','Alejandro Garnacho','LW','🇦🇷','مانشستر يونايتد',82],['نون مادويكي','Noni Madueke','RW','🇬🇧','تشيلسي',80],['بيدرو نيتو','Pedro Neto','RW','🇵🇹','تشيلسي',82],['رحيم سترلينج','Raheem Sterling','LW','🇬🇧','تشيلسي',80],['كودي جاكبو','Cody Gakpo','LW','🇳','ليفربول',83],['دونييل مالين','Donyell Malen','RW','🇳🇱','دورتموند',81],
+['كريم أديمي','Karim Adeyemi','LW','🇩🇪','دورتموند',80],['جيمي جيتينز','Jamie Gittens','LW','🇬🇧','دورتموند',79],['رياض محرز','Riyad Mahrez','RW','🇩🇿','الأهلي السعودي',82],['نيمار','Neymar','LW','🇧🇷','سانتوس',84],['سون هيونج مين','Son Heung-min','LW','🇰🇷','لوس أنجلوس',84],['أنخيل دي ماريا','Ángel Di María','RW','🇦🇷','بنفيكا',80],['نيكولاس جونزاليس','Nicolás González','LW','🇦🇷','يوفنتوس',81],['يانيك كاراسكو','Yannick Carrasco','LW','🇧🇪','الشباب',79],['كيريم أكتوركوجلو','Kerem Aktürkoğlu','LW','🇹🇷','بنفيكا',80],['ريكاردو أورسوليني','Riccardo Orsolini','RW','🇮🇹','بولونيا',78],
 ['صامويل تشوكويزي','Samu Chukwueze','RW','🇳🇬','ميلان',79],['نوا أوكافور','Noah Okafor','LW','🇨🇭','ميلان',79],['عبدالصمد الزلزولي','Abde Ezzalzouli','LW','🇲🇦','بيتيس',80],['إلياس بن صغير','Eliesse Ben Seghir','LW','🇲🇦','ليفركوزن',78],['سيمون أدينجرا','Simon Adingra','RW','🇨🇮','برايتون',77],['كامال الدين سليمانا','Kamaldeen Sulemana','LW','🇬🇭','ساوثهامبتون',76],['أنطوان سيمينيو','Antoine Semenyo','RW','🇬🇭','بورنموث',79],['بيرسي تاو','Percy Tau','RW','🇿🇦','الأهلي',75],['رمضان صبحي','Ramadan Sobhi','LW','🇪🇬','بيراميدز',72],['محمود تريزيجيه','Mahmoud Trezeguet','LW','🇪🇬','طرابزون سبور',75],
-['حسين الشحات','Hussein El Shahat','RW','🇪🇬','الأهلي',74],['مصطفى فتحي','Mostafa Fathy','RW','🇪🇬','بيراميدز',72],['إبراهيم عادل','Ibrahim Adel','LW','🇪🇬','الجزيرة',73],['سالم الدوسري','Salem Al-Dawsari','LW','🇸🇦','الهلال',78],['عبدالرحمن غريب','Abdulrahman Ghareeb','LW','🇸🇦','النصر',75],['أيمن يحيى','Ayman Yahya','RW','🇸🇦','النصر',71],['هتان باهبري','Hattan Bahebri','LW','🇸🇦','الشباب',71],['أكرم عفيف','Akram Afif','LW','🇶🇦','السد',78],['حسن الهيدوس','Hassan Al-Haydos','RW','🇶🇦','السد',74],['المعز علي','Almoez Ali','RW','🇶🇦','الدحيل',76],
+['حسين الشحات','Hussein El Shahat','RW','🇪🇬','الأهلي',74],['مصطفى فتحي','Mostafa Fathy','RW','🇪🇬','بيراميدز',72],['إبراهيم عادل','Ibrahim Adel','LW','🇪🇬','الجزيرة',73],['سالم الدوسري','Salem Al-Dawsari','LW','🇸🇦','الهلال',78],['عبدالرحمن غريب','Abdulrahman Ghareeb','LW','🇸🇦','النصر',75],['أكرم عفيف','Akram Afif','LW','🇶','السد',78],['المعز علي','Almoez Ali','RW','🇶','الدحيل',76],
 ['كايو لوكاس','Caio Lucas','LW','🇧🇷','الشارقة',73],['يوسف المساكني','Youssef Msakni','LW','🇹🇳','الترجي',73],['فيديريكو كييزا','Federico Chiesa','RW','🇮🇹','ليفربول',81],['دومينيكو بيراردي','Domenico Berardi','RW','🇮🇹','ساسولو',80],['ماتيا زاكاني','Mattia Zaccagni','LW','🇮🇹','لاتسيو',81],['ستيفان الشعراوي','Stephan El Shaarawy','LW','🇮🇹','روما',78],['جابرييل مارتينيلي','Gabriel Martinelli','LW','🇧🇷','أرسنال',84],['أنتوني','Antony','RW','🇧🇷','مانشستر يونايتد',79],['لوكاس مورا','Lucas Moura','RW','🇧🇷','ساو باولو',77],['ويليان','Willian','RW','🇧🇷','أولمبياكوس',74],
-['سعيد بن رحمة','Saïd Benrahma','LW','🇩🇿','نيوم',77],['ماتياس سولي','Matías Soulé','RW','🇦🇷','روما',80],['فاكوندو بونانوتي','Facundo Buonanotte','CAM','🇦🇷','ليستر سيتي',76],['فالنتين كاربوني','Valentín Carboni','CAM','🇦🇷','مرسيليا',77],['أمين عدلي','Amine Adli','CAM','🇲🇦','ليفركوزن',77],['ميسون جرينوود','Mason Greenwood','RW','🏴󠁧󠁢󠁥󠁮󠁧󠁿','مرسيليا',80],['أماد ديالو','Amad Diallo','RW','🇨🇮','مانشستر يونايتد',79],['برايان مبومو','Bryan Mbeumo','RW','🇨🇲','برينتفورد',82],['مالكوم','Malcom','RW','🇧🇷','الهلال',82],
-/* مهاجمون */
-['كيليان مبابي','Kylian Mbappé','ST','🇫🇷','ريال مدريد',91],['إيرلينج هالاند','Erling Haaland','ST','🇳🇴','مانشستر سيتي',90],['هاري كين','Harry Kane','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','بايرن ميونخ',89],['ليونيل ميسي','Lionel Messi','ST','🇦🇷','إنتر ميامي',88],['لاوتارو مارتينيز','Lautaro Martínez','ST','🇦🇷','إنتر',87],['فيكتور أوسيمين','Victor Osimhen','ST','🇳🇬','غلطة سراي',86],['روبرت ليفاندوفسكي','Robert Lewandowski','ST','🇵🇱','برشلونة',86],['ألكسندر إيزاك','Alexander Isak','ST','🇸🇪','نيوكاسل',86],['فيكتور جيوكيرس','Viktor Gyökeres','ST','🇸🇪','أرسنال',86],['كريستيانو رونالدو','Cristiano Ronaldo','ST','🇵🇹','النصر',86],
-['أولي واتكينز','Ollie Watkins','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','أستون فيلا',85],['خوليان ألفاريز','Julián Álvarez','ST','🇦🇷','أتلتيكو مدريد',85],['ماركوس تورام','Marcus Thuram','ST','🇫🇷','إنتر',85],['ماتيو ريتيجي','Mateo Retegui','ST','🇮🇹','القادسية',84],['بنجامين سيسكو','Benjamin Šeško','ST','🇸🇮','لايبزيج',84],['دوشان فلاهوفيتش','Dušan Vlahović','ST','🇷🇸','يوفنتوس',84],['لويس أوبيندا','Loïs Openda','ST','🇧🇪','لايبزيج',84],['راندال كولو مواني','Randal Kolo Muani','ST','🇫🇷','يوفنتوس',83],['جوناثان ديفيد','Jonathan David','ST','🇨🇦','ليل',83],['داروين نونيز','Darwin Núñez','ST','🇺🇾','الهلال',83],
-['ماتيوس كونيا','Matheus Cunha','ST','🇧🇷','مانشستر يونايتد',83],['كريستوفر نكونكو','Christopher Nkunku','ST','🇫🇷','تشيلسي',83],['جونزالو راموس','Gonçalo Ramos','ST','🇵🇹','باريس سان جيرمان',82],['راسموس هويلوند','Rasmus Højlund','ST','🇩🇰','مانشستر يونايتد',82],['نيكولاس جاكسون','Nicolas Jackson','ST','🇸🇳','تشيلسي',81],['إندريك','Endrick','ST','🇧🇷','ريال مدريد',81],['سامو أوموروديون','Samu Omorodion','ST','🇪🇸','بورتو',81],['مويس كين','Moise Kean','ST','🇮🇹','فيورنتينا',80],['باولو ديبالا','Paulo Dybala','ST','🇦🇷','روما',84],['ماورو إيكاردي','Mauro Icardi','ST','🇦🇷','غلطة سراي',81],
-['أوليفييه جيرو','Olivier Giroud','ST','🇫🇷','لوس أنجلوس',81],['نيكلاس فولكروج','Niclas Füllkrug','ST','🇩🇪','وست هام',81],['إدين دجيكو','Edin Džeko','ST','🇧🇦','فنربخشة',80],['جواو فيليكس','João Félix','ST','🇵🇹','ميلان',80],['سانتياجو خيمينيز','Santiago Giménez','ST','🇲🇽','ميلان',82],['لويس سواريز','Luis Suárez','ST','🇺🇾','إنتر ميامي',78],['إدينسون كافاني','Edinson Cavani','ST','🇺🇾','بوكا جونيورز',77],['أليكسيس سانشيز','Alexis Sánchez','ST','🇨🇱','أودينيزي',76],['بيير إيمريك أوباميانج','Pierre-Emerick Aubameyang','ST','🇬🇦','القادسية',78],['ألكسندر لاكازيت','Alexandre Lacazette','ST','🇫🇷','ليون',79],
-['إيفان توني','Ivan Toney','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','الأهلي السعودي',81],['دومينيك كالفرت لوين','Dominic Calvert-Lewin','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','إيفرتون',78],['جيمي فاردي','Jamie Vardy','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','ليستر سيتي',76],['باتريك شيك','Patrik Schick','ST','🇨🇿','ليفركوزن',81],['آدم هلوزيك','Adam Hložek','ST','🇨🇿','دورتموند',78],['يوسف موكوكو','Youssoufa Moukoko','ST','🇩🇪','دورتموند',77],['سيباستيان هالير','Sébastien Haller','ST','🇨🇮','دورتموند',78],['فوت فيجورست','Wout Weghorst','ST','🇳🇱','أياكس',76],['ممفيس ديباي','Memphis Depay','ST','🇳🇱','كورينثيانز',79],['لوك دي يونج','Luuk de Jong','ST','🇳🇱','آيندهوفن',78],
-['أرتيم دوفبيك','Artem Dovbyk','ST','🇺🇦','روما',81],['أيوزي بيريز','Ayoze Pérez','ST','🇪🇸','فياريال',79],['فيران توريس','Ferran Torres','ST','🇪🇸','برشلونة',79],['ماركو أسينسيو','Marco Asensio','ST','🇪🇸','باريس سان جيرمان',80],['ميكيل أويارزابال','Mikel Oyarzabal','ST','🇪🇸','ريال سوسيداد',81],['إينياكي ويليامز','Iñaki Williams','ST','🇬🇭','أتلتيك بلباو',80],['جوردان أيو','Jordan Ayew','ST','🇬🇭','ليستر سيتي',75],['كيليتشي إيهياناتشو','Kelechi Iheanacho','ST','🇳🇬','سيفاس سبور',76],['باتسون داكا','Patson Daka','ST','🇿🇲','ليستر سيتي',77],['موسى بارو','Musa Barrow','ST','🇬🇲','التعاون',75],
-['عمر السومة','Omar Al-Soma','ST','🇸🇾','العروبة',76],['عمر خريبين','Omar Khribin','ST','🇸🇾','الوحدة',74],['فراس البريكان','Firas Al-Buraikan','ST','🇸🇦','الأهلي السعودي',74],['عبدالله الحمدان','Abdullah Al-Hamdan','ST','🇸🇦','الهلال',71],['فهد المولد','Fahad Al-Muwallad','ST','🇸🇦','الشباب',72],['علي مبخوت','Ali Mabkhout','ST','🇦🇪','الجزيرة',75],['سيف الدين الجزيري','Seifeddine Jaziri','ST','🇹🇳','الزمالك',72],['طه ياسين الخنيسي','Taha Yassine Khenissi','ST','🇹🇳','الترجي',70],['بغداد بونجاح','Baghdad Bounedjah','ST','🇩🇿','الشمال',75],['أندي ديلور','Andy Delort','ST','🇩🇿','مونبلييه',74],
+['سعيد بن رحمة','Saïd Benrahma','LW','🇩🇿','نيوم',77],['ماتياس سولي','Matías Soulé','RW','🇦🇷','روما',80],['فاكوندو بونانوتي','Facundo Buonanotte','CAM','🇦','ليستر سيتي',76],['فالنتين كاربوني','Valentín Carboni','CAM','🇦🇷','مرسيليا',77],['أمين عدلي','Amine Adli','CAM','🇲🇦','ليفركوزن',77],['ميسون جرينوود','Mason Greenwood','RW','🇬🇧','مرسيليا',80],['أماد ديالو','Amad Diallo','RW','🇨🇮','مانشستر يونايتد',79],['برايان مبومو','Bryan Mbeumo','RW','🇨🇲','برينتفورد',82],['مالكوم','Malcom','RW','🇧🇷','الهلال',82],['جاريث بيل','Gareth Bale','RW','🇬🇧','معتزل',74],['إيدين هازارد','Eden Hazard','LW','🇧🇪','بدون نادٍ',70],
+['كيليان مبابي','Kylian Mbappé','ST','🇫🇷','ريال مدريد',91],['إيرلينج هالاند','Erling Haaland','ST','🇳🇴','مانشستر سيتي',90],['هاري كين','Harry Kane','ST','🇬🇧','بايرن ميونخ',89],['ليونيل ميسي','Lionel Messi','ST','🇦🇷','إنتر ميامي',88],['لاوتارو مارتينيز','Lautaro Martínez','ST','🇦🇷','إنتر',87],['فيكتور أوسيمين','Victor Osimhen','ST','🇳🇬','غلطة سراي',86],['روبرت ليفاندوفسكي','Robert Lewandowski','ST','🇵🇱','برشلونة',86],['ألكسندر إيزاك','Alexander Isak','ST','🇸🇪','نيوكاسل',86],['فيكتور جيوكيرس','Viktor Gyökeres','ST','🇸🇪','أرسنال',86],['كريستيانو رونالدو','Cristiano Ronaldo','ST','🇵🇹','النصر',86],
+['أولي واتكينز','Ollie Watkins','ST','🇬🇧','أستون فيلا',85],['خوليان ألفاريز','Julián Álvarez','ST','🇦🇷','أتلتيكو مدريد',85],['ماركوس تورام','Marcus Thuram','ST','🇫🇷','إنتر',85],['ماتيو ريتيجي','Mateo Retegui','ST','🇮🇹','القادسية',84],['بنجامين سيسكو','Benjamin Šeško','ST','🇸🇮','لايبزيج',84],['دوشان فلاهوفيتش','Dušan Vlahović','ST','🇷','يوفنتوس',84],['لويس أوبيندا','Loïs Openda','ST','🇧🇪','لايبزيج',84],['راندال كولو مواني','Randal Kolo Muani','ST','🇫🇷','يوفنتوس',83],['جوناثان ديفيد','Jonathan David','ST','🇨🇦','ليل',83],['داروين نونيز','Darwin Núñez','ST','🇺🇾','الهلال',83],
+['ماتيوس كونيا','Matheus Cunha','ST','🇧🇷','مانشستر يونايتد',83],['كريستوفر نكونكو','Christopher Nkunku','ST','🇫','تشيلسي',83],['جونزالو راموس','Gonçalo Ramos','ST','🇵🇹','باريس سان جيرمان',82],['راسموس هويلوند','Rasmus Højlund','ST','🇩🇰','مانشستر يونايتد',82],['نيكولاس جاكسون','Nicolas Jackson','ST','🇸','تشيلسي',81],['إندريك','Endrick','ST','🇧🇷','ريال مدريد',81],['سامو أوموروديون','Samu Omorodion','ST','🇪🇸','بورتو',81],['مويس كين','Moise Kean','ST','🇮🇹','فيورنتينا',80],['باولو ديبالا','Paulo Dybala','ST','🇦','روما',84],['ماورو إيكاردي','Mauro Icardi','ST','🇦🇷','غلطة سراي',81],
+['أوليفييه جيرو','Olivier Giroud','ST','🇫🇷','لوس أنجلوس',81],['نيكلاس فولكروج','Niclas Füllkrug','ST','🇩🇪','وست هام',81],['إدين دجيكو','Edin Džeko','ST','🇧🇦','فنربخشة',80],['جواو فيليكس','João Félix','ST','🇵🇹','ميلان',80],['سانتياجو خيمينيز','Santiago Giménez','ST','🇲','ميلان',82],['لويس سواريز','Luis Suárez','ST','🇺🇾','إنتر ميامي',78],['إدينسون كافاني','Edinson Cavani','ST','🇺🇾','بوكا جونيورز',77],['أليكسيس سانشيز','Alexis Sánchez','ST','🇨','أودينيزي',76],['بيير إيمريك أوباميانج','Pierre-Emerick Aubameyang','ST','🇬🇦','القادسية',78],['ألكسندر لاكازيت','Alexandre Lacazette','ST','🇫🇷','ليون',79],
+['إيفان توني','Ivan Toney','ST','🇬🇧','الأهلي السعودي',81],['دومينيك كالفرت لوين','Dominic Calvert-Lewin','ST','🇬🇧','إيفرتون',78],['جيمي فاردي','Jamie Vardy','ST','🇬🇧','ليستر سيتي',76],['باتريك شيك','Patrik Schick','ST','🇨🇿','ليفركوزن',81],['آدم هلوزيك','Adam Hložek','ST','🇨🇿','دورتموند',78],['يوسف موكوكو','Youssoufa Moukoko','ST','🇩🇪','دورتموند',77],['سيباستيان هالير','Sébastien Haller','ST','🇨🇮','دورتموند',78],['فوت فيجورست','Wout Weghorst','ST','🇳🇱','أياكس',76],['ممفيس ديباي','Memphis Depay','ST','🇳🇱','كورينثيانز',79],['لوك دي يونج','Luuk de Jong','ST','🇳🇱','آيندهوفن',78],
+['أرتيم دوفبيك','Artem Dovbyk','ST','🇺🇦','روما',81],['أيوزي بيريز','Ayoze Pérez','ST','🇪🇸','فياريال',79],['فيران توريس','Ferran Torres','ST','🇪🇸','برشلونة',79],['ماركو أسينسيو','Marco Asensio','ST','🇪🇸','باريس سان جيرمان',80],['ميكيل أويارزابال','Mikel Oyarzabal','ST','🇪🇸','ريال سوسيداد',81],['إينياكي ويليامز','Iñaki Williams','ST','🇬','أتلتيك بلباو',80],['جوردان أيو','Jordan Ayew','ST','🇬🇭','ليستر سيتي',75],['كيليتشي إيهياناتشو','Kelechi Iheanacho','ST','🇳🇬','سيفاس سبور',76],['باتسون داكا','Patson Daka','ST','🇿🇲','ليستر سيتي',77],['موسى بارو','Musa Barrow','ST','🇬🇲','التعاون',75],
+['عمر السومة','Omar Al-Soma','ST','🇸🇾','العروبة',76],['عمر خريبين','Omar Khribin','ST','🇸🇾','الوحدة',74],['فراس البريكان','Firas Al-Buraikan','ST','🇸🇦','الأهلي السعودي',74],['علي مبخوت','Ali Mabkhout','ST','🇦🇪','الجزيرة',75],['سيف الدين الجزيري','Seifeddine Jaziri','ST','🇹🇳','الزمالك',72],['بغداد بونجاح','Baghdad Bounedjah','ST','🇩🇿','الشمال',75],['أندي ديلور','Andy Delort','ST','🇩🇿','مونبلييه',74],
 ['أيوب الكعبي','Ayoub El Kaabi','ST','🇲🇦','أولمبياكوس',78],['عمر مرموش','Omar Marmoush','ST','🇪🇬','مانشستر سيتي',84],['مصطفى محمد','Mostafa Mohamed','ST','🇪🇬','نانت',76],['أسامة فيصل','Osama Faisal','ST','🇪🇬','البنك الأهلي',70],['محمد شريف','Mohamed Sherif','ST','🇪🇬','الخليج',71],['حسام حسن','Hossam Hassan','ST','🇪🇬','سيراميكا',70],['علي الحمادي','Ali Al-Hamadi','ST','🇮🇶','إيبسويتش',71],['إيجور جيسوس','Igor Jesus','ST','🇧🇷','بوتافوجو',79],['إنر فالنسيا','Enner Valencia','ST','🇪🇨','إنترناسيونال',76],['جون دوران','Jhon Durán','ST','🇨🇴','النصر',80],
 ['كاي هافيرتز','Kai Havertz','ST','🇩🇪','أرسنال',84],['دينيز أونداف','Deniz Undav','ST','🇩🇪','شتوتجارت',81],['سيرهو جيراسي','Serhou Guirassy','ST','🇬🇳','دورتموند',84],['بريل إمبولو','Breel Embolo','ST','🇨🇭','موناكو',78],['أديمولا لوكمان','Ademola Lookman','ST','🇳🇬','أتالانتا',85],['محمد قدوس','Mohammed Kudus','RW','🇬🇭','وست هام',84],['أنطوان جريزمان','Antoine Griezmann','ST','🇫🇷','أتلتيكو مدريد',85],['فيتور روكي','Vitor Roque','ST','🇧🇷','بالميراس',79],['جابرييل باربوسا','Gabriel Barbosa','ST','🇧🇷','كروزيرو',76],['هالك','Hulk','ST','🇧🇷','أتلتيكو مينيرو',77],
-['ريشارليسون','Richarlison','ST','🇧🇷','توتنهام',80],['جابرييل جيسوس','Gabriel Jesus','ST','🇧🇷','أرسنال',81],['بيدرو','Pedro','ST','🇧🇷','فلامنجو',78],['بورخا إيجليسياس','Borja Iglesias','ST','🇪🇸','سيلتا',78],['إياجو أسباس','Iago Aspas','ST','🇪🇸','سيلتا',80],['جيرارد مورينو','Gerard Moreno','ST','🇪🇸','فياريال',80],['خوسيلو','Joselu','ST','🇪🇸','الغرافة',77],['أندريا بيلوتي','Andrea Belotti','ST','🇮🇹','كومو',75],['محمد الأمين عمورة','Mohamed Amine Amoura','ST','🇩🇿','فولفسبورج',78],['ألكسندر ميتروفيتش','Aleksandar Mitrović','ST','🇷🇸','الهلال',83],['يوان ويسا','Yoane Wissa','ST','🇨🇩','برينتفورد',80],['إيفان فيرجسون','Evan Ferguson','ST','🇮🇪','برايتون',80],['داني ويلبيك','Danny Welbeck','ST','🏴󠁧󠁢󠁥󠁮󠁧󠁿','برايتون',78]
+['ريشارليسون','Richarlison','ST','🇧🇷','توتنهام',80],['جابرييل جيسوس','Gabriel Jesus','ST','🇧🇷','أرسنال',81],['بيدرو','Pedro','ST','🇧🇷','فلامنجو',78],['إياجو أسباس','Iago Aspas','ST','🇪🇸','سيلتا',80],['خوسيلو','Joselu','ST','🇪🇸','الغرافة',77],['أندريا بيلوتي','Andrea Belotti','ST','🇮🇹','كومو',75],['محمد الأمين عمورة','Mohamed Amine Amoura','ST','🇩🇿','فولفسبورج',78],['ألكسندر ميتروفيتش','Aleksandar Mitrović','ST','🇷🇸','الهلال',83],['يوان ويسا','Yoane Wissa','ST','🇨🇩','برينتفورد',80],['إيفان فيرجسون','Evan Ferguson','ST','🇮🇪','برايتون',80],['داني ويلبيك','Danny Welbeck','ST','🇬🇧','برايتون',78],
+['ماريو بالوتيلي','Mario Balotelli','ST','🇮🇹','أضنة سبور',72],['دييجو كوستا','Diego Costa','ST','🇪🇸','جريميو',73],['راداميل فالكاو','Radamel Falcao','ST','🇨','ميوناريوس',74],['تيمو فيرنر','Timo Werner','ST','🇩🇪','لايبزيج',78],['لوكا يوفيتش','Luka Jović','ST','🇷🇸','ميلان',78]
 ];
 var PLAYERS=D.map(function(x){return{ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]};});
 var ROUNDS=11;
-var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,lastData=0;
+var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,lastData=0,savedCode='',started=false;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1;
 var FALLBACK='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#1c2128"/><text x="100" y="125" font-size="90" text-anchor="middle">⚽</text></svg>');
+var PEERCFG={config:{iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'}]}};
 var IMG={};
 function wikiImg(en,el){if(!en)return;if(IMG[en]!==undefined){if(IMG[en])el.src=IMG[en];return;}
  try{fetch('https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=400&origin=*&titles='+encodeURIComponent(en)).then(function(r){return r.json();}).then(function(j){var p=j.query.pages[Object.keys(j.query.pages)[0]];var u=p.thumbnail?p.thumbnail.source:'';IMG[en]=u;if(u)el.src=u;}).catch(function(){});}catch(e){}}
@@ -292,14 +287,14 @@ function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0};}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function peerReady(){return typeof Peer!=='undefined';}
-function leaveHome(){try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);show('home');}
+function leaveHome(){try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);started=false;show('home');}
 function exitGame(){if(!confirm('هل تريد مغادرة المزاد؟'))return;clearInterval(timerInt);leaveHome();}
 function setView(v){view=v;$('tabBid').classList.toggle('sel',v==='bid');$('tabSq').classList.toggle('sel',v==='squads');$('viewBid').classList.toggle('hidden',v!=='bid');$('viewSquads').classList.toggle('hidden',v!=='squads');if(v==='squads')renderSquads();}
 function createRoom(){
  if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
- setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomCode=makeCode();
+ setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomCode=makeCode();savedCode=roomCode;
  try{
-  peer=new Peer('mzaida-'+roomCode);
+  peer=new Peer('mzaida-'+roomCode,PEERCFG);
   peer.on('open',function(){$('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');setStatus('تم الإنشاء. بانتظار الخصم…');});
   peer.on('connection',function(c){conn=c;wireConn();});
   peer.on('disconnected',function(){try{peer.reconnect();}catch(e){}});
@@ -310,29 +305,42 @@ function joinRoom(){
  if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
  var code=$('joinCode').value.trim().toUpperCase();
  if(code.length<4)return setStatus('أدخل رمزًا من 4 أحرف');
- isHost=false;mySeat=1;setStatus('جارٍ الاتصال…');
+ isHost=false;mySeat=1;savedCode=code;setStatus('جارٍ الاتصال…');
  try{
-  peer=new Peer();
+  peer=new Peer(PEERCFG);
   peer.on('open',function(){conn=peer.connect('mzaida-'+code,{reliable:true});wireConn();});
   peer.on('disconnected',function(){try{peer.reconnect();}catch(e){}});
-  peer.on('error',function(e){show('room');setStatus(e.type==='peer-unavailable'?'الغرفة غير موجودة':'تعذر الاتصال: '+e.type);});
+  peer.on('error',function(e){if(!started)show('room');setStatus(e.type==='peer-unavailable'?'الغرفة غير موجودة':'تعذر الاتصال: '+e.type);});
  }catch(e){toast('خطأ في الاتصال: '+e.message);}
 }
 function wireConn(){
- conn.on('open',function(){if(!isHost){conn.send({type:'hello',name:myName()});show('wait');}lastData=Date.now();});
+ conn.on('open',function(){if(!isHost){conn.send({type:'hello',name:myName()});if(!started)show('wait');}lastData=Date.now();$('connLbl').textContent='🟢 متصل';});
  conn.on('data',function(d){lastData=Date.now();handleData(d);});
- conn.on('close',function(){toast('انقطع الاتصال بالخصم');clearInterval(hbInt);$('connLbl').textContent='';});
+ conn.on('close',function(){clearInterval(hbInt);if(isHost){toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}else{$('connLbl').textContent='🔴 انقطع الاتصال';$('reconn').classList.remove('hidden');}});
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)conn.send({type:'ping'});if(Date.now()-lastData>15000){toast('انقطع الاتصال');clearInterval(hbInt);}},3000);
+ hbInt=setInterval(function(){if(conn&&conn.open)conn.send({type:'ping'});if(Date.now()-lastData>20000){clearInterval(hbInt);if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}else{$('reconn').classList.remove('hidden');}}},3000);
 }
+function retryConn(){
+ $('reconn').classList.add('hidden');toast('جارٍ إعادة الاتصال…');
+ try{if(peer)peer.destroy();}catch(e){}
+ peer=new Peer(PEERCFG);
+ peer.on('open',function(){conn=peer.connect('mzaida-'+savedCode,{reliable:true});wireConn();});
+ peer.on('error',function(){toast('فشل إعادة الاتصال — حاول مجددًا');$('reconn').classList.remove('hidden');});
+}
+function giveUp(){$('reconn').classList.add('hidden');leaveHome();}
 function handleData(d){
  if(d.type==='ping')return;
- if(d.type==='hello'&&isHost){guestName=d.name;show('settings');$('startBtn').textContent='بدء المزاد مع '+guestName;}
- else if(d.type==='start'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;curStar=null;show('game');$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل';render();}
+ if(d.type==='hello'&&isHost){
+  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,p:P,stars:stars,pool:pool,s:snap()});$('connLbl').textContent='🟢 متصل';}
+  else{guestName=d.name;show('settings');$('startBtn').textContent='بدء المزاد مع '+guestName;}
+ }
+ else if(d.type==='resume'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;started=true;show('game');$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');applySnap(d.s);}
+ else if(d.type==='start'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;curStar=null;started=true;show('game');$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='chat'){addChat(P[d.from].name,d.t);}
  else if(d.type==='act'&&isHost&&phase==='bid'&&turn===1){
   if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget)doRaise(d.v);}else doRaise();}
+  else if(d.a==='raise5'){if(bid+5<=P[1].budget)doRaise(bid+5);}
   else doPass();
  }
 }
@@ -353,7 +361,7 @@ function startFromSettings(){
   initGame();
  }
 }
-function initGame(){round=0;logArr=[];prevBid=-1;lastCardRound=-1;show('game');nextRound();}
+function initGame(){round=0;logArr=[];prevBid=-1;lastCardRound=-1;started=true;show('game');nextRound();}
 function nextRound(){
  clearInterval(timerInt);
  if(round>=stars.length)return endGame();
@@ -368,6 +376,7 @@ function startTimer(){
 function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
 function canAct(){return phase==='bid'&&!busy&&(mode===3?turn===mySeat:(mode===1?turn===0:true));}
 function humanRaise(){if(!canAct()||bid+1>P[turn].budget)return;if(online&&!isHost)return conn.send({type:'act',a:'raise'});doRaise();}
+function humanRaise5(){if(!canAct()||bid+5>P[turn].budget)return;if(online&&!isHost)return conn.send({type:'act',a:'raise5'});doRaise(bid+5);}
 function humanPass(){if(!canAct())return;if(online&&!isHost)return conn.send({type:'act',a:'pass'});doPass();}
 function humanCustom(){
  if(!canAct())return;
@@ -387,6 +396,16 @@ function pcardHTML(p,enter){
  return '<div class="pcard'+(enter?' enter':'')+'"><img data-en="'+p.en+'" src="'+FALLBACK+'" alt=""><div class="info"><div class="nm">'+p.flag+' '+p.ar+'</div><div class="cl">'+p.club+' • '+p.pos+'</div></div><div class="rt '+cls+'"><b>'+p.r+'</b><small>'+p.pos+'</small></div></div>';
 }
 function updateStarCard(){lastCardRound=round;$('futBox').innerHTML=pcardHTML(curStar,true);bindWiki($('futBox'));}
+function posGroup(p){if(p.pos==='GK')return 'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return 'DEF';if(p.pos==='CDM'||p.pos==='CM'||p.pos==='CAM')return 'MID';return 'ATT';}
+function pickRandom(g){
+ if(!pool.length)return null;
+ var list=[];for(var i=0;i<pool.length;i++){if(posGroup(pool[i])===g)list.push(i);}
+ if(!list.length){for(var j=0;j<pool.length;j++)list.push(j);}
+ var ws=list.map(function(idx){var w=pool[idx].r-60;return w*w+1;});
+ var tot=ws.reduce(function(a,b){return a+b;},0);var r=Math.random()*tot;
+ for(var k=0;k<list.length;k++){r-=ws[k];if(r<=0)return pool.splice(list[k],1)[0];}
+ return pool.splice(list[list.length-1],1)[0];
+}
 function rowOf(pos){if(pos==='GK')return 3;if(['CB','LB','RB'].indexOf(pos)>=0)return 2;if(['CDM','CM','CAM'].indexOf(pos)>=0)return 1;return 0;}
 function pitchHTML(pi,title){
  var rows=[[],[],[],[]];
@@ -404,12 +423,12 @@ function resolveRound(win,passer){
  clearInterval(timerInt);phase='reveal';
  var s=curStar,price=bid;
  P[win].squad.push({ar:s.ar,en:s.en,pos:s.pos,flag:s.flag,club:s.club,r:s.r});P[win].budget-=price;P[win].spent+=price;
- var rp=pool.length?pool.pop():{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:50};
+ var rp=pickRandom(posGroup(s))||{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:50};
  P[passer].squad.push(rp);
- log(P[win].name+' ضمّ '+s.ar+' مقابل '+fmt(price)+' — '+P[passer].name+' حصل على '+rp.ar);
+ log(P[win].name+' ضمّ '+s.ar+' مقابل '+fmt(price)+' — '+P[passer].name+' حصل على '+rp.ar+' (نفس المركز)');
  var content='<h2>نتيجة الجولة '+(round+1)+'</h2><div class="reveal">'+
  '<div>'+pcardHTML(s,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
- '<div>'+pcardHTML(rp,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">حصل عليه <b style="color:var(--blue)">'+P[passer].name+'</b> (عشوائي)</div></div></div>';
+ '<div>'+pcardHTML(rp,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">حصل عليه <b style="color:var(--blue)">'+P[passer].name+'</b> (نفس المركز)</div></div></div>';
  ovH=content+'<button class="big-btn green" onclick="closeOverlay()">الجولة التالية</button>';
  ovG=content+'<div class="status">بانتظار المضيف…</div>';
  render();broadcast();bindWiki($('obox'));
@@ -425,17 +444,21 @@ function simulateMatch(){
  var a=P[0].squad,b=P[1].squad;
  var avg=function(x){return x.length?x.reduce(function(t,p){return t+p.r;},0)/x.length:70;};
  var d=avg(a)-avg(b);
- var g0=poisson(Math.max(0.25,1.25+d*0.12+(Math.random()*0.8-0.4)));
- var g1=poisson(Math.max(0.25,1.25-d*0.12+(Math.random()*0.8-0.4)));
+ var g0=poisson(Math.max(0.25,1.25+d*0.15+(Math.random()*0.6-0.3)));
+ var g1=poisson(Math.max(0.25,1.25-d*0.15+(Math.random()*0.6-0.3)));
  var ev=[];
- for(var i=0;i<g0;i++){var s=scorerPick(a);if(s)ev.push({min:1+Math.floor(Math.random()*90),t:0,p:s.ar});}
- for(var j=0;j<g1;j++){var s2=scorerPick(b);if(s2)ev.push({min:1+Math.floor(Math.random()*90),t:1,p:s2.ar});}
+ for(var i=0;i<g0;i++){var s=scorerPick(a);if(s)ev.push({min:1+Math.floor(Math.random()*90),t:0,p:s.ar,r:s.r});}
+ for(var j=0;j<g1;j++){var s2=scorerPick(b);if(s2)ev.push({min:1+Math.floor(Math.random()*90),t:1,p:s2.ar,r:s2.r});}
  ev.sort(function(x,y){return x.min-y.min;});
- var motm=(g0>=g1?scorerPick(a):scorerPick(b))||a[0]||b[0];
- var html='<div class="match"><div class="sb"><span>'+P[0].name+'</span><span class="sc">'+g0+' - '+g1+'</span><span>'+P[1].name+'</span></div>';
+ var tally={};ev.forEach(function(e){tally[e.p]=tally[e.p]||{n:0,r:e.r};tally[e.p].n++;});
+ var motm=null,gn=0,gr=0;for(var k in tally){if(tally[k].n>gn||(tally[k].n===gn&&tally[k].r>gr)){gn=tally[k].n;gr=tally[k].r;motm=k;}}
+ if(!motm){var winSq=(g0===g1?(d>=0?a:b):(g0>g1?a:b));var bp=winSq.length?winSq.reduce(function(x,y){return x.r>=y.r?x:y;}):null;motm=bp?bp.ar:null;gn=0;}
+ var note=gn===1?'هدف واحد':gn===2?'هدفان':gn>2?gn+' أهداف':'';
+ var html='<div class="match"><div class="sb"><div class="col"><span>'+P[0].name+'</span><b>'+g0+'</b></div><span class="dash">–</span><div class="col"><span>'+P[1].name+'</span><b>'+g1+'</b></div></div>';
  html+='<div class="evts">'+(ev.length?ev.map(function(e){return '⚽ '+e.min+'′ '+e.p+' ('+P[e.t].name+')';}).join('<br>'):'لا أهداف — تعادل سلبي')+'</div>';
- if(motm)html+='<div class="motm">🌟 رجل المباراة: '+motm.ar+'</div>';
- return html+'</div>';
+ if(motm)html+='<div class="motm">🌟 رجل المباراة: '+motm+(note?' ('+note+')':'')+'</div>';
+ html+='</div>';
+ return{g0:g0,g1:g1,html:html};
 }
 function stats(i){
  var sq=P[i].squad,tot=sq.reduce(function(t,p){return t+p.r;},0);
@@ -445,11 +468,12 @@ function stats(i){
 function endGame(){
  phase='end';clearInterval(timerInt);
  var s0=stats(0),s1=stats(1);
- var winner=s0.tot===s1.tot?(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)):(s0.tot>s1.tot?0:1);
+ var sim=simulateMatch();
+ var champ=sim.g0!==sim.g1?(sim.g0>sim.g1?0:1):(s0.tot!==s1.tot?(s0.tot>s1.tot?0:1):(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)));
  var sq=function(i){return P[i].squad.map(function(p){return '<span class="chip">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join(' ');};
  endH='<h2>النتيجة النهائية</h2>'+
- (winner===-1?'<div class="winner-banner">🤝 تعادل</div>':'<div class="winner-banner">🏆 الفائز بالمزاد: '+P[winner].name+'</div>')+
- '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">🤖 محاكاة المباراة النهائية (تلقائية)</div>'+simulateMatch()+
+ (champ===-1?'<div class="winner-banner">🤝 تعادل</div>':'<div class="winner-banner">🏆 البطل: '+P[champ].name+'</div>')+
+ '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">🤖 المحاكمة النهائية تُحسم من نتيجة المباراة</div>'+sim.html+
  '<table class="stat-t"><tr><td></td><td><b>'+P[0].name+'</b></td><td><b>'+P[1].name+'</b></td></tr>'+
  '<tr><td>إجمالي القوة</td><td><b>'+s0.tot+'</b></td><td><b>'+s1.tot+'</b></td></tr>'+
  '<tr><td>متوسط التقييم</td><td>'+s0.avg+'</td><td>'+s1.avg+'</td></tr>'+
@@ -468,6 +492,7 @@ function render(){
  if(!curStar)return;
  if(round!==lastCardRound)updateStarCard();
  $('roundLbl').textContent='الجولة '+(round+1)+' / '+stars.length;
+ $('mvLbl').textContent='القيمة السوقية التقديرية: '+fmt((curStar.r-60)*30);
  var bn=$('bidNum');bn.textContent=bid===0?'0':fmt(bid);
  if(bid!==prevBid){prevBid=bid;bn.classList.remove('pop');void bn.offsetWidth;bn.classList.add('pop');}
  for(var i=0;i<2;i++){
@@ -477,18 +502,19 @@ function render(){
   $('squad'+i).innerHTML=P[i].squad.map(function(p){return '<span class="chip">'+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>';
   $('team'+i).classList.toggle('turn',i===turn);
  }
- var tl=$('timeLbl');
- if(CFG.timer>0){tl.classList.remove('hidden');tl.textContent='⏱️ '+timeLeft+' ثانية';tl.classList.toggle('low',timeLeft<=5);}else tl.classList.add('hidden');
+ var tb=$('tbarBox'),tf=$('tfill'),tl=$('timeLbl');
+ if(CFG.timer>0){tb.classList.remove('hidden');tl.classList.remove('hidden');tl.textContent='⏱️ '+timeLeft+' ثانية';var pct=Math.min(100,timeLeft/CFG.timer*100);tf.style.width=pct+'%';tf.classList.toggle('low',timeLeft<=5);tl.classList.toggle('low',timeLeft<=5);}else{tb.classList.add('hidden');tl.classList.add('hidden');}
  var humanCan=canAct();
  $('raiseBtn').disabled=!(humanCan&&bid+1<=P[turn].budget);
- $('raiseBtn').textContent='➕ زيادة مليون ('+fmt(bid+1)+')';
+ $('raiseBtn').textContent='➕ مليون ('+fmt(bid+1)+')';
+ $('raise5Btn').disabled=!(humanCan&&bid+5<=P[turn].budget);
+ $('raise5Btn').textContent='➕ خمسة ('+fmt(bid+5)+')';
  $('passBtn').disabled=!humanCan;
  $('customBid').disabled=!humanCan;$('customBtn').disabled=!humanCan;
  $('turnLbl').textContent='الدور: '+P[turn].name+(busy?' (يفكر…)':(online&&turn!==mySeat?'…':''));
  $('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
  if(view==='squads')renderSquads();
 }
-/* ضمان ربط الأزرار حتى لو كان هناك أي خلل */
 document.addEventListener('DOMContentLoaded',function(){
  try{
   $('mb1').onclick=function(){pickMode(1);};
