@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
- <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xzcxp2drrt");
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>⚽ مزاد النجوم</title>
@@ -161,6 +154,32 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .card-item.off{opacity:.4;cursor:not-allowed}
 .ci-ic{font-size:22px}.ci-nm{font-weight:900;font-size:11.5px}.ci-left{font-size:10px;color:var(--dim)}
 .ci-price{font-size:10.5px;color:var(--gold);font-weight:900;margin-top:2px}
+.gt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px}
+.gt-btn{background:var(--card2);border:2px solid var(--line);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--txt)}
+.gt-btn.sel{border-color:var(--acc);background:rgba(63,185,80,.1)}
+.gt-ic{font-size:26px}
+.gt-nm{font-weight:900;font-size:13px}
+.gt-sub{font-size:10px;color:var(--dim);text-align:center;line-height:1.4}
+.box-title{text-align:center;font-weight:900;font-size:16px;color:var(--gold);margin-bottom:2px}
+.box-sub{text-align:center;font-size:11.5px;color:var(--dim);margin-bottom:10px;line-height:1.7}
+.box-panels{display:flex;flex-direction:column;gap:14px}
+.box-panel{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px}
+.box-panel h5{font-size:13px;color:var(--blue);margin-bottom:8px;text-align:center;font-weight:900}
+.box-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.box-item{position:relative;aspect-ratio:1;background:linear-gradient(160deg,#2a1f0a,#1c2128);border:2px solid var(--gold);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-weight:900;gap:2px;padding:4px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.35);transition:transform .15s}
+.box-item:not(.locked):not(.opened):active{transform:scale(.94)}
+.box-item .bq{font-size:30px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.box-item.opened{aspect-ratio:auto;min-height:112px;background:var(--card);border-color:var(--line);cursor:default;padding:6px 4px}
+.box-item.opened .box-img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--card2);margin-bottom:2px}
+.box-item.opened .bn{font-size:9.5px;font-weight:900;text-align:center;line-height:1.25}
+.box-item.opened .br{font-size:14px;color:var(--gold);font-weight:900}
+.box-item.locked{opacity:.35;cursor:not-allowed;border-color:var(--line);background:var(--card2)}
+.box-item.picked{border-color:var(--acc);background:rgba(63,185,80,.12)}
+.box-item.bonus{border-color:var(--purple)}
+.box-bonus{background:var(--purple);color:#fff;font-size:9px;font-weight:900;border-radius:6px;padding:2px 5px;margin-bottom:3px;white-space:nowrap}
+.box-pickbtn{margin-top:4px;width:100%;padding:7px;border:none;border-radius:8px;background:var(--acc);color:#04180a;font-weight:900;font-size:10.5px;cursor:pointer}
+.box-status{text-align:center;font-size:11.5px;color:var(--dim);margin-top:6px}
+.pc-ready{background:var(--card2);border-radius:10px;padding:8px;text-align:center;font-size:12px;font-weight:800;margin:6px 0}
 .friend-row{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:4px 0;font-size:12px;font-weight:700;justify-content:space-between;flex-wrap:wrap}
 .friend-row button{border:none;border-radius:8px;padding:5px 10px;font-weight:800;font-size:11px;cursor:pointer}
 .fr-acc{background:var(--acc);color:#04180a}.fr-dec{background:var(--red);color:#1c0407}.fr-inv{background:var(--blue);color:#04101c}.fr-del{background:var(--card);color:var(--dim);border:1px solid var(--line)!important}
@@ -168,9 +187,14 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 </head>
 <body>
 <div id="home" class="screen">
-<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1>⚽ مزاد النجوم</h1><span style="width:70px"></span></div>
-<p class="desc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>🃏 كروت خاصة (بمقابل من ميزانيتك) تُفتح في آخر الجولات: سرقة، حماية، وايلد كارد المجاني وغيرها!<br>بعد المزاد: كابتن + تكتيك + مباراة تحسم اللقب.</p>
+<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><span style="width:70px"></span></div>
+<p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (سرقة، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card">
+<div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
+<div class="gt-grid">
+<button class="gt-btn sel" id="gt0" onclick="pickGameType('auction')"><span class="gt-ic">⚽</span><span class="gt-nm">مزاد النجوم</span><span class="gt-sub">مزاد على 11 لاعبًا</span></button>
+<button class="gt-btn" id="gt1" onclick="pickGameType('boxes')"><span class="gt-ic">🎁</span><span class="gt-nm">صناديق الحظ</span><span class="gt-sub">اختر لاعبك من 4 صناديق لكل مركز</span></button>
+</div>
 <label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames()">
 <label>اسم اللاعب الثاني (نفس الجهاز)</label><input id="name2" placeholder="اكتب الاسم" oninput="saveNames()">
 <div class="modes">
@@ -184,6 +208,7 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <div id="room" class="screen hidden">
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>غرفة أونلاين</h1></div>
 <div class="card">
+<div class="pc-ready" id="roomGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
 <button class="big-btn green" onclick="createRoom()">إنشاء غرفة</button>
 <div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div></div>
 <div class="or">— أو —</div>
@@ -196,17 +221,18 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <div id="settings" class="screen hidden">
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>الإعدادات</h1></div>
 <div class="card">
+<div class="pc-ready" id="setGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
 <div class="opt-lbl">⏱️ وقت التفكير <span id="timeVal">20 ث</span></div>
 <input type="range" id="rTime" min="0" max="60" step="5" value="20" oninput="updateTime(this.value)">
 <div style="font-size:11px;color:var(--dim);margin-top:-2px">اسحب لأقصى اليسار (0) لتعطيل التايمر تمامًا</div>
-<div class="opt-lbl">💰 ميزانية الفريق (50 مليون – 1 مليار) <span id="budVal">500 مليون</span></div>
+<div class="opt-lbl" id="budRow">💰 ميزانية الفريق (50 مليون – 1 مليار) <span id="budVal">500 مليون</span></div>
 <input type="range" id="rBud" min="50" max="1000" step="50" value="500" oninput="updateBud(this.value)">
 <button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
 </div>
 </div>
 <div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p>تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
 <div id="game" class="screen hidden">
-<div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1>⚽ مزاد النجوم</h1></div>
+<div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
 <div class="tabs"><button id="tabBid" class="sel" onclick="setView('bid')">المزايدة</button><button id="tabSq" onclick="setView('squads')">التشكيلات</button></div>
 <div id="viewBid">
@@ -231,15 +257,14 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 <input id="customBid" type="number" inputmode="numeric" placeholder="مبلغ بالمليون">
 <button id="customBtn" onclick="humanCustom()">تقديم العرض</button>
 </div>
-<button class="big-btn purple" style="margin-top:6px" onclick="openCards()">🃏 الكروت الخاصة</button>
 </div>
 <div class="log" id="log"></div>
 <div id="chatBox" class="chat hidden"><div class="chat-hdr">💬 دردشة</div><div id="chatMsgs"></div><div class="chat-in"><input id="chatIn" placeholder="رسالة…" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">إرسال</button></div></div>
 </div>
 <div id="viewSquads" class="hidden"></div>
+<div id="viewBoxes" class="hidden"></div>
 </div>
 <div id="overlay" class="overlay hidden"><div class="obox" id="obox"></div></div>
-<div id="cardsOv" class="overlay hidden"><div class="obox"><div id="cardsBox"></div><button class="big-btn red" style="margin-top:10px" onclick="closeCards()">✖ إغلاق</button></div></div>
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
 <div id="reconn" class="overlay hidden"><div class="obox"><h2>⚠️ انقطع الاتصال</h2><p style="color:var(--dim);font-size:13px;margin-bottom:12px">اضغط إعادة الاتصال لاستكمال نفس اللعبة من حيث توقفت.</p><button class="big-btn green" onclick="retryConn()">🔄 إعادة الاتصال</button><button class="big-btn red" style="margin-top:8px" onclick="giveUp()">العودة للرئيسية</button></div></div>
 <div id="toast"></div>
@@ -695,18 +720,41 @@ var D=[
 ["فلوران مالودا","Florent Malouda","LW","🇫🇷","معتزل",81],
 ["سمير نصري","Samir Nasri","CAM","🇫🇷","معتزل",83],
 ["يوهان ميكو","Yohan Cabaye","CM","🇫🇷","معتزل",80],
-["ماتيو فالبوينا","Mathieu Valbuena","CAM","🇫🇷","معتزل",80]
+["ماتيو فالبوينا","Mathieu Valbuena","CAM","🇫🇷","معتزل",80],
+["حسام حسن","Hossam Hassan","ST","🇪🇬","معتزل",84],
+["محمد أبو تريكة","Mohamed Aboutrika","CAM","🇪🇬","معتزل",85],
+["محمود الخطيب","Mahmoud El Khatib","ST","🇪🇬","معتزل",84],
+["أحمد حسن","Ahmed Hassan","CM","🇪🇬","معتزل",81],
+["إبراهيم حسن","Ibrahim Hassan","CB","🇪🇬","معتزل",80],
+["وائل جمعة","Wael Gomaa","CB","🇪🇬","معتزل",79],
+["عصام الحضري","Essam El-Hadary","GK","🇪🇬","معتزل",82]
 ];
 
 var PLAYERS=D.map(function(x){return{ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]};});
 var ROUNDS=11;
+var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1;
 var firstBidDone=false;
 var msgSeq=0,lastAppliedSeq=-1;
-var CARD_PRICES={wild:0,gift:15,norisk:25,protect:40,lastbid:70,steal:80};
+var CARD_PRICES={wild:0,gift:15,norisk:25,protect:40,steal:80};
+var CARD_DEFS=[
+ ['steal','🥷','السرقة','اسرق لاعب من الخصم'],
+ ['protect','🛡️','الحماية','امنع لاعبك من السرقة والتبديل'],
+ ['wild','🔄','وايلد كارد','لاعب عشوائي من الاحتياطي بدل لاعبك — مجاني'],
+ ['norisk','🎲','نو ريسك نو فن','لاعب عشوائي بدل لاعبك (مقابل مبلغ)'],
+ ['gift','🎁','لبّس صاحبك','ادّي الخصم لاعب ضعيف من الاحتياطي']
+];
+var BOX_CARD_DEFS=[
+ ['steal','🥷','السرقة','اسرق لاعب من الخصم (مرة واحدة)'],
+ ['protect','🛡️','الحماية','احمِ لاعبك من السرقة (مرة واحدة)']
+];
 var CARD_UNLOCK_ROUND=Math.max(0,ROUNDS-4);
+var cardsReady=[false,false];
+var BOX_POS=['GK','DEF','MID','CAM','FWD'];
+var BOX_LBL={GK:'حارس مرمى',DEF:'مدافع',MID:'وسط ميدان',CAM:'وسط مهاجم',FWD:'مهاجم'};
+var boxRound=0,boxSets=[[],[]],boxOpened=[[],[]],boxPicked=[null,null],boxUsedSet={};
 var PEERCFG={config:{iceServers:[
  {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun3.l.google.com:19302','stun:stun4.l.google.com:19302']},
  {urls:'stun:global.stun.twilio.com:3478'},
@@ -717,13 +765,7 @@ var PEERCFG={config:{iceServers:[
 ],iceCandidatePoolSize:6}};
 var IMG={};
 var GLBL={GK:'حراسة',DEF:'دفاع',MID:'وسط',ATT:'هجوم'};
-var TACTICS={
- '4-3-3':{name:'4-3-3 هجومي',desc:'هجوم قوي • دفاع متوسط',att:1.2,def:0.95},
- '4-4-2':{name:'4-4-2 متوازن',desc:'توازن كامل بين الهجوم والدفاع',att:1.0,def:1.0},
- '3-5-2':{name:'3-5-2 سيطرة وسط',desc:'سيطرة على وسط الملعب',att:1.1,def:0.98},
- '5-3-2':{name:'5-3-2 دفاعي',desc:'دفاع قوي • هجوم محدود',att:0.85,def:1.2}
-};
-var captainIdx=[-1,-1],tacticSel=[null,null];
+var captainIdx=[-1,-1];
 var cardFlow=null;
 
 /* ========= الأصدقاء (طبقة اجتماعية منفصلة) ========= */
@@ -811,9 +853,29 @@ function initialsImg(p){
  var col=p.r>=88?'#d29922':p.r>=85?'#3fb950':p.r>=80?'#58a6ff':'#8b949e';
  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#1c2128"/><circle cx="100" cy="100" r="85" fill="'+col+'" opacity="0.22"/><text x="100" y="128" font-size="72" font-family="Arial" font-weight="bold" text-anchor="middle" fill="'+col+'">'+init+'</text></svg>');
 }
-function wikiImg(en,el){if(!en)return;
+function wikiImg(en,el){
+ if(!en)return;
  if(IMG[en]!==undefined){if(IMG[en])el.src=IMG[en];return;}
- try{fetch('https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(en)).then(function(r){return r.json();}).then(function(j){var pages=j&&j.query&&j.query.pages;if(!pages)return;var keys=Object.keys(pages);if(!keys.length)return;var p=pages[keys[0]];var u=(p&&p.thumbnail)?p.thumbnail.source:'';IMG[en]=u;if(u)el.src=u;}).catch(function(){});}catch(e){}}
+ var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(en+' footballer')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
+ var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(en);
+ function fromPages(j){
+  var pages=j&&j.query&&j.query.pages;if(!pages)return'';
+  var keys=Object.keys(pages);if(!keys.length)return'';
+  var p=pages[keys[0]];
+  return (p&&p.thumbnail)?p.thumbnail.source:'';
+ }
+ try{
+  fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
+   var u=fromPages(j);
+   if(u){IMG[en]=u;el.src=u;return;}
+   return fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
+    var u2=fromPages(j2);IMG[en]=u2;if(u2)el.src=u2;
+   });
+  }).catch(function(){
+   try{fetch(directUrl).then(function(r){return r.json();}).then(function(j2){var u2=fromPages(j2);IMG[en]=u2;if(u2)el.src=u2;}).catch(function(){IMG[en]='';});}catch(e){IMG[en]='';}
+  });
+ }catch(e){}
+}
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
 function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -822,6 +884,21 @@ function show(id){['home','room','settings','wait','game'].forEach(function(s){$
 function updateTime(v){CFG.timer=+v;$('timeVal').textContent=(+v===0?'بدون تايمر':v+' ث');}
 function updateBud(v){CFG.budget=+v;$('budVal').textContent=fmt(+v);}
 function setErr(t){var e=$('homeErr');e.textContent=t;e.className='status'+(t?' err':'');}
+function pickGameType(t){
+ gameType=t;
+ $('gt0').classList.toggle('sel',t==='auction');
+ $('gt1').classList.toggle('sel',t==='boxes');
+ var lbl=t==='auction'?'⚽ مزاد النجوم':'🎁 صناديق الحظ';
+ $('roomGameType').textContent='نوع اللعبة: '+lbl+' — يقدر يتغيّر من الصفحة الرئيسية قبل إنشاء/دخول الغرفة';
+ $('setGameType').textContent='نوع اللعبة: '+lbl;
+ $('budRow').classList.toggle('hidden',t==='boxes');
+ $('rBud').classList.toggle('hidden',t==='boxes');
+ if(t==='auction'){
+  $('gameDesc').innerHTML='مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا (حارس + 4 دفاع + 3 وسط + 3 هجوم).<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (سرقة، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.';
+ }else{
+  $('gameDesc').innerHTML='تشكيلة خماسية: حارس، مدافع، وسط، وسط مهاجم، مهاجم.<br>لكل مركز 4 صناديق مغلقة — افتح صندوقًا واحدًا واقبله (Deal)، أو جرّب صندوقًا تانيًا (No Deal) لكن هتاخده إجباري ومفيش رجوع للأول.<br>🃏 بعض الصناديق فيها مفاجأة: كارت حماية أو كارت سرقة تكسبه لو قبلت الصندوق ده! بعد الـ5 مراكز تقدر تستخدم اللي كسبته، ثم كابتن، ثم مباراة تحسم اللقب.';
+ }
+}
 function pickMode(m){
  try{
   var n1=$('name1').value.trim();
@@ -830,17 +907,31 @@ function pickMode(m){
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
   $('name2').classList.remove('err-input');setErr('');saveNames();initUserPeer();
   mode=m;online=(m===3);show(m===3?'room':'settings');
+  if(m!==3){
+   $('startBtn').textContent=gameType==='boxes'?'بدء اللعبة':'بدء المزاد';
+   $('rBud').closest?null:null;
+  }
  }catch(e){toast('خطأ: '+e.message);}
 }
 function myName(){return $('name1').value.trim()||'اللاعب الأول';}
-function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0,cards:{steal:1,protect:1,wild:1,norisk:1,lastbid:1,gift:1}};}
-function ensureCards(p){if(!p.cards)p.cards={steal:1,protect:1,wild:1,norisk:1,lastbid:1,gift:1};}
+function defaultCards(){return gameType==='boxes'?{steal:0,protect:0}:{steal:1,protect:1,wild:1,norisk:1,gift:1};}
+function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0,cards:defaultCards()};}
+function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
 function leaveHome(){try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;show('home');}
-function exitGame(){if(!confirm('هل تريد مغادرة المزاد؟'))return;clearInterval(timerInt);leaveHome();}
-function setView(v){view=v;$('tabBid').classList.toggle('sel',v==='bid');$('tabSq').classList.toggle('sel',v==='squads');$('viewBid').classList.toggle('hidden',v!=='bid');$('viewSquads').classList.toggle('hidden',v!=='squads');if(v==='squads')renderSquads();}
+function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);leaveHome();}
+function setView(v){
+ view=v;
+ $('tabBid').classList.toggle('sel',v==='bid'||v==='boxes');
+ $('tabSq').classList.toggle('sel',v==='squads');
+ $('viewBid').classList.toggle('hidden',v!=='bid');
+ $('viewBoxes').classList.toggle('hidden',v!=='boxes');
+ $('viewSquads').classList.toggle('hidden',v!=='squads');
+ if(v==='squads')renderSquads();
+ if(v==='boxes')renderBoxesView();
+}
 
 /* ========= الاتصال (PeerJS) ========= */
 function createRoom(){
@@ -876,7 +967,7 @@ function joinRoom(){
 }
 function wireConn(){
  conn.on('open',function(){if(!isHost){conn.send({type:'hello',name:myName()});if(!started)show('wait');}$('connLbl').textContent='🟢 متصل • 2/2';});
- conn.on('data',function(d){handleData(d);});
+ conn.on('data',function(d){try{handleData(d);}catch(e){toast('⚠️ خطأ أثناء المزامنة، جرّب إعادة الاتصال لو استمرت المشكلة');console.error(e);}});
  conn.on('close',function(){clearInterval(hbInt);clearInterval(timerInt);if(isHost){toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}else{$('connLbl').textContent='🔴 انقطع الاتصال';$('reconn').classList.remove('hidden');}});
  conn.on('error',function(e){toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));});
  clearInterval(hbInt);
@@ -897,16 +988,19 @@ function handleData(d){
  if(d.type==='ping')return;
  if(d.type==='sys'){toast(d.t);return;}
  if(d.type==='hello'&&isHost){
-  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,p:P,stars:stars,pool:pool,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
-  else{guestName=d.name;toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ المزاد');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent='بدء المزاد مع '+guestName;}
+  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
+  else{guestName=d.name;toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
  }
- else if(d.type==='resume'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;started=true;show('game');$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
- else if(d.type==='start'&&!isHost){CFG=d.cfg;P=d.p;stars=d.stars;pool=d.pool;curStar=null;started=true;lastAppliedSeq=-1;show('game');$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
+ else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;started=true;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
+ else if(d.type==='start'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':'bid');$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
- else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,p:P,stars:stars,pool:pool,s:snap()});}
+ else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,s:snap()});}
  else if(d.type==='chat'){addChat(P[d.from]?P[d.from].name:'؟',d.t);}
  else if(d.type==='act'&&isHost){
   if(d.a==='card'){applyCard(1,d.c,d.i,d.j);return;}
+  if(d.a==='ready'){cardsReady[1]=true;log(P[1].name+' انتهى من الكروت');checkCardsReady();return;}
+  if(d.a==='openbox'){doOpenBox(1,d.idx);return;}
+  if(d.a==='pickbox'){doPickBox(1,d.idx);return;}
   if(phase==='bid'&&turn===1){
    if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget)doRaise(d.v);}else if(bid+1<=P[1].budget)doRaise();}
    else if(d.a==='raise5'){if(bid+5<=P[1].budget)doRaise(bid+5);}
@@ -918,46 +1012,72 @@ function handleData(d){
   else if(phase==='captain'&&d.a==='captain'){
    if(typeof d.idx==='number'&&d.idx>=0&&d.idx<P[1].squad.length){captainIdx[1]=d.idx;log(P[1].name+' اختار '+P[1].squad[d.idx].ar+' كابتنًا');checkCaptains();}
   }
-  else if(phase==='tactic'&&d.a==='tactic'){
-   if(d.t&&TACTICS[d.t]){tacticSel[1]=d.t;log(P[1].name+' اختار '+TACTICS[d.t].name);checkTactics();}
-  }
  }
 }
-function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,tacticSel:tacticSel};}
+function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked};}
 function broadcast(){if(online&&isHost&&conn&&conn.open)conn.send({type:'S',s:snap()});}
 function applySnap(s){
  if(!s)return;
  if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;}
- phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.P;curStar=s.star;logArr=s.log||[];ovH=s.ovH||'';ovG=s.ovG||'';endH=s.endH||'';firstBidDone=!!s.firstBidDone;captainIdx=s.captainIdx||[-1,-1];tacticSel=s.tacticSel||[null,null];
+ phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.P;curStar=s.star;logArr=s.log||[];ovH=s.ovH||'';ovG=s.ovG||'';endH=s.endH||'';firstBidDone=!!s.firstBidDone;captainIdx=s.captainIdx||[-1,-1];cardsReady=s.cardsReady||[false,false];boxRound=s.boxRound||0;boxSets=s.boxSets||[[],[]];boxOpened=s.boxOpened||[[],[]];boxPicked=s.boxPicked||[null,null];
  render();
 }
 function sendChat(){var t=$('chatIn').value.trim();if(!t||!conn||!conn.open)return;conn.send({type:'chat',t:t,from:mySeat});addChat(P[mySeat].name,t);$('chatIn').value='';}
 function addChat(n,t){var m=$('chatMsgs');m.innerHTML+='<div><b>'+n+':</b> '+t.replace(/</g,'&lt;')+'</div>';m.scrollTop=m.scrollHeight;}
 
+/* ========= ترتيب المراكز للعرض (حارس ← دفاع ← وسط ← هجوم) ========= */
+var POS_RANK={GK:0,CB:1,LB:1,RB:1,CDM:2,CM:2,CAM:2,ST:3,RW:3,LW:3};
+function rankOf(p){var r=POS_RANK[p.pos];return r===undefined?2:r;}
+function orderedSquad(arr){
+ var withIdx=arr.map(function(p,i){return{p:p,i:i};});
+ withIdx.sort(function(a,b){return rankOf(a.p)-rankOf(b.p);});
+ return withIdx;
+}
+
 /* ========= بدء اللعبة ========= */
+function balancedStars(){
+ var byGroup={GK:[],DEF:[],MID:[],ATT:[]};
+ shuffle(PLAYERS).forEach(function(p){byGroup[posGroup(p)].push(p);});
+ var chosen=byGroup.GK.slice(0,1).concat(byGroup.DEF.slice(0,4),byGroup.MID.slice(0,3),byGroup.ATT.slice(0,3));
+ var usedKeys={};chosen.forEach(function(p){usedKeys[p.en]=true;});
+ var restPool=PLAYERS.filter(function(p){return !usedKeys[p.en];});
+ return{stars:chosen,pool:shuffle(restPool)};
+}
 function startFromSettings(){
  if(online&&isHost){
   if(!conn||!conn.open){toast('لا يوجد خصم متصل بعد');return;}
-  P=[mkP(myName()),mkP(guestName||'الخصم')];var all=shuffle(PLAYERS);stars=all.slice(0,ROUNDS);pool=all.slice(ROUNDS);
+  P=[mkP(myName()),mkP(guestName||'الخصم')];
+  if(gameType==='auction'){var bs=balancedStars();stars=bs.stars;pool=bs.pool;}else{stars=[];pool=[];boxUsedSet={};}
   lastAppliedSeq=-1;msgSeq=0;
-  conn.send({type:'start',cfg:CFG,p:P,stars:stars,pool:pool});
+  conn.send({type:'start',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool});
   $('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';
   initGame();
  }else{
   P=[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))];
-  var all2=shuffle(PLAYERS);stars=all2.slice(0,ROUNDS);pool=all2.slice(ROUNDS);
+  if(gameType==='auction'){var bs2=balancedStars();stars=bs2.stars;pool=bs2.pool;}else{stars=[];pool=[];boxUsedSet={};}
   initGame();
  }
 }
-function initGame(){round=0;logArr=[];prevBid=-1;lastCardRound=-1;started=true;captainIdx=[-1,-1];tacticSel=[null,null];show('game');nextRound();}
+function updateGameTitleUI(){
+ $('gameTitle').textContent=gameType==='boxes'?'🎁 صناديق الحظ':'⚽ مزاد النجوم';
+ $('tabBid').textContent=gameType==='boxes'?'الصناديق':'المزايدة';
+}
+function initGame(){
+ round=0;boxRound=0;logArr=[];prevBid=-1;lastCardRound=-1;started=true;captainIdx=[-1,-1];cardsReady=[false,false];
+ if(gameType==='boxes')planBoxCardsOnce();
+ updateGameTitleUI();
+ show('game');
+ setView(gameType==='boxes'?'boxes':'bid');
+ if(gameType==='auction')nextRound();else startBoxRound();
+}
 function nextRound(){
  clearInterval(timerInt);
  if(online&&!isHost)return;
- if(round>=stars.length)return startCaptainPhase();
+ if(round>=stars.length)return startPostCards();
  bid=0;turn=round%2;phase='bid';curStar=stars[round];firstBidDone=false;
- if(!curStar){return startCaptainPhase();}
+ if(!curStar){return startPostCards();}
  log('الجولة '+(round+1)+': مزاد على '+curStar.ar+' ('+curStar.r+') — يبدأ: '+P[turn].name);
- render();broadcast();startTimer();maybeAI();aiCards();
+ render();broadcast();startTimer();maybeAI();
 }
 function startTimer(){
  clearInterval(timerInt);
@@ -999,38 +1119,159 @@ function aiMove(){if(phase!=='bid')return;var s=curStar;if(!s)return;
  var w=((s.r-70)/22)*CFG.budget*(0.25+Math.random()*0.2);w=Math.min(w,CFG.budget*0.6);w=Math.floor(w);
  if(bid+1<=P[1].budget&&bid+1<=w)doRaise();else doPass();}
 
-/* ========= الكروت الخاصة (بمقابل + تُفتح في آخر الجولات فقط) ========= */
-function cardsUnlocked(){return round>=CARD_UNLOCK_ROUND;}
-function openCards(){
- if(phase!=='bid')return toast('الكروت تشتغل أثناء المزايدة فقط');
- if(!cardsUnlocked()){toast('🔒 الكروت الخاصة تُفتح فقط في آخر '+(ROUNDS-CARD_UNLOCK_ROUND)+' جولات (من الجولة '+(CARD_UNLOCK_ROUND+1)+')');return;}
- cardFlow={card:null,sel:-1,sel2:-1,actor:(mode===2?0:(online?mySeat:0))};
- renderCards();$('cardsOv').classList.remove('hidden');
+/* ========= صناديق الحظ (وضع اللعب الجديد) ========= */
+function posGroup5(p){if(p.pos==='GK')return'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return'DEF';if(p.pos==='CDM'||p.pos==='CM')return'MID';if(p.pos==='CAM')return'CAM';return'FWD';}
+function drawBoxPlayers(pos,n){
+ var cands=PLAYERS.filter(function(p){return posGroup5(p)===pos&&!boxUsedSet[p.en];});
+ cands=shuffle(cands);
+ var picked=cands.slice(0,n);
+ picked.forEach(function(p){boxUsedSet[p.en]=true;});
+ return picked;
 }
-function closeCards(){$('cardsOv').classList.add('hidden');cardFlow=null;}
-function cardActor(n){if(cardFlow){cardFlow.actor=n;cardFlow.sel=-1;cardFlow.sel2=-1;renderCards();}}
+var boxCardPlan=[{steal:-1,protect:-1},{steal:-1,protect:-1}];
+function planBoxCardsOnce(){
+ for(var s=0;s<2;s++){
+  var idx=shuffle([0,1,2,3,4]);
+  boxCardPlan[s]={steal:idx[0],protect:idx[1]};
+ }
+}
+function attachBonusCard(seat,arr){
+ var plan=boxCardPlan[seat];var type=null;
+ if(plan.steal===boxRound)type='steal';
+ else if(plan.protect===boxRound)type='protect';
+ if(type){
+  var bi=Math.floor(Math.random()*arr.length);
+  arr[bi]=Object.assign({},arr[bi],{bonusCard:type});
+ }
+}
+function startBoxRound(){
+ if(online&&!isHost)return;
+ if(boxRound>=BOX_POS.length)return startPostCards();
+ phase='box';
+ var pos=BOX_POS[boxRound];
+ var s0=drawBoxPlayers(pos,4),s1=drawBoxPlayers(pos,4);
+ attachBonusCard(0,s0);attachBonusCard(1,s1);
+ boxSets=[s0,s1];
+ boxOpened=[[],[]];boxPicked=[null,null];
+ log('🎁 الجولة '+(boxRound+1)+': اختر '+BOX_LBL[pos]);
+ render();broadcast();
+ if(mode===1)aiBoxTurn();
+}
+function boxCanAct(seat){return phase==='box'&&(mode===3?seat===mySeat:(mode===1?seat===0:true));}
+function boxClickOpen(seat,idx){
+ if(!boxCanAct(seat))return;
+ if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'openbox',idx:idx});
+ doOpenBox(seat,idx);
+}
+function doOpenBox(seat,idx){
+ if(phase!=='box'||boxPicked[seat]||boxOpened[seat].indexOf(idx)>=0||boxOpened[seat].length>=2)return;
+ boxOpened[seat].push(idx);
+ if(boxOpened[seat].length===2){
+  /* قاعدة اللعبة: لو فتحت صندوق تاني، بتاخده إجباري ومفيش رجوع للصندوق الأول */
+  boxPicked[seat]=boxSets[seat][idx];
+ }
+ render();broadcast();
+ if(boxPicked[0]&&boxPicked[1])setTimeout(finalizeBoxPos,300);
+}
+function boxClickPick(seat,idx){
+ if(!boxCanAct(seat))return;
+ /* السماح فقط بقبول الصندوق الأول (الوحيد المفتوح) — الصندوق الثاني يُؤخذ تلقائيًا عند فتحه */
+ if(boxOpened[seat].length!==1||boxOpened[seat][0]!==idx)return;
+ if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'pickbox',idx:idx});
+ doPickBox(seat,idx);
+}
+function doPickBox(seat,idx){
+ if(phase!=='box'||boxPicked[seat])return;
+ if(boxOpened[seat].length!==1||boxOpened[seat][0]!==idx)return;
+ boxPicked[seat]=boxSets[seat][idx];
+ render();broadcast();
+ if(boxPicked[0]&&boxPicked[1])setTimeout(finalizeBoxPos,300);
+}
+function aiBoxTurn(){
+ setTimeout(function(){
+  if(phase!=='box')return;
+  var first=Math.floor(Math.random()*4);
+  doOpenBox(1,first);
+  setTimeout(function(){
+   if(phase!=='box'||boxPicked[1])return;
+   var r1=boxSets[1][first].r;
+   if(r1<82&&Math.random()<0.7){
+    var second=first;while(second===first)second=Math.floor(Math.random()*4);
+    doOpenBox(1,second);/* بيتاخد إجباري */
+   }else{
+    doPickBox(1,first);
+   }
+  },700);
+ },600);
+}
+function finalizeBoxPos(){
+ if(online&&!isHost)return;
+ clearInterval(timerInt);
+ var s0=boxPicked[0],s1=boxPicked[1];
+ if(!s0||!s1)return;
+ P[0].squad.push({ar:s0.ar,en:s0.en,pos:s0.pos,flag:s0.flag,club:s0.club,r:s0.r});
+ P[1].squad.push({ar:s1.ar,en:s1.en,pos:s1.pos,flag:s1.flag,club:s1.club,r:s1.r});
+ log(P[0].name+' اختار '+s0.ar+' ('+s0.r+') — '+P[1].name+' اختار '+s1.ar+' ('+s1.r+')');
+ var bonusLine0='',bonusLine1='';
+ if(s0.bonusCard){ensureCards(P[0]);P[0].cards[s0.bonusCard]=(P[0].cards[s0.bonusCard]||0)+1;var lbl0=s0.bonusCard==='steal'?'🥷 كارت سرقة':'🛡️ كارت حماية';log(P[0].name+' كسب '+lbl0+' من الصندوق!');bonusLine0='<div style="font-size:12px;color:var(--gold);font-weight:900;margin-top:4px">+ '+lbl0+' 🎉</div>';}
+ if(s1.bonusCard){ensureCards(P[1]);P[1].cards[s1.bonusCard]=(P[1].cards[s1.bonusCard]||0)+1;var lbl1=s1.bonusCard==='steal'?'🥷 كارت سرقة':'🛡️ كارت حماية';log(P[1].name+' كسب '+lbl1+' من الصندوق!');bonusLine1='<div style="font-size:12px;color:var(--gold);font-weight:900;margin-top:4px">+ '+lbl1+' 🎉</div>';}
+ var content='<h2>'+BOX_LBL[BOX_POS[boxRound]]+'</h2><div class="reveal">'+
+ '<div>'+pcardHTML(s0,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--gold)">'+P[0].name+'</b></div>'+bonusLine0+'</div>'+
+ '<div>'+pcardHTML(s1,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--blue)">'+P[1].name+'</b></div>'+bonusLine1+'</div></div>';
+ ovH=content+'<button class="big-btn green" onclick="closeBoxReveal()">المركز التالي</button>';
+ ovG=content+'<div class="status">بانتظار المضيف…</div>';
+ phase='boxreveal';
+ render();broadcast();bindWiki($('obox'));
+}
+function closeBoxReveal(){if(online&&!isHost)return;boxRound++;startBoxRound();}
+function renderBoxesView(){
+ if(!P[0]||!P[1])return;
+ var me=online?mySeat:0,other=1-me;
+ $('viewBoxes').innerHTML=pitchHTML(me,'تشكيلتك: '+P[me].name)+pitchHTML(other,'تشكيلة الخصم: '+P[other].name);
+}
+
+/* ========= الكروت الخاصة — مرحلة بعد بناء التشكيلة ========= */
+function startPostCards(){
+ if(online&&!isHost)return;
+ phase='postcards';cardsReady=[false,false];
+ log('🃏 مرحلة الكروت الخاصة');
+ render();broadcast();
+ if(mode===1)aiPostCards();
+}
+function teamPower(i){return P[i].squad.reduce(function(t,p){return t+p.r;},0);}
+function bestUnprotected(i){var ti=-1,tr=0;P[i].squad.forEach(function(p,idx){if(!p.protected&&p.r>tr){tr=p.r;ti=idx;}});return ti;}
+function aiPostCards(){
+ setTimeout(function(){
+  if(phase!=='postcards')return;
+  ensureCards(P[1]);
+  if(P[1].cards.protect>0&&P[1].squad.length&&priceOK(1,'protect')){
+   var bi=0,br=0;P[1].squad.forEach(function(p,i){if(p.r>br){br=p.r;bi=i;}});
+   applyPostCard(1,'protect',bi);
+  }
+  if(P[1].cards.steal>0&&priceOK(1,'steal')){
+   if(teamPower(1)<teamPower(0)){var ti=bestUnprotected(0);if(ti>=0)applyPostCard(1,'steal',ti);}
+  }
+  markReady(1);
+ },1000);
+}
+function priceOK(actor,c){var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);return price<=P[actor].budget;}
+function markReady(seat){
+ if(online&&!isHost){if(seat===1)conn.send({type:'act',a:'ready'});return;}
+ cardsReady[seat]=true;log(P[seat].name+' انتهى من الكروت');checkCardsReady();
+}
+function checkCardsReady(){if(cardsReady[0]&&cardsReady[1]){setTimeout(startCaptainPhase,500);}else{render();broadcast();}}
+function openPostCardPicker(actor){cardFlow={card:null,sel:-1,sel2:-1,actor:actor};render();}
+function closePostCardPicker(){cardFlow=null;render();}
 function selectCard(c){
  if(!cardFlow)return;
  ensureCards(P[cardFlow.actor]);
  if(P[cardFlow.actor].cards[c]<1)return toast('الكارت ده اتستخدم خلاص');
- var price=CARD_PRICES[c]||0;
+ var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);
  if(price>P[cardFlow.actor].budget)return toast('ميزانيتك المتبقية لا تكفي لشراء هذا الكارت ('+fmt(price)+')');
- if(c==='lastbid'&&turn!==cardFlow.actor)return toast('⚡ لاست بيد في دورك فقط');
- cardFlow.card=c;cardFlow.sel=-1;cardFlow.sel2=-1;renderCards();
+ cardFlow.card=c;cardFlow.sel=-1;cardFlow.sel2=-1;render();
 }
-function cardSel(i){if(!cardFlow)return;
- if(cardFlow.card==='wild'&&cardFlow.sel===-1){cardFlow.sel=i;}
- else if(cardFlow.card==='wild'){cardFlow.sel2=i;}
- else{cardFlow.sel=i;}
- renderCards();
-}
-function cancelCard(){if(cardFlow){cardFlow.card=null;cardFlow.sel=-1;cardFlow.sel2=-1;renderCards();}}
-function confirmCard(){
- if(!cardFlow||!cardFlow.card)return;
- var c=cardFlow.card,i=cardFlow.sel,j=cardFlow.sel2,actor=cardFlow.actor;
- if(online&&!isHost){conn&&conn.open&&conn.send({type:'act',a:'card',c:c,i:i,j:j});closeCards();return;}
- applyCard(actor,c,i,j);closeCards();
-}
+function cardSel(i){if(!cardFlow)return;cardFlow.sel=i;render();}
+function cancelCard(){if(cardFlow){cardFlow.card=null;cardFlow.sel=-1;cardFlow.sel2=-1;render();}}
 function pickRandom(g){
  if(!pool.length)return null;
  var list=[];for(var i=0;i<pool.length;i++){if(posGroup(pool[i])===g)list.push(i);}
@@ -1038,108 +1279,47 @@ function pickRandom(g){
  var idx=list[Math.floor(Math.random()*list.length)];
  return pool.splice(idx,1)[0];
 }
-function applyCard(actor,c,i,j){
- if(phase!=='bid')return false;
- if(!cardsUnlocked())return false;
+function confirmCard(){
+ if(!cardFlow||!cardFlow.card)return;
+ var c=cardFlow.card,i=cardFlow.sel,actor=cardFlow.actor;
+ if(online&&!isHost){conn&&conn.open&&conn.send({type:'act',a:'card',c:c,i:i});cardFlow=null;render();return;}
+ applyPostCard(actor,c,i);cardFlow=null;render();
+}
+function applyPostCard(actor,c,i){return applyCard(actor,c,i);}
+function applyCard(actor,c,i){
  ensureCards(P[actor]);var other=1-actor;
- var price=CARD_PRICES[c]||0;
+ if(P[actor].cards[c]===undefined||P[actor].cards[c]<1)return false;
+ var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);
  if(price>P[actor].budget)return false;
- if(c==='lastbid'){
-  if(P[actor].cards.lastbid<1||turn!==actor||bid<1||(bid+price)>P[actor].budget)return false;
-  P[actor].cards.lastbid=0;P[actor].budget-=price;P[actor].spent+=price;
-  log('⚡ '+P[actor].name+' استخدم لاست بيد (مقابل '+fmt(price)+') وضمّ '+curStar.ar+' بـ '+fmt(bid));
-  resolveRound(actor,other);return true;
- }
  if(c==='protect'){
-  if(P[actor].cards.protect<1||!P[actor].squad[i]||P[actor].squad[i].protected)return false;
+  if(!P[actor].squad[i]||P[actor].squad[i].protected)return false;
   P[actor].cards.protect=0;P[actor].budget-=price;P[actor].spent+=price;P[actor].squad[i].protected=true;
-  log('🛡️ '+P[actor].name+' حمى '+P[actor].squad[i].ar+' (مقابل '+fmt(price)+')');
+  log('🛡️ '+P[actor].name+' حمى '+P[actor].squad[i].ar+(price?' (مقابل '+fmt(price)+')':''));
  }else if(c==='steal'){
-  if(P[actor].cards.steal<1||!P[other].squad[i]||P[other].squad[i].protected)return false;
+  if(!P[other].squad[i]||P[other].squad[i].protected)return false;
   var pl=P[other].squad.splice(i,1)[0];P[actor].squad.push(pl);P[actor].cards.steal=0;P[actor].budget-=price;P[actor].spent+=price;
-  log('🥷 '+P[actor].name+' سرق '+pl.ar+' من '+P[other].name+' (مقابل '+fmt(price)+')!');
- }else if(c==='wild'){
-  if(P[actor].cards.wild<1||!P[actor].squad[i]||!P[other].squad[j]||P[other].squad[j].protected)return false;
-  var a=P[actor].squad[i],b=P[other].squad[j];
-  P[actor].squad[i]=b;P[other].squad[j]=a;P[actor].cards.wild=0;
-  log('🔄 وايلد كارد (مجاني): '+a.ar+' اتبادل مع '+b.ar);
- }else if(c==='norisk'){
-  if(P[actor].cards.norisk<1||!P[actor].squad[i]||!pool.length)return false;
+  log('🥷 '+P[actor].name+' سرق '+pl.ar+' من '+P[other].name+(price?' (مقابل '+fmt(price)+')':'')+'!');
+ }else if(c==='wild'||c==='norisk'){
+  if(!P[actor].squad[i]||!pool.length)return false;
   var old=P[actor].squad[i];var rp=pickRandom(posGroup(old));
   if(!rp)return false;
-  P[actor].squad[i]=rp;P[actor].cards.norisk=0;P[actor].budget-=price;P[actor].spent+=price;
-  log('🎲 نو ريسك نو فن (مقابل '+fmt(price)+'): '+old.ar+' ('+old.r+') بدل '+rp.ar+' ('+rp.r+')');
+  P[actor].squad[i]=rp;P[actor].cards[c]=0;P[actor].budget-=price;P[actor].spent+=price;
+  log((c==='wild'?'🔄 وايلد كارد':'🎲 نو ريسك نو فن')+(price?' (مقابل '+fmt(price)+')':' (مجاني)')+': '+old.ar+' ('+old.r+') بدل '+rp.ar+' ('+rp.r+')');
  }else if(c==='gift'){
-  if(P[actor].cards.gift<1||!pool.length)return false;
+  if(!pool.length)return false;
   var sorted=pool.slice().sort(function(x,y){return x.r-y.r;});
   var weak=sorted[Math.floor(Math.random()*Math.min(15,sorted.length))];
   pool.splice(pool.indexOf(weak),1);P[other].squad.push(weak);P[actor].cards.gift=0;P[actor].budget-=price;P[actor].spent+=price;
-  log('🎁 '+P[actor].name+' لبّس '+P[other].name+' اللاعب '+weak.ar+' (مقابل '+fmt(price)+')!');
+  log('🎁 '+P[actor].name+' لبّس '+P[other].name+' اللاعب '+weak.ar+(price?' (مقابل '+fmt(price)+')':'')+'!');
  }else return false;
  render();broadcast();return true;
 }
-function aiCards(){
- if(mode!==1||online)return;
- if(!cardsUnlocked())return;
- ensureCards(P[1]);
- if(P[1].cards.protect>0&&P[1].squad.length&&(CARD_PRICES.protect||0)<=P[1].budget){
-  var bi=0,br=0;P[1].squad.forEach(function(p,i){if(p.r>br){br=p.r;bi=i;}});
-  applyCard(1,'protect',bi);
- }
- if(P[1].cards.steal>0&&(CARD_PRICES.steal||0)<=P[1].budget){
-  var t0=P[0].squad.reduce(function(t,p){return t+p.r;},0),t1=P[1].squad.reduce(function(t,p){return t+p.r;},0);
-  if(t1<t0){var ti=-1,tr=0;P[0].squad.forEach(function(p,i){if(!p.protected&&p.r>tr){tr=p.r;ti=i;}});if(ti>=0)applyCard(1,'steal',ti);}
- }
-}
-function renderCards(){
- if(!cardFlow)return;
- var actor=cardFlow.actor,other=1-actor;
- ensureCards(P[actor]);var c=P[actor].cards;
- var html='<h2>🃏 الكروت الخاصة</h2><div style="font-size:11.5px;color:var(--dim);margin-bottom:6px">رصيدك المتاح: <b style="color:var(--gold)">'+fmt(P[actor].budget)+'</b></div>';
- if(mode===2)html+='<div class="tabs"><button class="'+(actor===0?'sel':'')+'" onclick="cardActor(0)">'+P[0].name+'</button><button class="'+(actor===1?'sel':'')+'" onclick="cardActor(1)">'+P[1].name+'</button></div>';
- var defs=[['lastbid','⚡','لاست بيد','خد لاعب المزاد الحالي بآخر مزايدة (في دورك)'],['steal','🥷','السرقة','اسرق لاعب من الخصم'],['protect','🛡️','الحماية','امنع لاعبك من السرقة والتبديل'],['wild','🔄','وايلد كارد','بدّل لاعبك بلاعب من الخصم — مجاني'],['norisk','🎲','نو ريسك نو فن','بدّل لاعبك بلاعب عشوائي'],['gift','🎁','لبّس صاحبك','ادّي الخصم لاعب ضعيف من الاحتياطي']];
- html+='<div class="cards-grid">';
- defs.forEach(function(d){
-  var n=c[d[0]];var price=CARD_PRICES[d[0]]||0;var afford=price<=P[actor].budget;
-  html+='<div class="card-item'+((n<1||!afford)?' off':'')+(cardFlow.card===d[0]?' sel':'')+'" onclick="selectCard(\''+d[0]+'\')"><div class="ci-ic">'+d[1]+'</div><div class="ci-nm">'+d[2]+'</div><div class="ci-left">'+(n>0?(afford?'متاح ✅':'الرصيد لا يكفي'):'مستخدم ❌')+'</div><div class="ci-price">'+(price>0?fmt(price):'مجاني 🎉')+'</div><div style="font-size:9px;color:var(--dim);margin-top:3px">'+d[3]+'</div></div>';
- });
- html+='</div>';
- if(cardFlow.card){
-  html+='<div class="phase-title">';
-  if(cardFlow.card==='protect'||cardFlow.card==='norisk'){
-   html+='اختار لاعبك:</div><div class="pick-grid">';
-   P[actor].squad.forEach(function(p,i){html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+(p.protected?' 🛡️':'')+'</div><div class="pc-rt">'+p.r+'</div></div>';});
-   html+='</div>';
-   if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مقابل '+fmt(CARD_PRICES[cardFlow.card]||0)+')</button>';
-  }else if(cardFlow.card==='steal'){
-   html+='اختار لاعب الخصم اللي هتسرقه:</div><div class="pick-grid">';
-   P[other].squad.forEach(function(p,i){if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
-   html+='</div>';
-   if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد السرقة (مقابل '+fmt(CARD_PRICES.steal)+')</button>';
-  }else if(cardFlow.card==='wild'){
-   if(cardFlow.sel===-1){
-    html+='اختار لاعبك اللي هيخرج:</div><div class="pick-grid">';
-    P[actor].squad.forEach(function(p,i){html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
-    html+='</div>';
-   }else{
-    html+='دلوقتي اختار لاعب الخصم اللي هتاخده:</div><div class="pick-grid">';
-    P[other].squad.forEach(function(p,i){if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
-    html+='</div>';
-    if(cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد التبديل (مجاني)</button>';
-   }
-  }else{
-   html+='</div><button class="big-btn goldb" onclick="confirmCard()">'+(cardFlow.card==='lastbid'?'⚡ استخدم لاست بيد (مقابل '+fmt(CARD_PRICES.lastbid)+')':'🎁 لبّسه! (مقابل '+fmt(CARD_PRICES.gift)+')')+'</button>';
-  }
-  html+='<button class="big-btn red" style="margin-top:6px" onclick="cancelCard()">↩ رجوع</button>';
- }
- $('cardsBox').innerHTML=html;bindWiki($('cardsBox'));
-}
 
-/* ========= الكابتن والتكتيك ========= */
+/* ========= الكابتن ========= */
 function startCaptainPhase(){
  if(online&&!isHost)return;
  phase='captain';captainIdx=[-1,-1];
- log('🏁 انتهى المزاد — اختاروا الكابتن');
+ log('🏁 اختاروا الكابتن');
  if(mode===1){setTimeout(function(){
   if(phase!=='captain')return;
   if(P[1].squad.length){var bi=0,br=0;P[1].squad.forEach(function(p,i){if(p.r>br){br=p.r;bi=i;}});captainIdx[1]=bi;log(P[1].name+' اختار '+P[1].squad[bi].ar+' كابتنًا');checkCaptains();}
@@ -1154,27 +1334,7 @@ function humanPickCaptain(idx){
  if(online&&!isHost){if(me===1)conn.send({type:'act',a:'captain',idx:idx});return;}
  captainIdx[me]=idx;log(P[me].name+' اختار '+P[me].squad[idx].ar+' كابتنًا');checkCaptains();
 }
-function checkCaptains(){if(captainIdx[0]===-1||captainIdx[1]===-1){render();broadcast();return;}setTimeout(startTacticPhase,800);}
-function startTacticPhase(){
- if(online&&!isHost)return;
- phase='tactic';tacticSel=[null,null];
- log('📋 اختاروا التكتيك');
- if(mode===1){setTimeout(function(){
-  if(phase!=='tactic')return;
-  var keys=Object.keys(TACTICS);var tk=keys[Math.floor(Math.random()*keys.length)];
-  tacticSel[1]=tk;log(P[1].name+' اختار '+TACTICS[tk].name);checkTactics();
- },800);}
- render();broadcast();
-}
-function humanPickTactic(t){
- if(phase!=='tactic'||!TACTICS[t])return;
- var me=online?mySeat:0;
- if(mode===2){if(tacticSel[0]===null)me=0;else if(tacticSel[1]===null)me=1;else return;}
- if(tacticSel[me]!==null)return;
- if(online&&!isHost){if(me===1)conn.send({type:'act',a:'tactic',t:t});return;}
- tacticSel[me]=t;log(P[me].name+' اختار '+TACTICS[t].name);checkTactics();
-}
-function checkTactics(){if(tacticSel[0]===null||tacticSel[1]===null){render();broadcast();return;}setTimeout(endGame,800);}
+function checkCaptains(){if(captainIdx[0]===-1||captainIdx[1]===-1){render();broadcast();return;}setTimeout(endGame,800);}
 
 /* ========= العرض ========= */
 function pcardHTML(p,enter,big){
@@ -1183,13 +1343,13 @@ function pcardHTML(p,enter,big){
 }
 function updateStarCard(){lastCardRound=round;if(!curStar)return;$('futBox').innerHTML=pcardHTML(curStar,true,true);bindWiki($('futBox'));}
 function posGroup(p){if(p.pos==='GK')return 'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return 'DEF';if(p.pos==='CDM'||p.pos==='CM'||p.pos==='CAM')return 'MID';return 'ATT';}
-function rowOf(pos){if(pos==='GK')return 3;if(['CB','LB','RB'].indexOf(pos)>=0)return 2;if(['CDM','CM','CAM'].indexOf(pos)>=0)return 1;return 0;}
+function rowOf(pos){if(pos==='GK')return 0;if(['CB','LB','RB'].indexOf(pos)>=0)return 1;if(['CDM','CM','CAM'].indexOf(pos)>=0)return 2;return 3;}
 function pitchHTML(pi,title){
  var rows=[[],[],[],[]];
  P[pi].squad.forEach(function(p){rows[rowOf(p.pos)].push(p);});
  var mp=function(p){var isCap=captainIdx[pi]===P[pi].squad.indexOf(p);return '<div class="mp"><div class="r '+(p.r>=85?'good':p.r>=75?'okc':'bad')+'">'+p.r+'</div><div class="n">'+(isCap?'👑':'')+(p.protected?'🛡️':'')+p.ar+'</div></div>';};
- var html='<div class="pitch"><h4>'+title+' ('+P[pi].squad.length+'/11)</h4>';
- for(var i=0;i<4;i++){html+='<div class="prow">'+rows[i].map(mp).join('');for(var e=rows[i].length;e<(i===3?1:3);e++)html+='<div class="mp empty"><div class="r"></div></div>';html+='</div>';}
+ var html='<div class="pitch"><h4>'+title+' ('+P[pi].squad.length+'/'+(gameType==='boxes'?5:11)+')</h4>';
+ for(var i=0;i<4;i++){html+='<div class="prow">'+rows[i].map(mp).join('');var minSlots=(i===0?1:0);for(var e=rows[i].length;e<minSlots;e++)html+='<div class="mp empty"><div class="r"></div></div>';html+='</div>';}
  return html+'</div>';
 }
 function renderSquads(){
@@ -1224,10 +1384,9 @@ function simulateMatch(){
  var capA=captainIdx[0]>=0?a[captainIdx[0]]:null,capB=captainIdx[1]>=0?b[captainIdx[1]]:null;
  var avg=function(x){if(!x.length)return 70;var s=0;x.forEach(function(p){s+=p.r;});return s/x.length;};
  var avgA=avg(a)+(capA?5:0),avgB=avg(b)+(capB?5:0);
- var tA=TACTICS[tacticSel[0]]||TACTICS['4-4-2'],tB=TACTICS[tacticSel[1]]||TACTICS['4-4-2'];
  var d=avgA-avgB;
- var g0=poisson(Math.max(0.2,1.15*tA.att/tB.def+d*0.12+(Math.random()*0.5-0.25)));
- var g1=poisson(Math.max(0.2,1.15*tB.att/tA.def-d*0.12+(Math.random()*0.5-0.25)));
+ var g0=poisson(Math.max(0.2,1.15+d*0.12+(Math.random()*0.5-0.25)));
+ var g1=poisson(Math.max(0.2,1.15-d*0.12+(Math.random()*0.5-0.25)));
  var ev=[];
  for(var i=0;i<g0;i++){var s=scorerPick(a);if(s)ev.push({min:1+Math.floor(Math.random()*90),t:0,p:s.ar,r:s.r});}
  for(var j=0;j<g1;j++){var s2=scorerPick(b);if(s2)ev.push({min:1+Math.floor(Math.random()*90),t:1,p:s2.ar,r:s2.r});}
@@ -1237,7 +1396,6 @@ function simulateMatch(){
  if(!motm){var winSq=(g0===g1?(d>=0?a:b):(g0>g1?a:b));var bp=winSq.length?winSq.reduce(function(x,y){return x.r>=y.r?x:y;}):null;motm=bp?bp.ar:null;gn=0;}
  var note=gn===1?'هدف واحد':gn===2?'هدفان':gn>2?gn+' أهداف':'';
  var html='<div class="match"><div class="sb"><div class="col"><span>'+P[0].name+(capA?' 👑':'')+'</span><b>'+g0+'</b></div><span class="dash">–</span><div class="col"><span>'+P[1].name+(capB?' 👑':'')+'</span><b>'+g1+'</b></div></div>';
- html+='<div style="font-size:11px;color:var(--dim);margin-bottom:6px">'+(TACTICS[tacticSel[0]]?TACTICS[tacticSel[0]].name:'—')+' ضد '+(TACTICS[tacticSel[1]]?TACTICS[tacticSel[1]].name:'—')+'</div>';
  html+='<div class="evts">'+(ev.length?ev.map(function(e){return '⚽ '+e.min+'′ '+e.p+' ('+P[e.t].name+')';}).join('<br>'):'لا أهداف — تعادل سلبي')+'</div>';
  if(motm)html+='<div class="motm">🌟 رجل المباراة: '+motm+(note?' ('+note+')':'')+'</div>';
  html+='</div>';
@@ -1253,7 +1411,7 @@ function endGame(){
  var s0=stats(0),s1=stats(1);
  var sim=simulateMatch();
  var champ=sim.g0!==sim.g1?(sim.g0>sim.g1?0:1):(s0.tot!==s1.tot?(s0.tot>s1.tot?0:1):(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)));
- var sq=function(i){return P[i].squad.map(function(p,idx){var isCap=captainIdx[i]===idx;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join(' ');};
+ var sq=function(i){return orderedSquad(P[i].squad).map(function(o){var idx=o.i;var isCap=captainIdx[i]===idx;var p=o.p;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join(' ');};
  endH='<h2>النتيجة النهائية</h2>'+
  (champ===-1?'<div class="winner-banner">🤝 تعادل</div>':'<div class="winner-banner">🏆 البطل: '+P[champ].name+'</div>')+
  '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">🤖 اللقب يُحسم من نتيجة المباراة النهائية</div>'+sim.html+
@@ -1262,15 +1420,92 @@ function endGame(){
  '<tr><td>متوسط التقييم</td><td>'+s0.avg+'</td><td>'+s1.avg+'</td></tr>'+
  '<tr><td>أفضل لاعب</td><td>'+s0.best+'</td><td>'+s1.best+'</td></tr>'+
  '<tr><td>الكابتن</td><td>'+(captainIdx[0]>=0&&P[0].squad[captainIdx[0]]?P[0].squad[captainIdx[0]].ar:'—')+'</td><td>'+(captainIdx[1]>=0&&P[1].squad[captainIdx[1]]?P[1].squad[captainIdx[1]].ar:'—')+'</td></tr>'+
- '<tr><td>التكتيك</td><td>'+(TACTICS[tacticSel[0]]?TACTICS[tacticSel[0]].name:'—')+'</td><td>'+(TACTICS[tacticSel[1]]?TACTICS[tacticSel[1]].name:'—')+'</td></tr>'+
  '<tr><td>لاعبون 85+</td><td>'+s0.stars+'</td><td>'+s1.stars+'</td></tr>'+
- '<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
- '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr></table>'+
+ (gameType==='auction'?('<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
+ '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr>'):'')+'</table>'+
  [0,1].map(function(i){return '<div class="squad-end"><b style="color:var(--acc)">'+P[i].name+':</b><br>'+sq(i)+'</div>';}).join('')+
  '<button class="big-btn green" onclick="location.reload()">العب مجددًا</button>';
  render();broadcast();
 }
+function renderPostCardsOverlay(){
+ var me=online?mySeat:0;
+ var html='<h2>🃏 مرحلة الكروت الخاصة</h2><div class="phase-title">'+(gameType==='boxes'?'استخدم أي كارت كسبته من الصناديق (لو كسبت حاجة)':'استخدم كروتك المتاحة قبل اختيار الكابتن')+'</div>';
+ var defs=gameType==='boxes'?BOX_CARD_DEFS:CARD_DEFS;
+ var seatsToShow=(mode===2)?[0,1]:[me];
+ seatsToShow.forEach(function(seat){
+  ensureCards(P[seat]);
+  var ready=cardsReady[seat];
+  html+='<div class="pc-ready" style="text-align:right">'+P[seat].name+(gameType==='auction'?(' — الرصيد: <b style="color:var(--gold)">'+fmt(P[seat].budget)+'</b>'):'')+'</div>';
+  if(ready){
+   html+='<div class="status">✅ '+P[seat].name+' جاهز — بانتظار الطرف التاني…</div>';
+  }else if(cardFlow&&cardFlow.actor===seat&&cardFlow.card){
+   var c=cardFlow.card,other=1-seat;
+   html+='<div class="phase-title">';
+   if(c==='protect'){
+    html+='اختار لاعبك للحماية:</div><div class="pick-grid">';
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    html+='</div>';
+    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد'+(gameType==='auction'?(' (مقابل '+fmt(CARD_PRICES.protect)+')'):'')+'</button>';
+   }else if(c==='steal'){
+    html+='اختار لاعب الخصم اللي هتسرقه:</div><div class="pick-grid">';
+    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    html+='</div>';
+    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد السرقة'+(gameType==='auction'?(' (مقابل '+fmt(CARD_PRICES.steal)+')'):'')+'</button>';
+   }else if(c==='wild'||c==='norisk'){
+    html+='اختار لاعبك اللي هيتغيّر (هيجيلك بدله لاعب عشوائي من نفس المركز):</div><div class="pick-grid">';
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    html+='</div>';
+    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد'+(c==='wild'?' (مجاني)':(' (مقابل '+fmt(CARD_PRICES.norisk)+')'))+'</button>';
+   }else if(c==='gift'){
+    html+='</div><button class="big-btn goldb" onclick="confirmCard()">🎁 لبّسه! (مقابل '+fmt(CARD_PRICES.gift)+')</button>';
+   }
+   html+='<button class="big-btn red" style="margin-top:6px" onclick="cancelCard()">↩ رجوع</button>';
+  }else{
+   html+='<div class="cards-grid">';
+   defs.forEach(function(d){
+    var n=P[seat].cards[d[0]];var price=gameType==='boxes'?0:(CARD_PRICES[d[0]]||0);var afford=price<=P[seat].budget;
+    html+='<div class="card-item'+((n<1||!afford)?' off':'')+'" onclick="'+((n<1||!afford)?'':('openPostCardPicker('+seat+');selectCard(\''+d[0]+'\')'))+'"><div class="ci-ic">'+d[1]+'</div><div class="ci-nm">'+d[2]+'</div><div class="ci-left">'+(n>0?(afford?'متاح ✅':'الرصيد لا يكفي'):(gameType==='boxes'?'لم تفز بيه 🎲':'مستخدم ❌'))+'</div><div class="ci-price">'+(price>0?fmt(price):'مجاني 🎉')+'</div></div>';
+   });
+   html+='</div><button class="big-btn green" style="margin-top:8px" onclick="markReady('+seat+')">✅ تم — كمّل</button>';
+  }
+ });
+ if(mode!==2&&!cardsReady[1-me]){
+  html+='<div class="status" style="margin-top:8px">بانتظار '+P[1-me].name+'…</div>';
+ }
+ $('obox').innerHTML=html;bindWiki($('obox'));
+}
+function renderBoxPhase(){
+ var me=online?mySeat:0;
+ var pos=BOX_POS[boxRound];
+ var html='<div class="box-panels">';
+ var seatsToShow=(mode===2)?[0,1]:[me,1-me];
+ seatsToShow.forEach(function(seat){
+  var mine=boxCanAct(seat);
+  html+='<div class="box-panel"><h5>'+P[seat].name+(boxPicked[seat]?' ✅':'')+'</h5><div class="box-grid">';
+  for(var i=0;i<4;i++){
+   var opened=boxOpened[seat].indexOf(i)>=0;
+   var isPicked=boxPicked[seat]&&boxSets[seat][i]&&boxPicked[seat].en===boxSets[seat][i].en&&boxPicked[seat].ar===boxSets[seat][i].ar;
+   var canOpen=mine&&!boxPicked[seat]&&!opened&&boxOpened[seat].length<2;
+   var canPick=mine&&!boxPicked[seat]&&opened&&boxOpened[seat].length===1;
+   if(opened&&(mine||boxPicked[seat])){
+    var pl=boxSets[seat][i];
+    var bonusBadge=pl.bonusCard?('<div class="box-bonus">'+(pl.bonusCard==='steal'?'🥷 سرقة!':'🛡️ حماية!')+'</div>'):'';
+    html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
+   }else{
+    html+='<div class="box-item'+(canOpen?'':' locked')+'" '+(canOpen?('onclick="boxClickOpen('+seat+','+i+')"'):'')+'><div class="bq">'+(mine?'🎁':'🔒')+'</div></div>';
+   }
+  }
+  html+='</div>';
+  if(mine&&!boxPicked[seat])html+='<div class="box-status">'+(boxOpened[seat].length===0?'افتح صندوقًا واحدًا للبدء — ممكن يبقى جواه كارت حماية أو سرقة كمان!':'عجبك اللاعب؟ اقبله، أو افتح صندوقًا تانيًا — هتاخده إجباري ومفيش رجوع للأول (No Deal)')+'</div>';
+  html+='</div>';
+ });
+ html='<div class="box-title">🎁 '+BOX_LBL[pos]+'</div><div class="box-sub">افتح صندوقًا واحدًا من الأربعة. اقبله (Deal)، أو جرّب صندوقًا تانيًا (No Deal) — لكن لو فتحت التاني بتاخده إجباري ومفيش رجوع للأول.<br>بعض الصناديق فيها كارت حماية أو سرقة تكسبه لو قبلت الصندوق ده!</div>'+html+'</div>';
+ $('obox').innerHTML=html;
+ bindWiki($('obox'));
+}
 function render(){
+ if(phase==='box'){$('overlay').classList.remove('hidden');renderBoxPhase();return;}
+ if(phase==='postcards'){$('overlay').classList.remove('hidden');renderPostCardsOverlay();return;}
  if(phase==='captain'){
   $('overlay').classList.remove('hidden');
   var me=online?mySeat:0,waiting=true,waitingName='',myTurn=false;
@@ -1279,26 +1514,15 @@ function render(){
   var html='<h2>👑 اختار الكابتن</h2><div class="phase-title">الكابتن بياخد +5 تقييم في المباراة</div>';
   if(myTurn){var ti=(mode===2?(captainIdx[0]===-1?0:1):me);
    html+='<p style="color:var(--blue);font-size:13px;font-weight:800;margin-bottom:8px">الدور: '+waitingName+'</p><div class="pick-grid">';
-   P[ti].squad.forEach(function(p,idx){html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+   orderedSquad(P[ti].squad).forEach(function(o){var p=o.p,idx=o.i;html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
    html+='</div>';
   }else if(waiting){html+='<div class="status">بانتظار '+waitingName+' يختار الكابتن…</div>';}
   $('obox').innerHTML=html;bindWiki($('obox'));return;
  }
- if(phase==='tactic'){
-  $('overlay').classList.remove('hidden');
-  var me=online?mySeat:0,waiting=true,waitingName='',myTurn=false;
-  if(mode===2){if(tacticSel[0]===null){waitingName=P[0].name;myTurn=true;}else if(tacticSel[1]===null){waitingName=P[1].name;myTurn=true;}else waiting=false;}
-  else{if(tacticSel[me]===null){waitingName=P[me].name;myTurn=true;}else waiting=false;}
-  var html='<h2>📋 اختار التكتيك</h2><div class="phase-title">التكتيك بيأثر على الهجوم والدفاع</div>';
-  if(myTurn){html+='<p style="color:var(--blue);font-size:13px;font-weight:800;margin-bottom:8px">الدور: '+waitingName+'</p><div class="tac-grid">';
-   for(var key in TACTICS){var t=TACTICS[key];html+='<div class="tac-card" onclick="humanPickTactic(\''+key+'\')"><h4>'+t.name+'</h4><p>'+t.desc+'</p><p style="color:var(--acc);font-weight:800">هجوم ×'+t.att+' • دفاع ×'+t.def+'</p></div>';}
-   html+='</div>';
-  }else if(waiting){html+='<div class="status">بانتظار '+waitingName+' يختار التكتيك…</div>';}
-  $('obox').innerHTML=html;return;
- }
- if(phase==='reveal'){$('overlay').classList.remove('hidden');$('obox').innerHTML=(online&&!isHost)?ovG:ovH;bindWiki($('obox'));return;}
+ if(phase==='reveal'||phase==='boxreveal'){$('overlay').classList.remove('hidden');$('obox').innerHTML=(online&&!isHost)?ovG:ovH;bindWiki($('obox'));return;}
  if(phase==='end'){$('overlay').classList.remove('hidden');$('obox').innerHTML=endH;return;}
  $('overlay').classList.add('hidden');
+ if(gameType==='boxes'){renderBoxesView();$('roundLbl').textContent='صناديق الحظ';$('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');return;}
  if(!curStar||!P[0]||!P[1])return;
  if(round!==lastCardRound)updateStarCard();
  $('roundLbl').textContent='الجولة '+(round+1)+' / '+stars.length;
@@ -1309,7 +1533,7 @@ function render(){
   $('tname'+i).textContent=(i===turn?'🎙️ ':'')+P[i].name;
   var tot=P[i].squad.reduce(function(t,p){return t+p.r;},0);
   $('tstats'+i).innerHTML='المتبقي: <b>'+fmt(P[i].budget)+'</b> — القوة: <b>'+tot+'</b> — اللاعبون: <b>'+P[i].squad.length+'/11</b>';
-  $('squad'+i).innerHTML=P[i].squad.map(function(p,idx){var isCap=captainIdx[i]===idx;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>';
+  $('squad'+i).innerHTML=orderedSquad(P[i].squad).map(function(o){var p=o.p,idx=o.i;var isCap=captainIdx[i]===idx;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>';
   $('team'+i).classList.toggle('turn',i===turn);
  }
  var tb=$('tbarBox'),tf=$('tfill'),tl=$('timeLbl');
