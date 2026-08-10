@@ -422,12 +422,16 @@ label{font-size:12.5px;letter-spacing:.2px}
 .tp-dot.cur{box-shadow:0 0 0 2px rgba(255,255,255,.25)}
 .tp-stat-box{background:var(--card2);border-radius:14px;padding:12px;margin-top:6px;text-align:right;font-size:12.5px;line-height:2}
 .tp-stat-box b{color:var(--gold)}
+#sfxBtn{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;font-size:15px;width:70px}
+.end-actions{display:flex;gap:8px;margin-top:10px}
+.end-actions .big-btn{flex:1}
+.share-box{background:var(--card2);border:1px dashed var(--gold);border-radius:12px;padding:10px;margin:10px 0;font-size:11.5px;color:var(--dim);line-height:1.9;white-space:pre-wrap;text-align:right}
 </style>
 </head>
 <body>
 <div class="salawat">🌙 صلِّ على النبي ﷺ <span class="s2">اللهم صلِّ وسلم عليه</span></div>
 <div id="home" class="screen">
-<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><span style="width:70px"></span></div>
+<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
@@ -439,6 +443,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames()">
 <label>اسم اللاعب الثاني (نفس الجهاز)</label><input id="name2" placeholder="اكتب الاسم" oninput="saveNames()">
 <div class="modes">
+<button class="mode-btn hidden" id="mb4" onclick="pickMode(4)"><span class="ic">🧍</span>سولو (لوحدك)</button>
 <button class="mode-btn" id="mb1" onclick="pickMode(1)"><span class="ic">🤖</span>ضد الحاسوب</button>
 <button class="mode-btn" id="mb2" onclick="pickMode(2)"><span class="ic">👥</span>لاعبان على جهاز واحد</button>
 <button class="mode-btn" id="mb3" onclick="pickMode(3)"><span class="ic">🌐</span>غرفة عبر الإنترنت</button>
@@ -456,6 +461,9 @@ label{font-size:12.5px;letter-spacing:.2px}
 <input id="joinCode" placeholder="رمز الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
 <button class="big-btn blue" style="margin-top:8px" onclick="joinRoom()">انضمام</button>
 <div id="roomStatus" class="status"></div>
+<label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--dim);cursor:pointer" onclick="toggleRelayUI()">
+<input type="checkbox" id="relayChk" style="width:auto;accent-color:var(--acc)">📶 اتصال محسّن لشبكات الجوال (أبطأ شوية لكن أضمن لو الاتصال بيفشل بشكل متكرر)
+</label>
 <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.8">إذا واجهت مشاكل اتصال بشكل متكرر (خصوصًا على شبكات الجوال أو الشركات)، جرّب شبكة واي فاي مختلفة — الاتصال يعتمد على مرور مباشر بين الجهازين وأحيانًا تمنعه بعض الشبكات.</div>
 </div>
 </div>
@@ -524,6 +532,74 @@ label{font-size:12.5px;letter-spacing:.2px}
 window.addEventListener('error',function(e){try{toast('خطأ: '+e.message);}catch(_){}});
 function $(id){return document.getElementById(id);}
 function toast(t){var el=$('toast');if(!el)return;el.textContent=t;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},2800);}
+
+/* ========= مؤثرات صوتية (WebAudio — بدون ملفات خارجية) ========= */
+var sfxOn=localStorage.getItem('mz_sfx')!=='off';
+var actx=null;
+function actxGet(){
+ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){actx=null;}}
+ return actx;
+}
+function beep(freq,dur,type,vol,delay){
+ if(!sfxOn)return;
+ var ctx=actxGet();if(!ctx)return;
+ if(ctx.state==='suspended'){try{ctx.resume();}catch(e){}}
+ var t0=ctx.currentTime+(delay||0);
+ try{
+  var osc=ctx.createOscillator();var g=ctx.createGain();
+  osc.type=type||'sine';osc.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.linearRampToValueAtTime(vol||0.12,t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+(dur||0.15));
+  osc.connect(g);g.connect(ctx.destination);
+  osc.start(t0);osc.stop(t0+(dur||0.15)+0.03);
+ }catch(e){}
+}
+function sfxTap(){beep(720,0.06,'square',0.05);}
+function sfxRaise(){beep(880,0.09,'triangle',0.09);}
+function sfxPass(){beep(240,0.18,'sawtooth',0.07);}
+function sfxCard(){beep(520,0.08,'triangle',0.08);beep(780,0.1,'triangle',0.08,0.07);}
+function sfxTick(){beep(1000,0.05,'square',0.05);}
+function sfxFanfare(){[523,659,784,1046].forEach(function(f,i){beep(f,0.22,'triangle',0.12,i*0.12);});}
+function sfxRoundOutcome(result){
+ /* result: true=فوز/دقيق، false=خسارة/بعيد، null/undefined=تعادل */
+ if(result===true){beep(660,0.1,'sine',0.1);beep(880,0.12,'sine',0.1,0.1);beep(1100,0.14,'sine',0.11,0.2);}
+ else if(result===false){beep(300,0.18,'sine',0.08);beep(220,0.22,'sine',0.08,0.14);}
+ else{beep(500,0.12,'sine',0.09);beep(500,0.12,'sine',0.09,0.14);}
+}
+function toggleSfx(){
+ sfxOn=!sfxOn;
+ try{localStorage.setItem('mz_sfx',sfxOn?'on':'off');}catch(e){}
+ updateSfxBtn();
+ if(sfxOn)beep(880,0.08,'sine',0.1);
+}
+function updateSfxBtn(){var b=$('sfxBtn');if(b)b.textContent=sfxOn?'🔊':'🔇';}
+document.addEventListener('DOMContentLoaded',updateSfxBtn);
+document.addEventListener('click',function(e){
+ var t=e.target.closest&&e.target.closest('button');
+ if(!t||t.id==='sfxBtn')return;
+ if(t.classList.contains('mode-btn')||t.classList.contains('gt-btn')||t.classList.contains('diff-btn')||t.classList.contains('big-btn')||t.classList.contains('back'))sfxTap();
+},true);
+
+/* ========= مشاركة النتيجة ========= */
+function shareResult(){
+ if(!shareText){toast('لا توجد نتيجة لمشاركتها بعد');return;}
+ if(navigator.share){
+  navigator.share({title:'⚽ مزاد النجوم',text:shareText}).catch(function(){});
+  return;
+ }
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(shareText).then(function(){toast('✅ تم نسخ النتيجة — الصقها في أي مكان');}).catch(function(){fallbackShareCopy();});
+ }else{fallbackShareCopy();}
+}
+function fallbackShareCopy(){
+ try{
+  var ta=document.createElement('textarea');
+  ta.value=shareText;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  toast('✅ تم نسخ النتيجة — الصقها في أي مكان');
+ }catch(e){toast('تعذر نسخ النتيجة');}
+}
 
 /* ========= قاعدة البيانات (متوازنة + معتزلين أقوياء) ========= */
 var D=[
@@ -1002,7 +1078,7 @@ var ROUNDS=11;
 var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
 var CFG={budget:500,timer:20};
-var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1;
+var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
 var firstBidDone=false;
 var msgSeq=0,lastAppliedSeq=-1;
 var CARD_PRICES={wild:0,gift:15,norisk:25,protect:40,steal:80};
@@ -1040,7 +1116,21 @@ var TP_EASY=[
 ["فلوريان فيرتز","Florian Wirtz","🇩🇪","باير ليفركوزن","ليفربول",2025,125],
 ["ألكسندر إيزاك","Alexander Isak","🇸🇪","نيوكاسل","ليفربول",2025,145],
 ["موسى كايسيدو","Moisés Caicedo","🇪🇨","برايتون","تشيلسي",2023,133],
-["إنزو فرنانديز","Enzo Fernández","🇦🇷","بنفيكا","تشيلسي",2023,121]
+["إنزو فرنانديز","Enzo Fernández","🇦🇷","بنفيكا","تشيلسي",2023,121],
+["كريستيانو رونالدو","Cristiano Ronaldo","🇵🇹","سبورتينج لشبونة","مانشستر يونايتد",2003,17],
+["ليونيل ميسي","Lionel Messi","🇦🇷","برشلونة","باريس سان جيرمان",2021,0],
+["روبرت ليفاندوفسكي","Robert Lewandowski","🇵🇱","بايرن ميونخ","برشلونة",2022,45],
+["فينيسيوس جونيور","Vinícius Júnior","🇧🇷","فلامنجو","ريال مدريد",2018,45],
+["زين الدين زيدان","Zinedine Zidane","🇫🇷","يوفنتوس","ريال مدريد",2001,75.6],
+["لويس سواريز","Luis Suárez","🇺🇾","ليفربول","برشلونة",2014,81.72],
+["رونالدينيو","Ronaldinho","🇧🇷","باريس سان جيرمان","برشلونة",2003,30],
+["دافيد بيكهام","David Beckham","🏴󠁧󠁢󠁥󠁮󠁧󠁿","مانشستر يونايتد","ريال مدريد",2003,37.5],
+["رونالدو (البرازيلي)","Ronaldo","🇧🇷","إنتر ميلان","ريال مدريد",2002,45],
+["نيمار","Neymar","🇧🇷","سانتوس","برشلونة",2013,88.2],
+["أنخيل دي ماريا","Ángel Di María","🇦🇷","ريال مدريد","مانشستر يونايتد",2014,75],
+["جيانلويجي بوفون","Gianluigi Buffon","🇮🇹","بارما","يوفنتوس",2001,52],
+["هيرنان كريسبو","Hernán Crespo","🇦🇷","بارما","لاتسيو",2000,56.81],
+["كريستيان فييري","Christian Vieri","🇮🇹","لاتسيو","إنتر ميلان",1999,49.06]
 ];
 var TP_MID=[
 ["جاك جريليش","Jack Grealish","🏴󠁧󠁢󠁥󠁮󠁧󠁿","أستون فيلا","مانشستر سيتي",2021,117],
@@ -1070,7 +1160,22 @@ var TP_MID=[
 ["كاي هافيرتس","Kai Havertz","🇩🇪","باير ليفركوزن","تشيلسي",2020,80],
 ["تيموثي فيرنانديز","Timo Werner","🇩🇪","لايبزيج","تشيلسي",2020,53],
 ["خوليان ألفاريز","Julián Álvarez","🇦🇷","ريفر بليت","مانشستر سيتي",2022,17.7],
-["كريم بنزيمة","Karim Benzema","🇫🇷","ليون","ريال مدريد",2009,35]
+["كريم بنزيمة","Karim Benzema","🇫🇷","ليون","ريال مدريد",2009,35],
+["أنجيل دي ماريا","Ángel Di María","🇦🇷","بنفيكا","ريال مدريد",2010,25],
+["مسعود أوزيل","Mesut Özil","🇩🇪","فيردر بريمن","ريال مدريد",2010,15],
+["توني كروس","Toni Kroos","🇩🇪","بايرن ميونخ","ريال مدريد",2014,25],
+["جيمس رودريجيز","James Rodríguez","🇨🇴","موناكو","ريال مدريد",2014,80],
+["ألفارو موراتا","Álvaro Morata","🇪🇸","ريال مدريد","تشيلسي",2017,66],
+["فيليبي كوتينيو","Philippe Coutinho","🇧🇷","برشلونة","أستون فيلا",2023,20],
+["دانيلو","Danilo","🇧🇷","ريال مدريد","مانشستر سيتي",2017,26.5],
+["فريد","Fred","🇧🇷","شاختار دونيتسك","مانشستر يونايتد",2018,59],
+["ناثان أكيه","Nathan Aké","🇳🇱","بورنموث","مانشستر سيتي",2020,45],
+["روبن دياز","Rúben Dias","🇵🇹","بنفيكا","مانشستر سيتي",2020,68],
+["دارويش زوما","Kurt Zouma","🇫🇷","تشيلسي","وست هام",2021,29.8],
+["ثياجو سيلفا","Thiago Silva","🇧🇷","باريس سان جيرمان","تشيلسي",2020,0],
+["أليكس تيليس","Alex Telles","🇧🇷","بورتو","مانشستر يونايتد",2020,15.4],
+["دونيلا مالين","Donyell Malen","🇳🇱","آيندهوفن","دورتموند",2021,30],
+["فاوستينو أنجيلي","Facundo Pellistri","🇺🇾","بينارول","مانشستر يونايتد",2020,9]
 ];
 var TP_HARD=[
 ["ماركو أسينسيو","Marco Asensio","🇪🇸","ماجوركا","ريال مدريد",2015,3.5],
@@ -1105,7 +1210,29 @@ var TP_HARD=[
 ["يوشكو جفارديول","Joško Gvardiol","🇭🇷","لايبزيج","مانشستر سيتي",2023,90],
 ["نيكولو باريلا","Nicolò Barella","🇮🇹","كالياري","إنتر ميلان",2019,40],
 ["هاكان تشالهان أوغلو","Hakan Çalhanoğlu","🇹🇷","باير ليفركوزن","ميلان",2017,0],
-["بيوتر زيلينسكي","Piotr Zieliński","🇵🇱","أودينيزي","نابولي",2016,16]
+["بيوتر زيلينسكي","Piotr Zieliński","🇵🇱","أودينيزي","نابولي",2016,16],
+["نجولو كانتي","N'Golo Kanté","🇫🇷","كاين","ليستر سيتي",2015,7.5],
+["رودريجو","Rodrygo","🇧🇷","سانتوس","ريال مدريد",2019,45],
+["إدير ميليتاو","Éder Militão","🇧🇷","بورتو","ريال مدريد",2019,50],
+["فيرلاند مندي","Ferland Mendy","🇫🇷","ليون","ريال مدريد",2019,48],
+["توماس ميونييه","Thomas Meunier","🇧🇪","بروج","باريس سان جيرمان",2016,7],
+["ماركوس ليونارد","Marcos Llorente","🇪🇸","ريال مدريد","أتلتيكو مدريد",2019,40],
+["ياني كاراسكو","Yannick Carrasco","🇧🇪","أتلتيكو مدريد","داليان بروفيشنال",2018,30],
+["كوارسما","Ricardo Quaresma","🇵🇹","بورتو","إنتر ميلان",2008,18.6],
+["باولو ديبالا","Paulo Dybala","🇦🇷","بالرمو","يوفنتوس",2015,32],
+["ميرالم بيانيتش","Miralem Pjanić","🇧🇦","روما","يوفنتوس",2016,32],
+["ليوناردو بونوتشي","Leonardo Bonucci","🇮🇹","يوفنتوس","ميلان",2017,42],
+["جونزالو هيجواين","Gonzalo Higuaín","🇦🇷","يوفنتوس","تشيلسي",2019,0],
+["هيرنانديز","Theo Hernández","🇫🇷","ريال مدريد","ميلان",2019,20],
+["ساندرو تونالي","Sandro Tonali","🇮🇹","بريشيا","ميلان",2020,15],
+["أوليفييه جيرو","Olivier Giroud","🇫🇷","أرسنال","تشيلسي",2018,0],
+["بيير إيميريك أوباميانج","Pierre-Emerick Aubameyang","🇬🇦","دورتموند","أرسنال",2018,63.75],
+["نيكولاس بيبيه","Nicolas Pépé","🇨🇮","ليل","أرسنال",2019,80],
+["توماس بارتي","Thomas Partey","🇬🇭","أتلتيكو مدريد","أرسنال",2020,50],
+["بن وايت","Ben White","🏴󠁧󠁢󠁥󠁮󠁧󠁿","برايتون","أرسنال",2021,58],
+["أرون رامسدال","Aaron Ramsdale","🏴󠁧󠁢󠁥󠁮󠁧󠁿","شيفيلد يونايتد","أرسنال",2021,30],
+["مارتن أوديجارد","Martin Ødegaard","🇳🇴","ريال مدريد","أرسنال",2021,35],
+["كاي هافيرتس","Kai Havertz","🇩🇪","تشيلسي","أرسنال",2023,75]
 ];
 
 /* ========= جلب أسعار حقيقية لايف من Transfermarkt (مع رجوع تلقائي للأرقام الموثّقة أعلاه لو فشل الاتصال) ========= */
@@ -1186,6 +1313,20 @@ var PEER_SERVERS=[
 var peerSrvIdx=parseInt(localStorage.getItem('mz_srv')||'0',10)||0;
 if(peerSrvIdx>=PEER_SERVERS.length)peerSrvIdx=0;
 var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:10},debug:0,pingInterval:2500,referrerPolicy:'no-referrer'};
+/* على شبكات الجوال (خصوصًا خلف NAT مشترك بين المشتركين) أحيانًا الاتصال المباشر بين الجهازين
+   يفشل تمامًا حتى لو نجح الاتصال بسيرفر التوصيل؛ الحل هو إجبار المرور عبر خادم TURN فقط (relay) */
+var forceRelay=false;
+function setRelayMode(on){
+ forceRelay=on;
+ if(on)PEERCFG.config.iceTransportPolicy='relay';
+ else delete PEERCFG.config.iceTransportPolicy;
+}
+function toggleRelayUI(){
+ setTimeout(function(){
+  var chk=$('relayChk');
+  if(chk)setRelayMode(chk.checked);
+ },0);
+}
 function applyPeerServer(){
  var s=PEER_SERVERS[peerSrvIdx]||{};
  ['host','port','secure','path','key'].forEach(function(k){delete PEERCFG[k];});
@@ -1364,6 +1505,8 @@ function pickGameType(t){
  $('rBud').classList.toggle('hidden',t==='boxes');
  $('tpDiffBox').classList.toggle('hidden',t!=='transferprice');
  $('timeBudBox').classList.toggle('hidden',t==='transferprice');
+ $('mb4').classList.toggle('hidden',t!=='transferprice');
+ if(mode===4&&t!=='transferprice')mode=1;
  if(t==='auction'){
   $('gameDesc').innerHTML='مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا (حارس + 4 دفاع + 3 وسط + 3 هجوم).<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.';
  }else if(t==='boxes'){
@@ -1378,10 +1521,12 @@ function pickMode(m){
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
   $('name1').classList.remove('err-input');
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
-  $('name2').classList.remove('err-input');setErr('');saveNames();initUserPeer();
+  if(m===4&&gameType!=='transferprice'){setErr('⚠️ وضع السولو متاح فقط في لعبة راجع سعرك');return;}
+  $('name2').classList.remove('err-input');setErr('');saveNames();
+  if(m!==4)initUserPeer();
   mode=m;online=(m===3);show(m===3?'room':'settings');
   if(m!==3){
-   $('startBtn').textContent=gameType==='boxes'?'بدء اللعبة':(gameType==='transferprice'?'بدء التحدي':'بدء المزاد');
+   $('startBtn').textContent=gameType==='boxes'?'بدء اللعبة':(gameType==='transferprice'?(m===4?'🧍 ابدأ التحدي بمفردك':'بدء التحدي'):'بدء المزاد');
   }
  }catch(e){toast('خطأ: '+e.message);}
 }
@@ -1463,13 +1608,27 @@ function scheduleRejoin(){
  autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(1000*rejoinTries,5000));
 }
 function wireConn(){
+ var myConn=conn;
+ var dataOpenTimer=setTimeout(function(){
+  if(conn!==myConn||!conn||conn.open)return;
+  if(!isHost&&!forceRelay){
+   setRelayMode(true);
+   toast('🔧 الاتصال المباشر بطيء — بنجرّب مسار محسّن لشبكات الجوال...');
+   try{conn.close();}catch(e){}
+   connectToHost(savedCode,true);
+  }else if(isHost){
+   toast('⏳ لسه مفيش اتصال — لو استمرت المشكلة فعّل "اتصال محسّن لشبكات الجوال" من الغرفة');
+  }
+ },9000);
  conn.on('open',function(){
+  clearTimeout(dataOpenTimer);
   rejoinTries=0;lastRx=Date.now();
   if(!isHost){conn.send({type:'hello',name:myName()});if(!started)show('wait');else conn.send({type:'sync'});}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
  });
  conn.on('data',function(d){lastRx=Date.now();try{handleData(d);}catch(e){toast('⚠️ خطأ أثناء المزامنة، جرّب إعادة الاتصال لو استمرت المشكلة');console.error(e);}});
  conn.on('close',function(){
+  clearTimeout(dataOpenTimer);
   clearInterval(hbInt);
   if(isHost){toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
   else{$('connLbl').textContent='🟡 إعادة الاتصال…';scheduleRejoin();}
@@ -1592,7 +1751,7 @@ function startFromSettings(){
    btn.disabled=false;btn.textContent=prevTxt;
    initGame();
   }else{
-   P=[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))];
+   P=(mode===4)?[mkP(myName())]:[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))];
    if(gameType==='auction'){var bs2=balancedStars();stars=bs2.stars;pool=bs2.pool;}
    else if(isTP){stars=[];pool=[];}
    else{stars=[];pool=[];boxUsedSet={};}
@@ -1635,6 +1794,7 @@ function startTimer(){
   timeLeft=CFG.timer;
   timerInt=setInterval(function(){
    timeLeft--;
+   if(timeLeft>=0&&timeLeft<=5)sfxTick();
    if(timeLeft<0){clearInterval(timerInt);
     if(!firstBidDone){log('انتهى وقت '+P[turn].name+' بدون عرض — تخطي الدور');turn=1-turn;render();broadcast();startTimer();maybeAI();return;}
     log('انتهى وقت '+P[turn].name+' — سُلّمت الصفقة');resolveRound(1-turn,turn);return;}
@@ -1660,8 +1820,8 @@ function humanCustom(){
  if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise',v:v});
  doRaise(v);
 }
-function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;if(CFG.timer>0)timeLeft+=3;render();broadcast();startTimer();maybeAI();}
-function doPass(){if(phase!=='bid')return;log(P[turn].name+' سلّم الصفقة للخصم');resolveRound(1-turn,turn);}
+function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;if(CFG.timer>0)timeLeft+=3;sfxRaise();render();broadcast();startTimer();maybeAI();}
+function doPass(){if(phase!=='bid')return;log(P[turn].name+' سلّم الصفقة للخصم');sfxPass();resolveRound(1-turn,turn);}
 function maybeAI(){if(mode===1&&!online&&turn===1&&phase==='bid'){busy=true;render();setTimeout(function(){if(phase!=='bid')return;busy=false;aiMove();},900+Math.random()*800);}}
 var AI_TARGETS={GK:1,DEF:4,MID:4,ATT:2};
 function squadNeeds(i){
@@ -1810,6 +1970,7 @@ function doPickBox(seat,idx){
  if(phase!=='box'||boxPicked[seat])return;
  if(boxOpened[seat].length!==1||boxOpened[seat][0]!==idx)return;
  boxPicked[seat]=boxSets[seat][idx];
+ sfxCard();
  render();broadcast();
  if(boxPicked[0]&&boxPicked[1])setTimeout(finalizeBoxPos,300);
 }
@@ -1892,7 +2053,8 @@ function tpSubmitGuess(seat,v){
  if(v===null||v===undefined||isNaN(v)||v<0)return false;
  tpGuess[seat]=Math.round(v*10)/10;tpLocked[seat]=true;
  log(P[seat].name+' قفل توقعه');
- if(tpLocked[0]&&tpLocked[1]){setTimeout(revealTPRound,300);}
+ if(mode===4){setTimeout(revealTPRound,300);}
+ else if(tpLocked[0]&&tpLocked[1]){setTimeout(revealTPRound,300);}
  else{render();broadcast();}
  return true;
 }
@@ -1909,9 +2071,22 @@ function aiTPGuess(){
   tpSubmitGuess(1,g);
  },900+Math.random()*1200);
 }
+function tpStarsFor(errPct){return errPct<=5?3:(errPct<=15?2:(errPct<=30?1:0));}
 function revealTPRound(){
  if(online&&!isHost)return;
  var real=tpCur.fee;
+ if(mode===4){
+  var d0s=Math.abs(tpGuess[0]-real);
+  var errPct=real>0?(d0s/real*100):(d0s>0?100:0);
+  var st=tpStarsFor(errPct);
+  tpScore[0]+=st;
+  tpHistory.push({ar:tpCur.ar,flag:tpCur.flag,from:tpCur.from,to:tpCur.to,year:tpCur.year,real:real,g0:tpGuess[0],d0:d0s,errPct:errPct,stars:st});
+  log('توقعك '+fmtM(tpGuess[0])+' — السعر الحقيقي '+real+' مليون — '+(st>0?('⭐'.repeat(st)):'محاولة غير دقيقة'));
+  tpPhase='reveal';
+  sfxRoundOutcome(st>0);
+  render();broadcast();
+  return;
+ }
  var d0=Math.abs(tpGuess[0]-real),d1=Math.abs(tpGuess[1]-real);
  var winner=-1;
  if(d0<d1)winner=0;else if(d1<d0)winner=1;
@@ -1919,6 +2094,8 @@ function revealTPRound(){
  tpHistory.push({ar:tpCur.ar,flag:tpCur.flag,from:tpCur.from,to:tpCur.to,year:tpCur.year,real:real,g0:tpGuess[0],g1:tpGuess[1],d0:d0,d1:d1,winner:winner});
  log(winner===-1?('تعادل! السعر الحقيقي '+real+' مليون'):(P[winner].name+' يفوز بالجولة — السعر الحقيقي '+real+' مليون'));
  tpPhase='reveal';
+ var meSeat=online?mySeat:0;
+ sfxRoundOutcome(winner===-1?null:winner===meSeat);
  render();broadcast();
 }
 function tpNextRoundClick(){
@@ -1937,6 +2114,7 @@ function tpDotClass(i){
  return w===0?'done0':(w===1?'done1':'donedraw');
 }
 function renderTP(){
+ if(mode===4)return renderTPSolo();
  if(!P[0]||!P[1]||!tpCur){return;}
  var me=online?mySeat:0,other=1-me;
  var html='';
@@ -1985,6 +2163,40 @@ function renderTP(){
  $('viewTP').innerHTML=html;
  bindWiki($('viewTP'));
 }
+function renderTPSolo(){
+ if(!P[0]||!tpCur)return;
+ var html='';
+ html+='<div class="tp-scoreboard"><div class="tp-sc lead"><div class="nm2">'+P[0].name+'</div><div class="pts">⭐ '+tpScore[0]+'</div></div></div>';
+ html+='<div class="tp-progress">';
+ for(var i=0;i<tpDeck.length;i++){
+  var cls='';
+  if(i<tpHistory.length){var st=tpHistory[i].stars;cls=st>=3?'done0':(st>=1?'donedraw':'done1');}
+  html+='<div class="tp-dot '+cls+(i===tpRound?' cur':'')+'">'+(i+1)+'</div>';
+ }
+ html+='</div>';
+ html+='<div class="tp-round-pill">الجولة '+(tpRound+1)+' / '+tpDeck.length+'</div>';
+ html+='<div class="tp-hero"><img data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
+ html+='<div class="tp-move">'+tpCur.from+' <span class="arrow">➜</span> '+tpCur.to+' <span class="yr">('+tpCur.year+')</span></div></div>';
+ if(tpPhase==='guess'){
+  var locked=tpLocked[0];
+  html+='<div class="tp-guessbox">';
+  html+='<label style="font-weight:900;margin-bottom:6px">توقعك بالمليون يورو</label>';
+  if(locked){
+   html+='<div class="tp-lockstatus">🔒 تم قفل التوقع ('+fmtM(tpGuess[0])+')…</div>';
+  }else{
+   html+='<input type="number" inputmode="decimal" id="tpGuessInput0" placeholder="مثال: 85">';
+   html+='<button class="big-btn green" style="margin-top:8px" onclick="tpConfirm(0)">✅ قفل التوقع</button>';
+  }
+  html+='</div><div class="tp-hint">3 نجوم لو قريب جدًا (≤5%)، نجمتين (≤15%)، نجمة (≤30%)</div>';
+ }else if(tpPhase==='reveal'){
+  var h=tpHistory[tpHistory.length-1];
+  html+='<div class="tp-real">💶 السعر الحقيقي: '+fmtM(h.real)+'</div>';
+  html+='<div class="tp-result-row'+(h.stars>0?' win':'')+'"><div><div class="who">توقعك: '+fmtM(h.g0)+'</div><div class="gv">فرق '+h.d0.toFixed(1)+' مليون ('+h.errPct.toFixed(0)+'%)</div></div><div class="df">'+(h.stars>0?'⭐'.repeat(h.stars):'—')+'</div></div>';
+  html+='<button class="big-btn green" style="margin-top:6px" onclick="tpNextRoundClick()">'+(tpRound+1>=tpDeck.length?'🏁 عرض النتيجة النهائية':'الجولة التالية ➜')+'</button>';
+ }
+ $('viewTP').innerHTML=html;
+ bindWiki($('viewTP'));
+}
 function tpConfirm(seat){
  var el=$('tpGuessInput'+seat);
  if(!el)return;
@@ -1994,7 +2206,9 @@ function tpConfirm(seat){
  tpSubmitGuess(seat,v);
 }
 function endTPGame(){
+ if(mode===4)return endTPGameSolo();
  phase='end';
+ sfxFanfare();
  var champ=tpScore[0]>tpScore[1]?0:(tpScore[1]>tpScore[0]?1:-1);
  var totalErr0=0,totalErr1=0,best=null,bestDiff=1e9;
  tpHistory.forEach(function(h){
@@ -2015,7 +2229,42 @@ function endTPGame(){
  '</table>'+
  (best?('<div class="tp-stat-box">🎯 <b>أقرب توقع في اللعبة:</b> '+best.flag+' '+best.ar+' — فرق '+bestDiff.toFixed(1)+' مليون فقط عن السعر الحقيقي ('+fmtM(best.real)+')</div>'):'')+
  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
- '<button class="big-btn green" style="margin-top:10px" onclick="location.reload()">العب مجددًا</button>';
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ shareText='💰 راجع سعرك — النتيجة النهائية\n'+
+ (champ===-1?'🤝 تعادل '+tpScore[0]+' - '+tpScore[1]:'🏆 البطل: '+P[champ].name+' ('+tpScore[0]+' - '+tpScore[1]+')')+'\n'+
+ '📊 متوسط خطأ '+P[0].name+': '+avg0+' مليون €\n'+
+ '📊 متوسط خطأ '+P[1].name+': '+avg1+' مليون €\n'+
+ (best?('🎯 أقرب توقع: '+best.flag+' '+best.ar+' (فرق '+bestDiff.toFixed(1)+' مليون فقط)\n'):'')+
+ '🎮 جرّب تخمّن أسعار انتقالات النجوم بنفسك!';
+ render();broadcast();
+}
+function endTPGameSolo(){
+ phase='end';
+ sfxFanfare();
+ var totalErr=0,totalStars=0,best=null,bestDiff=1e9;
+ tpHistory.forEach(function(h){
+  totalErr+=h.d0;totalStars+=h.stars;
+  if(h.d0<bestDiff){bestDiff=h.d0;best=h;}
+ });
+ var avg=(totalErr/Math.max(1,tpHistory.length)).toFixed(1);
+ var maxStars=tpHistory.length*3;
+ var pct=maxStars?Math.round(totalStars/maxStars*100):0;
+ var grade=pct>=80?'🏆 خبير الانتقالات':(pct>=50?'👍 لاعب جيد':'📈 استمر في المحاولة');
+ var histHtml=tpHistory.map(function(h,i){
+  return '<div class="tp-result-row'+(h.stars>0?' win':'')+'"><div><div class="who">'+(i+1)+'. '+h.flag+' '+h.ar+'</div><div class="gv">'+h.from+' ➜ '+h.to+' ('+h.year+') — الحقيقي: '+fmtM(h.real)+' — توقعك: '+fmtM(h.g0)+'</div></div><div class="df">'+(h.stars>0?'⭐'.repeat(h.stars):'—')+'</div></div>';
+ }).join('');
+ endH='<h2>النتيجة النهائية — راجع سعرك (سولو)</h2>'+
+ '<div class="winner-banner">⭐ مجموع نقاطك: '+totalStars+' / '+maxStars+' ('+pct+'%)<br><span style="font-size:13px">'+grade+'</span></div>'+
+ '<table class="stat-t"><tr><td>متوسط الخطأ عن السعر الحقيقي</td><td>'+avg+' مليون €</td></tr></table>'+
+ (best?('<div class="tp-stat-box">🎯 <b>أقرب توقع في اللعبة:</b> '+best.flag+' '+best.ar+' — فرق '+bestDiff.toFixed(1)+' مليون فقط عن السعر الحقيقي ('+fmtM(best.real)+')</div>'):'')+
+ '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ shareText='💰 راجع سعرك (سولو) — النتيجة النهائية\n'+
+ '⭐ مجموع نقاطي: '+totalStars+' / '+maxStars+' ('+pct+'%)\n'+
+ grade+'\n'+
+ '📊 متوسط الخطأ: '+avg+' مليون €\n'+
+ (best?('🎯 أقرب توقع لي: '+best.flag+' '+best.ar+' (فرق '+bestDiff.toFixed(1)+' مليون فقط)\n'):'')+
+ '🎮 جرّب تخمّن أسعار انتقالات النجوم بنفسك!';
  render();broadcast();
 }
 
@@ -2102,6 +2351,7 @@ function confirmCard(){
  if(!cardFlow||!cardFlow.card)return;
  var c=cardFlow.card,i=cardFlow.sel,j=cardFlow.sel2,actor=cardFlow.actor;
  if(c==='steal'&&(i<0||j<0))return toast('اختار لاعب من عندك ولاعب من الخصم');
+ sfxCard();
  if(online&&!isHost){conn&&conn.open&&conn.send({type:'act',a:'card',c:c,i:i,j:j});cardFlow=null;render();return;}
  applyPostCard(actor,c,i,j);cardFlow=null;render();
 }
@@ -2303,6 +2553,7 @@ function stats(i){
 }
 function endGame(){
  phase='end';clearInterval(timerInt);
+ sfxFanfare();
  var s0=stats(0),s1=stats(1);
  var sim=simulateMatch();
  var champ=sim.g0!==sim.g1?(sim.g0>sim.g1?0:1):(s0.tot!==s1.tot?(s0.tot>s1.tot?0:1):(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)));
@@ -2319,7 +2570,13 @@ function endGame(){
  (gameType==='auction'?('<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
  '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr>'):'')+'</table>'+
  [0,1].map(function(i){return '<div class="squad-end"><b style="color:var(--acc)">'+P[i].name+':</b><br>'+sq(i)+'</div>';}).join('')+
- '<button class="big-btn green" onclick="location.reload()">العب مجددًا</button>';
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ shareText='⚽ '+(gameType==='boxes'?'صناديق الحظ':'مزاد النجوم')+' — النتيجة النهائية\n'+
+ (champ===-1?'🤝 تعادل بين '+P[0].name+' و'+P[1].name:'🏆 البطل: '+P[champ].name)+'\n'+
+ '💪 '+P[0].name+': قوة '+s0.tot+' (متوسط '+s0.avg+')\n'+
+ '💪 '+P[1].name+': قوة '+s1.tot+' (متوسط '+s1.avg+')\n'+
+ '⚽ نتيجة المباراة النهائية: '+sim.g0+' - '+sim.g1+'\n'+
+ '🎮 العب مزاد النجوم بنفسك!';
  render();broadcast();
 }
 function renderPostCardsOverlay(){
@@ -2454,6 +2711,8 @@ document.addEventListener('DOMContentLoaded',function(){
   $('mb1').onclick=function(){pickMode(1);};
   $('mb2').onclick=function(){pickMode(2);};
   $('mb3').onclick=function(){pickMode(3);};
+  $('mb4').onclick=function(){pickMode(4);};
+  updateSfxBtn();
   if($('name1').value)initUserPeer();
  }catch(e){}
 });
