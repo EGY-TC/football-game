@@ -190,6 +190,79 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .friend-row{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:4px 0;font-size:12px;font-weight:700;justify-content:space-between;flex-wrap:wrap}
 .friend-row button{border:none;border-radius:8px;padding:5px 10px;font-weight:800;font-size:11px;cursor:pointer}
 .fr-acc{background:var(--acc);color:#04180a}.fr-dec{background:var(--red);color:#1c0407}.fr-inv{background:var(--blue);color:#04101c}.fr-del{background:var(--card);color:var(--dim);border:1px solid var(--line)!important}
+
+/* ===== تحسينات الشكل + باكات UT ===== */
+body{background:radial-gradient(1200px 600px at 50% -10%,rgba(88,166,255,.10),transparent 60%),radial-gradient(900px 500px at 100% 100%,rgba(177,74,255,.08),transparent 60%),var(--bg) !important;background-attachment:fixed}
+.big-btn{box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .12s ease,filter .2s ease}
+.big-btn:hover{filter:brightness(1.08)}
+.tabs button{transition:all .18s ease}
+.tabs button.sel{background:linear-gradient(180deg,rgba(63,185,80,.16),transparent);box-shadow:0 0 0 1px rgba(63,185,80,.35) inset}
+.team{transition:border-color .2s ease,box-shadow .2s ease}
+.team.turn{box-shadow:0 0 0 1px rgba(63,185,80,.35),0 8px 24px rgba(63,185,80,.10)}
+.pcard{background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.bid-num{text-shadow:0 0 18px rgba(210,153,34,.35)}
+.obox{box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.box-title{font-size:18px;letter-spacing:.5px;text-shadow:0 0 16px rgba(210,153,34,.3)}
+.box-panel{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent),var(--card2);border-radius:16px}
+.box-grid{gap:10px}
+
+/* الباك (Pack) بشكل Ultimate Team */
+.box-item.pack{
+ aspect-ratio:.68;border:none;border-radius:12px;padding:0;
+ background:
+  radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,.18),transparent 55%),
+  linear-gradient(200deg,#7b2ff7 0%,#5d2bd6 28%,#2b6fd6 55%,#17c3c9 100%);
+ box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 0 2px rgba(255,215,120,.55) inset;
+ overflow:hidden;position:relative;display:block;
+ animation:packFloat 3.6s ease-in-out infinite;
+}
+.box-item.pack.pk1{background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,.16),transparent 55%),linear-gradient(200deg,#0f2a5a 0%,#123f8a 35%,#2b8fd6 70%,#6fe3d2 100%)}
+.box-item.pack.pk2{background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,.16),transparent 55%),linear-gradient(200deg,#3a0b4f 0%,#7b1fa2 35%,#c2185b 72%,#ff9a3c 100%)}
+.box-item.pack.pk3{background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,.16),transparent 55%),linear-gradient(200deg,#12331f 0%,#1e7a45 38%,#2fbf71 70%,#d2e86a 100%)}
+.box-item.pack::after{
+ content:'';position:absolute;inset:0;
+ background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 8px,transparent 8px 20px);
+ mix-blend-mode:overlay;pointer-events:none;
+}
+.box-item.pack .pack-shine{
+ position:absolute;top:-60%;left:-70%;width:60%;height:220%;
+ background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+ transform:rotate(18deg);animation:packShine 3.2s ease-in-out infinite;pointer-events:none;
+}
+.box-item.pack .pack-badge{
+ position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:6px;
+ background:linear-gradient(180deg,#ffe9a8,#d29922);color:#3a2503;
+ display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;
+ box-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+.box-item.pack .pack-crest{
+ position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);
+ width:52%;aspect-ratio:.82;
+ background:linear-gradient(180deg,#0d1b3a,#0a1024);
+ clip-path:polygon(50% 0,100% 16%,100% 62%,50% 100%,0 62%,0 16%);
+ display:flex;align-items:center;justify-content:center;
+ box-shadow:0 0 0 2px rgba(255,215,120,.75),0 6px 14px rgba(0,0,0,.45);
+}
+.box-item.pack .pack-crest b{
+ font-size:15px;font-weight:900;letter-spacing:1px;
+ background:linear-gradient(180deg,#ffe9a8,#d29922);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.box-item.pack .pack-foot{
+ position:absolute;bottom:6px;left:0;right:0;text-align:center;
+ font-size:8.5px;font-weight:900;letter-spacing:1.5px;color:rgba(255,255,255,.85);
+ text-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.box-item.pack:not(.locked):hover{transform:translateY(-3px) scale(1.02)}
+.box-item.pack:not(.locked):active{transform:scale(.95)}
+.box-item.pack.locked{filter:grayscale(.75) brightness(.55);animation:none}
+@keyframes packShine{0%{left:-70%}55%{left:130%}100%{left:130%}}
+@keyframes packFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.box-item.opened{animation:packOpen .45s cubic-bezier(.2,.9,.25,1.2)}
+@keyframes packOpen{0%{transform:rotateY(80deg) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+.box-item.opened.picked{box-shadow:0 0 0 2px var(--acc),0 10px 26px rgba(63,185,80,.25)}
+.box-item.opened.bonus{box-shadow:0 0 0 2px var(--purple),0 10px 26px rgba(177,74,255,.25)}
+.box-pickbtn{box-shadow:0 4px 12px rgba(63,185,80,.3)}
+
 </style>
 </head>
 <body>
@@ -762,14 +835,35 @@ var cardsReady=[false,false];
 var BOX_POS=['GK','DEF','MID','CAM','FWD'];
 var BOX_LBL={GK:'حارس مرمى',DEF:'مدافع',MID:'وسط ميدان',CAM:'وسط مهاجم',FWD:'مهاجم'};
 var boxRound=0,boxSets=[[],[]],boxOpened=[[],[]],boxPicked=[null,null],boxUsedSet={};
-var PEERCFG={config:{iceServers:[
- {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun3.l.google.com:19302','stun:stun4.l.google.com:19302']},
- {urls:'stun:global.stun.twilio.com:3478'},
- {urls:'stun:stun.services.mozilla.com'},
- {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
- {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
- {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
-],iceCandidatePoolSize:6}};
+var ICE=[
+ {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun.cloudflare.com:3478','stun:stun.relay.metered.ca:80']},
+ {urls:'turn:standard.relay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:standard.relay.metered.ca:80?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:standard.relay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turns:standard.relay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:staticauth.openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:staticauth.openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+];
+/* قائمة خوادم التوصيل (Signaling) مع تبديل تلقائي لو واحد وقع */
+var PEER_SERVERS=[
+ {},
+ {host:'0.peerjs.com',port:443,secure:true,path:'/'},
+ {host:'peerjs.92k.de',port:443,secure:true,path:'/'}
+];
+var peerSrvIdx=0;
+var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:8},debug:0,pingInterval:3000};
+function applyPeerServer(){
+ var s=PEER_SERVERS[peerSrvIdx]||{};
+ ['host','port','secure','path','key'].forEach(function(k){delete PEERCFG[k];});
+ for(var k in s)PEERCFG[k]=s[k];
+}
+applyPeerServer();
+function bumpPeerServer(){
+ peerSrvIdx=(peerSrvIdx+1)%PEER_SERVERS.length;
+ applyPeerServer();
+ return peerSrvIdx;
+}
+function isNetErr(e){var t=e&&e.type;return t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed';}
 var IMG={};
 var GLBL={GK:'حراسة',DEF:'دفاع',MID:'وسط',ATT:'هجوم'};
 var captainIdx=[-1,-1];
@@ -791,7 +885,7 @@ function initUserPeer(){
   userPeer=new Peer('mzaidaf-'+myCode,PEERCFG);
   userPeer.on('connection',function(c){wireSocial(c);});
   userPeer.on('disconnected',function(){try{userPeer.reconnect();}catch(e){}});
-  userPeer.on('error',function(){});
+  userPeer.on('error',function(e){if(isNetErr(e)){bumpPeerServer();setTimeout(function(){try{userPeer.destroy();}catch(_){ } initUserPeer();},1500);}});
  }catch(e){}
 }
 function wireSocial(c){
@@ -1121,10 +1215,59 @@ function humanCustom(){
 function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;if(CFG.timer>0)timeLeft+=3;render();broadcast();startTimer();maybeAI();}
 function doPass(){if(phase!=='bid')return;log(P[turn].name+' سلّم الصفقة للخصم');resolveRound(1-turn,turn);}
 function maybeAI(){if(mode===1&&!online&&turn===1&&phase==='bid'){busy=true;render();setTimeout(function(){if(phase!=='bid')return;busy=false;aiMove();},900+Math.random()*800);}}
-function aiMove(){if(phase!=='bid')return;var s=curStar;if(!s)return;
- if(!firstBidDone){if(bid+1<=P[1].budget)doRaise();else resolveRound(1-turn,turn);return;}
- var w=((s.r-70)/22)*CFG.budget*(0.25+Math.random()*0.2);w=Math.min(w,CFG.budget*0.6);w=Math.floor(w);
- if(bid+1<=P[1].budget&&bid+1<=w)doRaise();else doPass();}
+var AI_TARGETS={GK:1,DEF:4,MID:4,ATT:2};
+function squadNeeds(i){
+ var have={GK:0,DEF:0,MID:0,ATT:0};
+ P[i].squad.forEach(function(p){have[posGroup(p)]=(have[posGroup(p)]||0)+1;});
+ var need={};for(var k in AI_TARGETS)need[k]=Math.max(0,AI_TARGETS[k]-have[k]);
+ return need;
+}
+function needCount(i){var n=squadNeeds(i),t=0;for(var k in n)t+=n[k];return t;}
+/* تقييم اللاعب بالنسبة للذكاء الاصطناعي: أقصى سعر منطقي يدفعه */
+function aiValue(s){
+ var me=P[1],opp=P[0];
+ var starsLeft=Math.max(1,stars.length-round);
+ var slotsLeft=Math.max(1,Math.min(starsLeft,ROUNDS-me.squad.length));
+ var perSlot=me.budget/slotsLeft;
+ var q=(s.r-74)/12; if(q<-0.6)q=-0.6; if(q>1.9)q=1.9;
+ var val=perSlot*(0.55+0.85*q);
+ var need=squadNeeds(1),g=posGroup(s);
+ if(need[g]>0){
+  val*= (need[g]>=2?1.25:1.15);
+  /* لو المراكز الناقصة = عدد اللاعبين المتبقين، لازم ياخده مهما كان */
+  if(needCount(1)>=starsLeft)val=Math.max(val,me.budget-(starsLeft-1));
+ }else{
+  val*=0.6;
+ }
+ /* لو متأخر في القوة، يخاطر أكتر. لو متقدم، يوفر */
+ var diff=teamPower(1)-teamPower(0);
+ val*= diff<-6?1.15:(diff>6?0.92:1);
+ /* الخصم فلوسه قليلة → مش محتاج يغالي */
+ if(opp.budget<me.budget*0.5)val*=0.85;
+ val*= (0.94+Math.random()*0.12);
+ /* احتياطي: جنيه لكل مركز ناقص متبقي */
+ var reserve=Math.max(0,needCount(1)-1);
+ var cap=me.budget-reserve;
+ val=Math.floor(Math.min(val,cap));
+ return Math.max(0,val);
+}
+function aiMove(){
+ if(phase!=='bid')return; var s=curStar; if(!s)return;
+ var v=aiValue(s);
+ if(!firstBidDone){
+  if(bid+1<=P[1].budget&&(v>=1||needCount(1)>=Math.max(1,stars.length-round)))doRaise();
+  else resolveRound(1-turn,turn);
+  return;
+ }
+ var next=bid+1;
+ if(next<=P[1].budget&&next<=v){
+  /* قفزة ذكية: لو اللاعب مهم جدًا والسعر لسه رخيص، يزود أكتر عشان يخوف الخصم */
+  var jump=1;
+  if(v>=6&&bid<v*0.45)jump=Math.min(3,Math.max(1,Math.floor(v*0.15)));
+  var target=Math.min(P[1].budget,Math.min(v,bid+jump));
+  doRaise(Math.max(next,target));
+ }else doPass();
+}
 
 /* ========= صناديق الحظ (وضع اللعب الجديد) ========= */
 function posGroup5(p){if(p.pos==='GK')return'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return'DEF';if(p.pos==='CDM'||p.pos==='CM')return'MID';if(p.pos==='CAM')return'CAM';return'FWD';}
@@ -1194,6 +1337,12 @@ function doPickBox(seat,idx){
  render();broadcast();
  if(boxPicked[0]&&boxPicked[1])setTimeout(finalizeBoxPos,300);
 }
+function posPoolAvg(pos){
+ var c=PLAYERS.filter(function(p){return posGroup5(p)===pos&&!boxUsedSet[p.en];});
+ if(!c.length)return 80;
+ var t=0;c.forEach(function(p){t+=p.r;});
+ return t/c.length;
+}
 function aiBoxTurn(){
  setTimeout(function(){
   if(phase!=='box')return;
@@ -1201,15 +1350,23 @@ function aiBoxTurn(){
   doOpenBox(1,first);
   setTimeout(function(){
    if(phase!=='box'||boxPicked[1])return;
-   var r1=boxSets[1][first].r;
-   if(r1<82&&Math.random()<0.7){
+   var pl=boxSets[1][first];
+   var r1=pl.r+(pl.bonusCard?2.5:0);           /* الكارت ليه قيمة */
+   var ev=posPoolAvg(BOX_POS[boxRound])+0.8;   /* توقع الصندوق التاني */
+   var diff=teamPower(1)-teamPower(0);
+   if(diff<-4)ev+=2;      /* متأخر → يخاطر */
+   else if(diff>4)ev-=2;  /* متقدم → يأمّن */
+   if(boxRound>=BOX_POS.length-1&&diff>0)ev-=3; /* آخر جولة وهو فايز */
+   var gamble=r1<ev-0.5;
+   if(!gamble&&r1<ev+1&&Math.random()<0.25)gamble=true; /* لمسة عدم توقع */
+   if(gamble){
     var second=first;while(second===first)second=Math.floor(Math.random()*4);
-    doOpenBox(1,second);/* بيتاخد إجباري */
+    doOpenBox(1,second);
    }else{
     doPickBox(1,first);
    }
-  },700);
- },600);
+  },800);
+ },700);
 }
 function finalizeBoxPos(){
  if(online&&!isHost)return;
@@ -1499,7 +1656,7 @@ function renderBoxPhase(){
     var bonusBadge=pl.bonusCard?('<div class="box-bonus">'+(pl.bonusCard==='steal'?'🥷 سرقة!':'🛡️ حماية!')+'</div>'):'';
     html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
    }else{
-    html+='<div class="box-item'+(canOpen?'':' locked')+'" '+(canOpen?('onclick="boxClickOpen('+seat+','+i+')"'):'')+'><div class="bq">'+(mine?'🎁':'🔒')+'</div></div>';
+    html+='<div class="box-item pack pk'+(i%4)+(canOpen?'':' locked')+'" '+(canOpen?('onclick="boxClickOpen('+seat+','+i+')"'):'')+'><span class="pack-shine"></span><span class="pack-badge">'+(mine?'👥':'🔒')+'</span><span class="pack-crest"><b>UT</b></span><span class="pack-foot">PACK '+(i+1)+'</span></div>';
    }
   }
   html+='</div>';
