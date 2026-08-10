@@ -112,6 +112,7 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .mic-btn.on{background:rgba(63,185,80,.18);border-color:var(--acc);color:var(--acc)}
 .mic-btn.on .mic-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);animation:micpulse 1.1s infinite}
 @keyframes micpulse{50%{opacity:.25}}
+.opp-mic{font-size:10.5px;color:var(--acc);font-weight:800;margin-right:6px;animation:micpulse 1.1s infinite}
 #chatMsgs{max-height:110px;overflow:auto;padding:8px 10px;font-size:12px;line-height:1.9}
 #chatMsgs b{color:var(--blue)}
 .chat-in{display:flex;border-top:1px solid var(--line)}
@@ -460,7 +461,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div class="card">
 <div class="pc-ready" id="roomGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
 <button class="big-btn green" onclick="createRoom()">إنشاء غرفة</button>
-<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div></div>
+<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
 <div class="or">— أو —</div>
 <input id="joinCode" placeholder="رمز الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
 <button class="big-btn blue" style="margin-top:8px" onclick="joinRoom()">انضمام</button>
@@ -522,7 +523,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 </div>
 <div class="log" id="log"></div>
-<div id="chatBox" class="chat hidden"><div class="chat-hdr"><span>💬 دردشة</span><button id="micBtn" class="mic-btn" onclick="toggleMic()" title="اتكلم صوت مع خصمك">🎤 المايك مقفول</button></div><div id="chatMsgs"></div><div class="chat-in"><input id="chatIn" placeholder="رسالة…" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">إرسال</button></div></div>
+<div id="chatBox" class="chat hidden"><div class="chat-hdr"><span>💬 دردشة <span id="oppMicLbl" class="opp-mic hidden">🎤 خصمك بيتكلم</span></span><button id="micBtn" class="mic-btn" onclick="toggleMic()" title="اتكلم صوت مع خصمك">🎤 المايك مقفول</button></div><div id="chatMsgs"></div><div class="chat-in"><input id="chatIn" placeholder="رسالة…" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">إرسال</button></div></div>
 <audio id="remoteAudio" autoplay playsinline style="display:none"></audio>
 </div>
 <div id="viewSquads" class="hidden"></div>
@@ -539,7 +540,7 @@ function $(id){return document.getElementById(id);}
 function toast(t){var el=$('toast');if(!el)return;el.textContent=t;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},2800);}
 
 /* ========= مؤثرات صوتية (WebAudio — بدون ملفات خارجية) ========= */
-var sfxOn=localStorage.getItem('mz_sfx')!=='off';
+var sfxOn=localStorage.getItem('mz_sfx')==='on';
 var actx=null;
 function actxGet(){
  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){actx=null;}}
@@ -572,6 +573,8 @@ function sfxRoundOutcome(result){
  else if(result===false){beep(300,0.18,'sine',0.08);beep(220,0.22,'sine',0.08,0.14);}
  else{beep(500,0.12,'sine',0.09);beep(500,0.12,'sine',0.09,0.14);}
 }
+function sfxMicOn(){beep(700,0.07,'sine',0.09);beep(950,0.09,'sine',0.09,0.07);}
+function sfxMicOff(){beep(500,0.08,'sine',0.06);beep(320,0.1,'sine',0.06,0.06);}
 function toggleSfx(){
  sfxOn=!sfxOn;
  try{localStorage.setItem('mz_sfx',sfxOn?'on':'off');}catch(e){}
@@ -1752,17 +1755,20 @@ function toggleMic(){
   if(localStream)localStream.getAudioTracks().forEach(function(t){t.enabled=false;});
   updateMicBtn();
   toast('🔇 المايك مقفول');
+  try{if(conn&&conn.open)conn.send({type:'mic',on:false});}catch(e){}
   return;
  }
  if(localStream){
   localStream.getAudioTracks().forEach(function(t){t.enabled=true;});
   micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
+  try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
   startCallIfPossible();
   return;
  }
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('المتصفح ده مش بيدعم المايك');return;}
  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
   localStream=stream;micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
+  try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
   startCallIfPossible();
  }).catch(function(){toast('تعذر الوصول للمايك — تأكد من إذن المتصفح للموقع');});
 }
@@ -1772,6 +1778,7 @@ function stopVoice(){
  currentCall=null;
  if(localStream){try{localStream.getTracks().forEach(function(t){t.stop();});}catch(e){}localStream=null;}
  updateMicBtn();
+ var ob=$('oppMicLbl');if(ob)ob.classList.add('hidden');
 }
 var IMG={};
 var GLBL={GK:'حراسة',DEF:'دفاع',MID:'وسط',ATT:'هجوم'};
@@ -1962,6 +1969,21 @@ function setView(v){
 /* ========= الاتصال (PeerJS) ========= */
 var peerMgr=null,autoRejoin=null,rejoinTries=0,lastRx=0,watchdog=null;
 function stopPeerMgr(){try{if(peerMgr)peerMgr.stop();}catch(e){}peerMgr=null;}
+function shareRoomCode(){
+ if(!roomCode)return;
+ var msg='🎮 يلا العب معايا "مزاد النجوم"!\nرمز الغرفة: '+roomCode+'\nافتح اللعبة ودوس "انضمام" واكتب الرمز ده 👆';
+ if(navigator.share){
+  navigator.share({title:'مزاد النجوم',text:msg}).catch(function(){});
+  return;
+ }
+ var waUrl='https://wa.me/?text='+encodeURIComponent(msg);
+ var w=window.open(waUrl,'_blank');
+ if(!w){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(msg).then(function(){toast('📋 اتنسخ الرمز — الصقه لصاحبك');}).catch(function(){toast('الرمز: '+roomCode);});
+  }else{toast('الرمز: '+roomCode);}
+ }
+}
 function createRoom(){
  if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
  setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomCode=makeCode();savedCode=roomCode;
@@ -2009,20 +2031,7 @@ function scheduleRejoin(){
  autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(1000*rejoinTries,5000));
 }
 function wireConn(){
- var myConn=conn;
- var dataOpenTimer=setTimeout(function(){
-  if(conn!==myConn||!conn||conn.open)return;
-  if(!isHost&&!forceRelay){
-   setRelayMode(true);
-   toast('🔧 الاتصال المباشر بطيء — بنجرّب مسار محسّن لشبكات الجوال...');
-   try{conn.close();}catch(e){}
-   connectToHost(savedCode,true);
-  }else if(isHost){
-   toast('⏳ لسه مفيش اتصال — لو استمرت المشكلة فعّل "اتصال محسّن لشبكات الجوال" من الغرفة');
-  }
- },9000);
  conn.on('open',function(){
-  clearTimeout(dataOpenTimer);
   rejoinTries=0;lastRx=Date.now();
   if(!isHost){conn.send({type:'hello',name:myName()});if(!started)show('wait');else conn.send({type:'sync'});}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
@@ -2030,7 +2039,6 @@ function wireConn(){
  });
  conn.on('data',function(d){lastRx=Date.now();try{handleData(d);}catch(e){toast('⚠️ خطأ أثناء المزامنة، جرّب إعادة الاتصال لو استمرت المشكلة');console.error(e);}});
  conn.on('close',function(){
-  clearTimeout(dataOpenTimer);
   clearInterval(hbInt);
   oppPeerId=null;try{if(currentCall)currentCall.close();}catch(e){}currentCall=null;
   if(isHost){toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
@@ -2072,6 +2080,12 @@ function handleData(d){
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='chat'){addChat(P[d.from]?P[d.from].name:'؟',d.t);}
  else if(d.type==='peerid'){oppPeerId=d.id;if(micOn&&localStream)startCallIfPossible();}
+ else if(d.type==='mic'){
+  var oppName=P[1-mySeat]?P[1-mySeat].name:'خصمك';
+  if(d.on){sfxMicOn();toast('🎤 '+oppName+' فتح المايك — اتكلم معاه!');}
+  else{sfxMicOff();toast('🔇 '+oppName+' قفل المايك');}
+  var ob=$('oppMicLbl');if(ob)ob.classList.toggle('hidden',!d.on);
+ }
  else if(d.type==='act'&&isHost){
   if(d.a==='card'){applyCard(1,d.c,d.i,d.j);return;}
   if(d.a==='ready'){cardsReady[1]=true;log(P[1].name+' انتهى من الكروت');checkCardsReady();return;}
