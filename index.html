@@ -187,7 +187,16 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .h2h-name{font-weight:800;font-size:13px}
 .h2h-rec{font-size:12px;font-weight:900}
 .h2h-rec .w{color:var(--acc)}.h2h-rec .l{color:var(--red)}.h2h-rec .d{color:var(--dim)}
+.lb-obox{display:flex;flex-direction:column;max-height:94vh}
+.lb-obox-body{overflow-y:auto;flex:1;min-height:0}
+.lb-close-fixed{position:sticky;top:0;left:0;background:var(--card);z-index:2;display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;margin-bottom:4px}
+.lb-close-fixed h2{margin:0}
+.lb-x{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;width:34px;height:34px;font-size:16px;font-weight:900;cursor:pointer;flex-shrink:0}
 .promo-banner{background:rgba(177,74,255,.12);border:1px solid var(--purple);border-radius:12px;padding:10px;margin-bottom:10px;text-align:center;font-weight:900;color:#d2a8ff;font-size:13px}
+.rematch-box{background:var(--card2);border:1px solid var(--gold);border-radius:14px;padding:12px;margin-top:10px;text-align:center}
+.rematch-box .rt-title{font-weight:900;color:var(--gold);font-size:14px;margin-bottom:8px}
+.onb-tip{background:rgba(88,166,255,.1);border:1px solid var(--blue);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--blue);font-weight:700;line-height:1.8;display:flex;gap:8px;align-items:flex-start}
+.onb-tip button{background:none;border:none;color:var(--dim);font-size:14px;cursor:pointer;flex-shrink:0;padding:0 2px}
 .opt-lbl{font-weight:900;margin:10px 0 4px;font-size:14px;display:flex;justify-content:space-between}
 .opt-lbl span{color:var(--acc)}
 .first-bid-note{background:rgba(248,81,73,.08);border:1px solid var(--red);border-radius:10px;padding:8px;font-size:11.5px;color:var(--red);text-align:center;margin:4px 0;font-weight:700}
@@ -479,6 +488,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 <div id="home" class="screen">
 <div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
+<div id="onbTip" class="onb-tip hidden"><span>👋 جديد هنا؟ (1) اكتب اسمك تحت (2) اختار "ضد الحاسوب" عشان تجرّب أول جولة سريعة (3) بعدين جرّب "لاعبان على جهاز واحد" أو "غرفة أونلاين" مع صحابك.</span><button onclick="dismissOnbTip()">✖</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
@@ -581,8 +591,9 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 <div id="overlay" class="overlay hidden"><div class="obox" id="obox"></div></div>
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
-<div id="lbOv" class="overlay hidden"><div class="obox">
-<h2>🏆 قائمة المتصدرين</h2>
+<div id="lbOv" class="overlay hidden" onclick="if(event.target===this)closeLeaderboard()"><div class="obox lb-obox">
+<div class="lb-close-fixed"><h2>🏆 قائمة المتصدرين</h2><button class="lb-x" onclick="closeLeaderboard()">✖</button></div>
+<div class="lb-obox-body">
 <div class="desc" style="margin-bottom:8px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): تفوز تاخد نقط والخصم يتخصم منه نفس القيمة — كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر (لحد 20 نقطة). فوز متتالي بيدّيك بونص 🔥. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
 <div id="lbPromo"></div>
 <div class="lb-tabs">
@@ -593,7 +604,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div id="lbMe" class="lb-me hidden"></div>
 <div id="lbList">جارٍ التحميل…</div>
 <button class="big-btn goldb" style="margin-top:10px" onclick="loadLeaderboard()">🔄 تحديث</button>
-<button class="big-btn red" style="margin-top:8px" onclick="closeLeaderboard()">✖ إغلاق</button>
+</div>
 </div></div>
 <div id="reconn" class="overlay hidden"><div class="obox"><h2>⚠️ انقطع الاتصال</h2><p style="color:var(--dim);font-size:13px;margin-bottom:12px">اضغط إعادة الاتصال لاستكمال نفس اللعبة من حيث توقفت.</p><button class="big-btn green" onclick="retryConn()">🔄 إعادة الاتصال</button><button class="big-btn red" style="margin-top:8px" onclick="giveUp()">العودة للرئيسية</button></div></div>
 <div id="toast"></div>
@@ -670,6 +681,33 @@ function fallbackShareCopy(){
   document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
   toast('✅ تم نسخ النتيجة — الصقها في أي مكان');
  }catch(e){toast('تعذر نسخ النتيجة');}
+}
+/* ========= الثأر والتحدي (Rematch Hook) =========
+   لما ماتش يخلص، بنعرض للاعب زرار يبعت تحدي مباشر لخصمه (واتساب/مشاركة
+   النظام) فيه النتيجة النهائية + دعوة صريحة للعب تاني. الاحتكاك بالخسارة
+   هو أقوى سبب يخلي حد يفتح اللينك تاني من نفسه من غير ما تدعوه انت يدويًا. */
+function sendRematchChallenge(loserName,winnerName,scoreText){
+ var msg='⚽ '+winnerName+' فاز عليك '+scoreText+' في "مزاد النجوم"!\n'+
+  '🔥 '+loserName+'، جاهز للثأر؟ ادخل العب تاني:\n'+
+  location.href;
+ if(navigator.share){
+  navigator.share({title:'تحدي مزاد النجوم',text:msg}).catch(function(){});
+  return;
+ }
+ var waUrl='https://wa.me/?text='+encodeURIComponent(msg);
+ var w=window.open(waUrl,'_blank');
+ if(!w){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(msg).then(function(){toast('📋 اتنسخت رسالة التحدي — ابعتها لخصمك');}).catch(function(){toast('تعذر النسخ');});
+  }else{toast('تعذر النسخ');}
+ }
+}
+/* زرار "العب تاني بنفس الإعدادات" — بيرجع لشاشة الإعدادات بنفس الأسماء
+   ونوع اللعبة، جاهز يبدأ مباشرة من غير ما يعيد كتابة أي حاجة */
+function quickRematch(){
+ clearInterval(timerInt);
+ if(online){leaveHome();return;}
+ started=false;show('settings');
 }
 
 /* ========= قاعدة البيانات (متوازنة + معتزلين أقوياء) ========= */
@@ -2421,6 +2459,7 @@ function pickMode(m){
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
   if(m===4&&gameType!=='transferprice'){setErr('⚠️ وضع السولو متاح فقط في لعبة راجع سعرك');return;}
   $('name2').classList.remove('err-input');setErr('');saveNames();
+  dismissOnbTip();
   if(m!==4)initUserPeer();
   mode=m;online=(m===3);show(m===3?'room':'settings');
   if(m!==3){
@@ -3686,7 +3725,8 @@ function endTPGame(){
  '</table>'+
  (best?('<div class="tp-stat-box">🎯 <b>أقرب توقع في اللعبة:</b> '+best.flag+' '+best.ar+' — فرق '+bestDiff.toFixed(1)+' مليون فقط عن السعر الحقيقي ('+fmtM(best.real)+')</div>'):'')+
  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
- '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+tpScore[0]+' - '+tpScore[1]+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
  shareText='💰 راجع سعرك — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل '+tpScore[0]+' - '+tpScore[1]:'🏆 البطل: '+P[champ].name+' ('+tpScore[0]+' - '+tpScore[1]+')')+'\n'+
  '📊 متوسط خطأ '+P[0].name+': '+avg0+' مليون €\n'+
@@ -3715,7 +3755,7 @@ function endTPGameSolo(){
  '<table class="stat-t"><tr><td>متوسط الخطأ عن السعر الحقيقي</td><td>'+avg+' مليون €</td></tr></table>'+
  (best?('<div class="tp-stat-box">🎯 <b>أقرب توقع في اللعبة:</b> '+best.flag+' '+best.ar+' — فرق '+bestDiff.toFixed(1)+' مليون فقط عن السعر الحقيقي ('+fmtM(best.real)+')</div>'):'')+
  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
- '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
  shareText='💰 راجع سعرك (سولو) — النتيجة النهائية\n'+
  '⭐ مجموع نقاطي: '+totalStars+' / '+maxStars+' ('+pct+'%)\n'+
  grade+'\n'+
@@ -4027,7 +4067,8 @@ function endGame(){
  (gameType==='auction'?('<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
  '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr>'):'')+'</table>'+
  [0,1].map(function(i){return '<div class="squad-end"><b style="color:var(--acc)">'+P[i].name+':</b><br>'+sq(i)+'</div>';}).join('')+
- '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="location.reload()">العب مجددًا</button></div>';
+ (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+sim.g0+' - '+sim.g1+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
+ '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
  shareText='⚽ '+(gameType==='boxes'?'صناديق الحظ':'مزاد النجوم')+' — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل بين '+P[0].name+' و'+P[1].name:'🏆 البطل: '+P[champ].name)+'\n'+
  '💪 '+P[0].name+': قوة '+s0.tot+' (متوسط '+s0.avg+')\n'+
@@ -4174,8 +4215,13 @@ document.addEventListener('DOMContentLoaded',function(){
   updateSfxBtn();
   if($('name1').value)initUserPeer();
   lbEnsureChannel();
+  if(!localStorage.getItem('mz_onb_seen'))$('onbTip').classList.remove('hidden');
  }catch(e){}
 });
+function dismissOnbTip(){
+ try{localStorage.setItem('mz_onb_seen','1');}catch(e){}
+ $('onbTip').classList.add('hidden');
+}
 </script>
  <!-- توقيع المطور -->
 <footer style="
