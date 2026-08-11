@@ -460,10 +460,15 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>غرفة أونلاين</h1></div>
 <div class="card">
 <div class="pc-ready" id="roomGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
-<button class="big-btn green" onclick="createRoom()">إنشاء غرفة</button>
+<button class="big-btn purple" onclick="joinRandom()">🔀 دخول عشوائي (أي حد متاح)</button>
+<div class="or">— أو —</div>
+<label>كلمة سر للغرفة (اختياري — سيبها فاضية عشان الغرفة تبقى مفتوحة لأي حد)</label>
+<input id="roomPassIn" placeholder="اختياري" maxlength="20">
+<button class="big-btn green" style="margin-top:8px" onclick="createRoom()">إنشاء غرفة</button>
 <div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
 <div class="or">— أو —</div>
 <input id="joinCode" placeholder="رمز الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
+<input id="joinPassIn" placeholder="كلمة السر (لو الغرفة محمية)" maxlength="20" style="margin-top:6px">
 <button class="big-btn blue" style="margin-top:8px" onclick="joinRoom()">انضمام</button>
 <div id="roomStatus" class="status"></div>
 <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--dim);cursor:pointer" onclick="toggleRelayUI()">
@@ -1335,6 +1340,7 @@ var MORE_PLAYERS_V2=[
 var ROUNDS=11;
 var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
+var roomPass='',isPublicRoom=false;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
 var firstBidDone=false;
@@ -1581,8 +1587,12 @@ var TP_HARD=[
 ["كريستيانو رونالدو","Cristiano Ronaldo","🇵🇹","سبورتينج لشبونة","مانشستر يونايتد",2003,17]
 ];
 
-/* ========= جلب أسعار حقيقية لايف من Transfermarkt (مع رجوع تلقائي للأرقام الموثّقة أعلاه لو فشل الاتصال) ========= */
-var TP_API_BASE='https://transfermarkt-api.fly.dev';
+/* ========= جلب أسعار حقيقية لايف من Transfermarkt (مع رجوع تلقائي للأرقام الموثّقة أعلاه لو فشل الاتصال) =========
+   فيه مصدرين (المصدر الأساسي وبديل احتياطي)؛ لو الأساسي وقع أو رجّع نفس النتيجة بشكل متكرر
+   بيتحول تلقائيًا للبديل عشان يقلل تكرار نفس الصفقات ويوسّع تنوع الأرقام المرجوعة. */
+var TP_API_SOURCES=['https://transfermarkt-api.fly.dev','https://transfermarkt-api-2.fly.dev'];
+var tpSrcIdx=0;
+var TP_API_BASE=TP_API_SOURCES[0];
 function tpParseFeeToMillions(feeStr){
  if(!feeStr)return null;
  var s=feeStr.toString().trim().toLowerCase();
@@ -1606,9 +1616,9 @@ function tpFetchWithTimeout(url,ms){
  var timer=ctrl?setTimeout(function(){ctrl.abort();},ms):null;
  return fetch(url,ctrl?{signal:ctrl.signal}:{}).finally(function(){if(timer)clearTimeout(timer);});
 }
-/* بيدور على السعر الحقيقي لصفقة اللاعب في نفس السنة تقريبًا؛ لو مقدرش يوصله بيسيب الرقم الموثّق الموجود أصلاً */
-function tpFetchLiveFee(entry){
- return tpFetchWithTimeout(TP_API_BASE+'/players/search/'+encodeURIComponent(entry.en),4500)
+/* بيدور على السعر الحقيقي لصفقة اللاعب في نفس السنة تقريبًا من مصدر معيّن؛ null لو فشل */
+function tpFetchLiveFeeFrom(base,entry){
+ return tpFetchWithTimeout(base+'/players/search/'+encodeURIComponent(entry.en),4500)
   .then(function(r){return r.ok?r.json():null;})
   .then(function(sData){
    if(!sData)return null;
@@ -1616,7 +1626,7 @@ function tpFetchLiveFee(entry){
    if(!results||!results.length)return null;
    var pid=results[0].id||results[0].playerId;
    if(!pid)return null;
-   return tpFetchWithTimeout(TP_API_BASE+'/players/'+pid+'/transfers',4500).then(function(r2){return r2.ok?r2.json():null;});
+   return tpFetchWithTimeout(base+'/players/'+pid+'/transfers',4500).then(function(r2){return r2.ok?r2.json():null;});
   })
   .then(function(tData){
    if(!tData)return null;
@@ -1634,12 +1644,28 @@ function tpFetchLiveFee(entry){
   })
   .catch(function(){return null;});
 }
+/* يجرب المصدر الحالي، ولو رجّع null يجرب باقي المصادر بالترتيب قبل ما يستسلم للأرقام الموثّقة المخزّنة محليًا */
+function tpFetchLiveFee(entry){
+ var order=[];
+ for(var i=0;i<TP_API_SOURCES.length;i++)order.push(TP_API_SOURCES[(tpSrcIdx+i)%TP_API_SOURCES.length]);
+ var p=Promise.resolve(null);
+ order.forEach(function(base,idx){
+  p=p.then(function(res){
+   if(res!==null)return res;
+   return tpFetchLiveFeeFrom(base,entry).then(function(r){
+    if(r!==null&&idx>0){tpSrcIdx=TP_API_SOURCES.indexOf(base);}
+    return r;
+   });
+  });
+ });
+ return p;
+}
 
 var BOX_POS=['GK','DEF','MID','CAM','FWD'];
 var BOX_LBL={GK:'حارس مرمى',DEF:'مدافع',MID:'وسط ميدان',CAM:'وسط مهاجم',FWD:'مهاجم'};
 var boxRound=0,boxSets=[[],[]],boxOpened=[[],[]],boxPicked=[null,null],boxUsedSet={};
 var ICE=[
- {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun3.l.google.com:19302','stun:stun4.l.google.com:19302','stun:stun.cloudflare.com:3478','stun:stun.nextcloud.com:443','stun:stun.relay.metered.ca:80']},
+ {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun3.l.google.com:19302','stun:stun4.l.google.com:19302','stun:stun.cloudflare.com:3478','stun:stun.nextcloud.com:443','stun:stun.relay.metered.ca:80','stun:stun.sipgate.net:3478','stun:stun.antisip.com:3478','stun:global.stun.twilio.com:3478']},
  {urls:'turn:standard.relay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turn:standard.relay.metered.ca:80?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turn:standard.relay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
@@ -1647,7 +1673,11 @@ var ICE=[
  {urls:'turn:staticauth.openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turn:staticauth.openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
- {urls:'turns:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+ {urls:'turns:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:relay1.expressturn.com:3478',username:'ef4QARANH3IJ4HH2SO',credential:'p3wxLoVJdTG5PnMz'},
+ {urls:'turn:relay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:relay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+ {urls:'turn:relay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
 ];
 /* قائمة خوادم التوصيل (Signaling) مع تبديل تلقائي لو واحد وقع */
 var PEER_SERVERS=[
@@ -1951,7 +1981,7 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;clearInterval(watchdog);stopPeerMgr();stopVoice();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;show('home');}
+function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;clearInterval(watchdog);stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';show('home');}
 function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);leaveHome();}
 function setView(v){
  view=v;
@@ -1986,13 +2016,20 @@ function shareRoomCode(){
 }
 function createRoom(){
  if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
+ var passInput=$('roomPassIn');
+ roomPass=passInput?passInput.value.trim():'';
+ isPublicRoom=!roomPass;
  setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomCode=makeCode();savedCode=roomCode;
  stopPeerMgr();
  function spawnHost(){
   peerMgr=makePeer('mzaida-'+roomCode,{
    onSpawn:function(pr){peer=pr;wireVoiceOnPeer(pr);},
-   onOpen:function(){$('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');setStatus('تم الإنشاء. بانتظار انضمام الخصم… (1/2)');},
-   onConn:function(c){conn=c;wireConn();},
+   onOpen:function(){
+    $('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');
+    setStatus(isPublicRoom?'تم الإنشاء (غرفة مفتوحة). بانتظار انضمام أي لاعب… (1/2)':'تم الإنشاء (غرفة بكلمة سر). بانتظار انضمام الخصم… (1/2)');
+    if(isPublicRoom)lobbyAnnounce();
+   },
+   onConn:function(c){wireIncomingConn(c);},
    onRetry:function(t,i){setStatus('جارٍ التبديل لسيرفر اتصال آخر… ('+(i+1)+'/'+PEER_SERVERS.length+')');},
    onUnavailableId:function(){toast('الرمز مستخدم — جارٍ توليد رمز جديد');roomCode=makeCode();savedCode=roomCode;stopPeerMgr();setTimeout(spawnHost,300);},
    onFail:function(){setStatus('⚠️ تعذر الوصول لأي سيرفر اتصال — تأكد من الإنترنت وأعد المحاولة');toast('مشكلة في سيرفرات الاتصال، حاول بعد قليل');},
@@ -2001,11 +2038,15 @@ function createRoom(){
  }
  spawnHost();
 }
+/* لو الغرفة عامة (من غير باسورد)، بيتحقق من كلمة السر (فاضية) وقت وصول أي اتصال جديد */
+function wireIncomingConn(c){conn=c;wireConn();}
 function joinRoom(){
  if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
  var code=$('joinCode').value.trim().toUpperCase();
  if(code.length<4)return setStatus('أدخل رمزًا من 4 أحرف');
- isHost=false;mySeat=1;savedCode=code;setStatus('جارٍ الاتصال…');
+ var passInput=$('joinPassIn');
+ var pass=passInput?passInput.value.trim():'';
+ isHost=false;mySeat=1;savedCode=code;roomPass=pass;setStatus('جارٍ الاتصال…');
  connectToHost(code,false);
 }
 function connectToHost(code,silent){
@@ -2022,6 +2063,132 @@ function connectToHost(code,silent){
   onError:function(e){if(!silent)setStatus('تعذر الاتصال: '+e.type);}
  });
 }
+
+/* ========= لوبي عام (غرف مفتوحة بدون كود) ========= */
+/* أي غرفة تتعمل بدون كلمة سر تُعتبر "مفتوحة" وتُعلن نفسها في اللوبي.
+   اللوبي نفسه عبارة عن Peer ثابت الاسم (lobbyHostPeer)؛ أول جهاز يفتح غرفة عامة ولا يجد لوبي شغّال
+   يتولى دور "منسّق اللوبي" تلقائيًا ويحتفظ بقائمة الغرف المفتوحة المُعلَنة إليه، وأي جهاز آخر
+   يتصل به ليسجّل غرفته أو ليطلب غرفة عشوائية متاحة. لا حاجة لأي سيرفر خارجي. */
+var LOBBY_ID='mzaida-lobby-hub-v1';
+var lobbyRooms={};/* code -> {code,ts,gameType} عند من يستضيف دور المنسّق */
+var lobbyCoordPeer=null,lobbyCoordMgr=null,isLobbyCoordinator=false;
+var lobbyClientPeerMgr=null,lobbyClientConn=null;
+function lobbyPurgeStale(){
+ var now=Date.now();
+ Object.keys(lobbyRooms).forEach(function(c){if(now-lobbyRooms[c].ts>20000)delete lobbyRooms[c];});
+}
+function tryBecomeLobbyCoordinator(onDone){
+ if(isLobbyCoordinator)return onDone&&onDone(true);
+ lobbyCoordMgr=makePeer(LOBBY_ID,{
+  onSpawn:function(pr){lobbyCoordPeer=pr;},
+  onOpen:function(){
+   isLobbyCoordinator=true;
+   lobbyCoordPeer.on('connection',function(c){
+    c.on('data',function(d){
+     if(!d||!d.type)return;
+     if(d.type==='announce'){lobbyRooms[d.code]={code:d.code,ts:Date.now(),gameType:d.gameType||'auction'};}
+     else if(d.type==='unannounce'){delete lobbyRooms[d.code];}
+     else if(d.type==='findRandom'){
+      lobbyPurgeStale();
+      var codes=Object.keys(lobbyRooms).filter(function(k){return k!==d.exclude;});
+      var pick=codes.length?lobbyRooms[codes[Math.floor(Math.random()*codes.length)]].code:null;
+      try{c.send({type:'randomResult',code:pick});}catch(e){}
+     }
+    });
+   });
+   onDone&&onDone(true);
+  },
+  onUnavailableId:function(){isLobbyCoordinator=false;onDone&&onDone(false);},
+  onFail:function(){isLobbyCoordinator=false;onDone&&onDone(false);},
+  onError:function(){}
+ });
+}
+function lobbyConnectClient(onOpen,onFail){
+ stopLobbyClient();
+ lobbyClientPeerMgr=makePeer(null,{
+  onSpawn:function(pr){},
+  onOpen:function(pr){
+   var c=pr.connect(LOBBY_ID,{reliable:true});
+   var doneTO=setTimeout(function(){onFail&&onFail();},5000);
+   c.on('open',function(){clearTimeout(doneTO);lobbyClientConn=c;onOpen&&onOpen(c);});
+   c.on('error',function(){clearTimeout(doneTO);onFail&&onFail();});
+  },
+  onPeerUnavailable:function(){onFail&&onFail();},
+  onFail:function(){onFail&&onFail();},
+  onError:function(){}
+ });
+}
+function stopLobbyClient(){try{if(lobbyClientPeerMgr)lobbyClientPeerMgr.stop();}catch(e){}lobbyClientPeerMgr=null;lobbyClientConn=null;}
+function stopLobbyCoordinator(){isLobbyCoordinator=false;try{if(lobbyCoordMgr)lobbyCoordMgr.stop();}catch(e){}lobbyCoordMgr=null;lobbyCoordPeer=null;lobbyRooms={};}
+/* استدعاها الـ host بعد فتح غرفة عامة بنجاح؛ تحاول تبقى منسّق أو تتصل بالمنسّق الحالي عشان تعلن غرفتها */
+var lobbyHbInt=null;
+function lobbyAnnounce(){
+ tryBecomeLobbyCoordinator(function(became){
+  if(became){lobbyRooms[roomCode]={code:roomCode,ts:Date.now(),gameType:gameType};return;}
+  lobbyConnectClient(function(c){
+   try{c.send({type:'announce',code:roomCode,gameType:gameType});}catch(e){}
+   clearInterval(lobbyHbInt);
+   lobbyHbInt=setInterval(function(){try{if(c&&c.open)c.send({type:'announce',code:roomCode,gameType:gameType});}catch(e){}},8000);
+  },function(){/* اللوبي مش متاح دلوقتي، مفيش مشكلة — الغرفة لسه شغالة بالكود العادي */});
+ });
+}
+function lobbyStopAnnounce(){
+ clearInterval(lobbyHbInt);
+ try{if(lobbyClientConn&&lobbyClientConn.open)lobbyClientConn.send({type:'unannounce',code:roomCode});}catch(e){}
+ stopLobbyClient();
+ if(isLobbyCoordinator)delete lobbyRooms[roomCode];
+}
+/* دخول عشوائي: يدوّر على أي غرفة مفتوحة معلَنة في اللوبي وينضم لها تلقائيًا، ولو مفيش بينشئ غرفة مفتوحة جديدة وينتظر */
+function joinRandom(){
+ if(!peerReady())return toast('مكتبة الاتصال لم تُحمّل بعد.. انتظر قليلًا أو تحقق من الإنترنت');
+ setStatus('🔀 بندوّر على غرفة مفتوحة…');
+ tryBecomeLobbyCoordinator(function(became){
+  if(became){
+   lobbyPurgeStale();
+   var codes=Object.keys(lobbyRooms);
+   if(codes.length){joinFoundRoom(lobbyRooms[codes[0]].code);}
+   else{setStatus('مفيش غرف مفتوحة دلوقتي — بننشئلك واحدة وننتظر حد ينضم');createOpenRoomAndWait();}
+   return;
+  }
+  lobbyConnectClient(function(c){
+   var to=setTimeout(function(){setStatus('مفيش غرف مفتوحة دلوقتي — بننشئلك واحدة وننتظر حد ينضم');createOpenRoomAndWait();},5000);
+   c.on('data',function(d){
+    if(!d||d.type!=='randomResult')return;
+    clearTimeout(to);
+    if(d.code)joinFoundRoom(d.code);
+    else{setStatus('مفيش غرف مفتوحة دلوقتي — بننشئلك واحدة وننتظر حد ينضم');createOpenRoomAndWait();}
+   });
+   try{c.send({type:'findRandom'});}catch(e){}
+  },function(){setStatus('مفيش غرف مفتوحة دلوقتي — بننشئلك واحدة وننتظر حد ينضم');createOpenRoomAndWait();});
+ });
+}
+function joinFoundRoom(code){
+ var codeIn=$('joinCode');if(codeIn)codeIn.value=code;
+ isHost=false;mySeat=1;savedCode=code;roomPass='';setStatus('🔀 جارٍ الانضمام لغرفة مفتوحة…');
+ connectToHost(code,false);
+}
+function createOpenRoomAndWait(){
+ var passInput=$('roomPassIn');if(passInput)passInput.value='';
+ roomPass='';isPublicRoom=true;
+ isHost=true;mySeat=0;roomCode=makeCode();savedCode=roomCode;
+ stopPeerMgr();
+ function spawnHost(){
+  peerMgr=makePeer('mzaida-'+roomCode,{
+   onSpawn:function(pr){peer=pr;wireVoiceOnPeer(pr);},
+   onOpen:function(){
+    $('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');
+    setStatus('🔀 غرفة مفتوحة جاهزة — بانتظار انضمام أي لاعب… (1/2)');
+    lobbyAnnounce();
+   },
+   onConn:function(c){wireIncomingConn(c);},
+   onRetry:function(t,i){setStatus('جارٍ التبديل لسيرفر اتصال آخر… ('+(i+1)+'/'+PEER_SERVERS.length+')');},
+   onUnavailableId:function(){roomCode=makeCode();savedCode=roomCode;stopPeerMgr();setTimeout(spawnHost,300);},
+   onFail:function(){setStatus('⚠️ تعذر الوصول لأي سيرفر اتصال — تأكد من الإنترنت وأعد المحاولة');},
+   onError:function(e){setStatus('خطأ: '+e.type);}
+  });
+ }
+ spawnHost();
+}
 function scheduleRejoin(){
  if(isHost||!savedCode)return;
  clearTimeout(autoRejoin);
@@ -2033,7 +2200,7 @@ function scheduleRejoin(){
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();
-  if(!isHost){conn.send({type:'hello',name:myName()});if(!started)show('wait');else conn.send({type:'sync'});}
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass||''});if(!started)show('wait');else conn.send({type:'sync'});}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -2041,17 +2208,28 @@ function wireConn(){
  conn.on('close',function(){
   clearInterval(hbInt);
   oppPeerId=null;try{if(currentCall)currentCall.close();}catch(e){}currentCall=null;
+  conn=null;
   if(isHost){toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
+  else if(!started){setStatus('تعذر الانضمام — تأكد من الرمز وكلمة السر');show('room');}
   else{$('connLbl').textContent='🟡 إعادة الاتصال…';scheduleRejoin();}
  });
- conn.on('error',function(e){if(!isHost)scheduleRejoin();else toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));});
+ conn.on('error',function(e){
+  if(!isHost)scheduleRejoin();
+  else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
+ });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
  clearInterval(watchdog);
  watchdog=setInterval(function(){
-  if(isHost||!online)return;
-  if(conn&&conn.open&&lastRx&&Date.now()-lastRx>15000){lastRx=Date.now();try{conn.close();}catch(e){}scheduleRejoin();}
- },5000);
+  if(!online)return;
+  if(!conn||!conn.open)return;
+  if(lastRx&&Date.now()-lastRx>10000){
+   lastRx=Date.now();
+   try{conn.close();}catch(e){}
+   if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
+   else scheduleRejoin();
+  }
+ },3000);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden||!online)return;
@@ -2071,6 +2249,11 @@ function handleData(d){
  if(d.type==='ping')return;
  if(d.type==='sys'){toast(d.t);return;}
  if(d.type==='hello'&&isHost){
+  if(roomPass&&(d.pass||'')!==roomPass){
+   try{conn.send({type:'sys',t:'🔒 كلمة السر غير صحيحة'});}catch(e){}
+   setTimeout(function(){try{conn.close();}catch(e){}},300);
+   return;
+  }
   if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
   else{guestName=d.name;toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
  }
