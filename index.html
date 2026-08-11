@@ -164,6 +164,16 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .stat-t b{color:var(--gold)}
 .squad-end{text-align:right;background:var(--card2);border-radius:10px;padding:10px;margin:8px 0;line-height:2;font-size:11.5px}
 .winner-banner{background:rgba(210,153,34,.1);border:1px solid var(--gold);border-radius:12px;padding:12px;margin-bottom:12px;font-size:16px;font-weight:900;color:var(--gold)}
+.lb-row{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:6px}
+.lb-rank{width:28px;text-align:center;font-weight:900;color:var(--dim);font-size:13px;flex-shrink:0}
+.lb-row:nth-child(1) .lb-rank{color:var(--gold);font-size:16px}
+.lb-row:nth-child(2) .lb-rank{color:#c9d1d9;font-size:15px}
+.lb-row:nth-child(3) .lb-rank{color:#e3906b;font-size:15px}
+.lb-name{flex:1;font-weight:800;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-sub{font-size:10.5px;color:var(--dim);font-weight:700}
+.lb-pts{font-weight:900;color:var(--acc);font-size:14px;flex-shrink:0}
+.lb-me{background:rgba(88,166,255,.12);border:1px solid var(--blue);border-radius:12px;padding:9px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.lb-me .lb-name{color:var(--blue)}
 .opt-lbl{font-weight:900;margin:10px 0 4px;font-size:14px;display:flex;justify-content:space-between}
 .opt-lbl span{color:var(--acc)}
 .first-bid-note{background:rgba(248,81,73,.08);border:1px solid var(--red);border-radius:10px;padding:8px;font-size:11.5px;color:var(--red);text-align:center;margin:4px 0;font-weight:700}
@@ -454,7 +464,7 @@ label{font-size:12.5px;letter-spacing:.2px}
   </a>
 </div>
 <div id="home" class="screen">
-<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
+<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
@@ -557,6 +567,14 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 <div id="overlay" class="overlay hidden"><div class="obox" id="obox"></div></div>
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
+<div id="lbOv" class="overlay hidden"><div class="obox">
+<h2>🏆 قائمة المتصدرين</h2>
+<div class="desc" style="margin-bottom:10px">كل ما تفوز في مباراة (مزاد النجوم / صناديق الحظ) تكسب نقط — كل ما فوزك يكون بفارق أهداف أقل كل ما نقطك تزيد (لحد 20 نقطة أقصى حد). التعادل والخسارة ملهمش نقط، ومباريات الحاسوب مش بتتحسب.</div>
+<div id="lbMe" class="lb-me hidden"></div>
+<div id="lbList">جارٍ التحميل…</div>
+<button class="big-btn goldb" style="margin-top:10px" onclick="loadLeaderboard()">🔄 تحديث</button>
+<button class="big-btn red" style="margin-top:8px" onclick="closeLeaderboard()">✖ إغلاق</button>
+</div></div>
 <div id="reconn" class="overlay hidden"><div class="obox"><h2>⚠️ انقطع الاتصال</h2><p style="color:var(--dim);font-size:13px;margin-bottom:12px">اضغط إعادة الاتصال لاستكمال نفس اللعبة من حيث توقفت.</p><button class="big-btn green" onclick="retryConn()">🔄 إعادة الاتصال</button><button class="big-btn red" style="margin-top:8px" onclick="giveUp()">العودة للرئيسية</button></div></div>
 <div id="toast"></div>
 <script>
@@ -2433,6 +2451,91 @@ function sbClient(){
  sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:60}}});
  return sbc;
 }
+/* ========= تصنيف المتصدرين (Leaderboard) =========
+   كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط
+   للاعب في جدول ثابت على Supabase. أقصى نقطة للفوز 20 (فارق هدف واحد
+   أو نتيجة متقاربة)، وكل ما فارق الأهداف يكبر كل ما النقط تقل، لحد حد أدنى 10
+   للفوز الكاسح. التعادل والخسارة = صفر.
+   ملحوظة: لازم تنشئ الجدول التالي مرة واحدة في Supabase SQL editor:
+   create table mz_leaderboard (
+     name text primary key,
+     points int default 0,
+     matches int default 0,
+     wins int default 0
+   );
+   alter table mz_leaderboard enable row level security;
+   create policy "public read" on mz_leaderboard for select using (true);
+   create policy "public write" on mz_leaderboard for insert with check (true);
+   create policy "public update" on mz_leaderboard for update using (true);
+*/
+function matchPoints(myGoals,oppGoals){
+ if(myGoals<=oppGoals)return 0;
+ var diff=myGoals-oppGoals;
+ var pts=20-(diff-1)*3; /* فرق هدف = 20، فرقين = 17، 3 = 14 ... */
+ if(pts<10)pts=10;
+ return pts;
+}
+async function lbEnsureRow(name){
+ var c=sbClient();if(!c)return null;
+ try{
+  var sel=await c.from('mz_leaderboard').select('*').eq('name',name).maybeSingle();
+  if(sel.data)return sel.data;
+  var ins=await c.from('mz_leaderboard').insert({name:name,points:0,matches:0,wins:0}).select().maybeSingle();
+  return ins.data||null;
+ }catch(e){return null;}
+}
+async function lbAddResult(name,pts,won){
+ var c=sbClient();if(!c||!name)return;
+ try{
+  var row=await lbEnsureRow(name);
+  if(!row)return;
+  await c.from('mz_leaderboard').update({
+   points:(row.points||0)+pts,
+   matches:(row.matches||0)+1,
+   wins:(row.wins||0)+(won?1:0)
+  }).eq('name',name);
+ }catch(e){/* لو الجدول مش موجود أو النت مقطوع، نتجاهل بهدوء */}
+}
+/* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب) */
+function recordMatchResult(name0,g0,name1,g1){
+ if(mode===1)return; /* ضد الحاسوب — مش بيتحسب في التصنيف */
+ if(!name0||!name1)return;
+ var p0=matchPoints(g0,g1),p1=matchPoints(g1,g0);
+ lbAddResult(name0,p0,g0>g1);
+ lbAddResult(name1,p1,g1>g0);
+}
+async function fetchLeaderboard(){
+ var c=sbClient();if(!c)return [];
+ try{
+  var r=await c.from('mz_leaderboard').select('*').order('points',{ascending:false}).limit(100);
+  return r.data||[];
+ }catch(e){return [];}
+}
+function openLeaderboard(){$('lbOv').classList.remove('hidden');loadLeaderboard();}
+function closeLeaderboard(){$('lbOv').classList.add('hidden');}
+async function loadLeaderboard(){
+ $('lbList').innerHTML='جارٍ التحميل…';
+ $('lbMe').classList.add('hidden');
+ var rows=await fetchLeaderboard();
+ if(!sbReady()){$('lbList').innerHTML='<div class="status err">تعذّر الاتصال بالتصنيف الآن، حاول لاحقًا</div>';return;}
+ if(!rows.length){$('lbList').innerHTML='<div class="status">لسه محدش لعب مباريات مسجّلة — كن أول واحد! 🚀</div>';return;}
+ var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
+ var html='';
+ rows.forEach(function(r,i){
+  var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
+  html+='<div class="lb-row"><div class="lb-rank">'+medal+'</div><div><div class="lb-name">'+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز</div></div><div class="lb-pts">'+(r.points||0)+' نقطة</div></div>';
+ });
+ $('lbList').innerHTML=html;
+ if(myN){
+  var mine=rows.find?rows.find(function(r){return r.name===myN;}):null;
+  if(!mine){for(var i=0;i<rows.length;i++){if(rows[i].name===myN){mine=rows[i];break;}}}
+  if(mine){
+   var rank=rows.indexOf(mine)+1;
+   $('lbMe').classList.remove('hidden');
+   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div><div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز</div></div><div class="lb-pts">'+(mine.points||0)+' نقطة</div>';
+  }
+ }
+}
 var netCh=null;
 /* معرّف ثابت للجهاز — بيخلّي إعادة تحميل الصفحة ترجّعك لنفس مقعدك بدل ما تعمل لاعب جديد */
 var myCid=null;
@@ -3766,6 +3869,7 @@ function endGame(){
  '💪 '+P[1].name+': قوة '+s1.tot+' (متوسط '+s1.avg+')\n'+
  '⚽ نتيجة المباراة النهائية: '+sim.g0+' - '+sim.g1+'\n'+
  '🎮 العب مزاد النجوم بنفسك!';
+ recordMatchResult(P[0].name,sim.g0,P[1].name,sim.g1);
  render();broadcast();
 }
 function renderPostCardsOverlay(){
