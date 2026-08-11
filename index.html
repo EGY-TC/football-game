@@ -174,6 +174,20 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .lb-pts{font-weight:900;color:var(--acc);font-size:14px;flex-shrink:0}
 .lb-me{background:rgba(88,166,255,.12);border:1px solid var(--blue);border-radius:12px;padding:9px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
 .lb-me .lb-name{color:var(--blue)}
+.lb-tabs{display:flex;gap:6px;margin-bottom:10px}
+.lb-tabs button{flex:1;padding:9px 2px;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--dim);font-weight:900;font-size:12.5px;cursor:pointer}
+.lb-tabs button.sel{color:var(--acc);border-color:var(--acc);background:rgba(63,185,80,.1)}
+.lb-tier{font-size:15px;flex-shrink:0}
+.lb-streak{color:var(--red);font-size:10.5px;font-weight:900;margin-right:4px}
+.tier-bronze{color:#e3906b}
+.tier-silver{color:#c9d1d9}
+.tier-gold{color:var(--gold)}
+.tier-legend{color:var(--purple)}
+.h2h-row{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.h2h-name{font-weight:800;font-size:13px}
+.h2h-rec{font-size:12px;font-weight:900}
+.h2h-rec .w{color:var(--acc)}.h2h-rec .l{color:var(--red)}.h2h-rec .d{color:var(--dim)}
+.promo-banner{background:rgba(177,74,255,.12);border:1px solid var(--purple);border-radius:12px;padding:10px;margin-bottom:10px;text-align:center;font-weight:900;color:#d2a8ff;font-size:13px}
 .opt-lbl{font-weight:900;margin:10px 0 4px;font-size:14px;display:flex;justify-content:space-between}
 .opt-lbl span{color:var(--acc)}
 .first-bid-note{background:rgba(248,81,73,.08);border:1px solid var(--red);border-radius:10px;padding:8px;font-size:11.5px;color:var(--red);text-align:center;margin:4px 0;font-weight:700}
@@ -569,7 +583,13 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
 <div id="lbOv" class="overlay hidden"><div class="obox">
 <h2>🏆 قائمة المتصدرين</h2>
-<div class="desc" style="margin-bottom:10px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): تفوز تاخد نقط والخصم يتخصم منه نفس القيمة — كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر (لحد 20 نقطة). التعادل ملهوش تأثير. رصيدك متضمنلوش ينزل تحت الصفر. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
+<div class="desc" style="margin-bottom:8px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): تفوز تاخد نقط والخصم يتخصم منه نفس القيمة — كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر (لحد 20 نقطة). فوز متتالي بيدّيك بونص 🔥. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
+<div id="lbPromo"></div>
+<div class="lb-tabs">
+<button id="lbt0" class="sel" onclick="setLbTab('all')">🏆 التصنيف العام</button>
+<button id="lbt1" onclick="setLbTab('season')">📅 الموسم</button>
+<button id="lbt2" onclick="setLbTab('h2h')">⚔️ مواجهاتي</button>
+</div>
 <div id="lbMe" class="lb-me hidden"></div>
 <div id="lbList">جارٍ التحميل…</div>
 <button class="big-btn goldb" style="margin-top:10px" onclick="loadLeaderboard()">🔄 تحديث</button>
@@ -2458,10 +2478,39 @@ function sbClient(){
    اللاعبين المتصلين حاليًا عبر نفس قناة المزامنة اللي شغالة أصلاً باللعبة
    (بدون جدول قاعدة بيانات) عشان تتجمّع في تصنيف مشترك بينكم مع الوقت.
    كل جهاز بيحتفظ بنسخته من التصنيف وبيدمج فيها أي نتائج بتوصله من لاعبين
-   تانيين لعبوا معاه أونلاين قبل كده. */
+   تانيين لعبوا معاه أونلاين قبل كده.
+
+   عناصر المنافسة:
+   - نقط zero-sum (فوز بياخد، خسارة بتتخصم بنفس القيمة).
+   - ستريك فوز 🔥: كل فوز متتالي بيدّي بونص إضافي (+2 لكل مباراة في
+     السلسلة، حد أقصى +10)، وبيتصفر لما تخسر. بيتفظ أطول ستريك عمرك كله.
+   - رتب/مستويات 🎖️: برونزي/فضي/ذهبي/أسطوري حسب مجموع نقطك.
+   - موسم أسبوعي 📅: نقط الموسم بتتصفر كل أسبوع (تصنيف منفصل عن الكلي).
+   - مواجهات مباشرة ⚔️: سجل فوز/خسارة/تعادل بينك وبين كل خصم لعبت ضده. */
 var LB_KEY='mz_leaderboard_v1';
 var LB_CH_NAME='mzaida-leaderboard-global';
-var lbCh=null,lbChReady=false;
+var lbCh=null,lbChReady=false,lbTab='all';
+var LB_STREAK_BONUS=2,LB_STREAK_CAP=10;
+var TIERS=[
+ {id:'bronze',min:0,label:'برونزي',ic:'🥉',cls:'tier-bronze'},
+ {id:'silver',min:100,label:'فضي',ic:'🥈',cls:'tier-silver'},
+ {id:'gold',min:300,label:'ذهبي',ic:'🥇',cls:'tier-gold'},
+ {id:'legend',min:600,label:'أسطوري',ic:'👑',cls:'tier-legend'}
+];
+function tierOf(pts){
+ var t=TIERS[0];
+ for(var i=0;i<TIERS.length;i++)if((pts||0)>=TIERS[i].min)t=TIERS[i];
+ return t;
+}
+/* مفتاح الموسم الحالي — بيتغيّر كل أسبوع (سنة+رقم أسبوع ISO) عشان
+   التصنيف الموسمي يتصفر لوحده أوتوماتيك من غير أي تدخل يدوي */
+function currentSeasonKey(){
+ var d=new Date();d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+ d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+ var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+ var wk=Math.ceil((((d-yearStart)/864e5)+1)/7);
+ return d.getUTCFullYear()+'-W'+(wk<10?'0'+wk:wk);
+}
 /* بيرجع مقدار النقط (بالقيمة المطلقة) اللي هتنتقل بين الفريقين حسب فارق
    الأهداف — فارق هدف واحد = 20 نقطة، وكل ما الفارق يكبر كل ما القيمة تقل
    لحد أدنى 10. التعادل = صفر (مفيش نقط تتحرك). الفايز بياخدها موجبة،
@@ -2479,17 +2528,38 @@ function lbLoad(){
 function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
-/* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟) جوه الجدول المحلي.
-   pts ممكن تكون سالبة (خسارة) — بنمنع رصيد اللاعب إنه ينزل تحت الصفر. */
-function lbMergeOne(tbl,name,pts,won){
+function lbFreshRow(name){
+ return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{}};
+}
+/* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟ + اسم الخصم) جوه الجدول المحلي.
+   pts ممكن تكون سالبة (خسارة) — بنمنع رصيد اللاعب إنه ينزل تحت الصفر.
+   بيحدّث كمان الستريك، الموسم، وسجل المواجهة مع الخصم ده تحديدًا. */
+function lbMergeOne(tbl,name,pts,won,drew,oppName){
  if(!name)return false;
- var row=tbl[name]||{name:name,points:0,matches:0,wins:0,losses:0};
- row.points=Math.max(0,(row.points||0)+pts);
+ var row=tbl[name]||lbFreshRow(name);
+ if(row.season!==currentSeasonKey()){row.season=currentSeasonKey();row.seasonPoints=0;}
+ if(!row.h2h)row.h2h={};
+ var bonus=0;
+ if(won){
+  row.streak=(row.streak||0)+1;
+  bonus=Math.min(LB_STREAK_CAP,(row.streak-1)*LB_STREAK_BONUS);
+  if(row.streak>(row.bestStreak||0))row.bestStreak=row.streak;
+ }else if(!drew){
+  row.streak=0;
+ }
+ var totalPts=pts+(pts>0?bonus:0);
+ row.points=Math.max(0,(row.points||0)+totalPts);
+ row.seasonPoints=Math.max(0,(row.seasonPoints||0)+totalPts);
  row.matches=(row.matches||0)+1;
  row.wins=(row.wins||0)+(won?1:0);
- row.losses=(row.losses||0)+(won?0:(pts<0?1:0));
+ row.losses=(row.losses||0)+(!won&&!drew?1:0);
+ if(oppName){
+  var h=row.h2h[oppName]||{w:0,l:0,d:0};
+  if(drew)h.d++;else if(won)h.w++;else h.l++;
+  row.h2h[oppName]=h;
+ }
  tbl[name]=row;
- return true;
+ return {row:row,bonus:bonus};
 }
 function lbBroadcastRow(name){
  try{
@@ -2507,7 +2577,11 @@ function lbEnsureChannel(){
    var tbl=lbLoad();
    var cur=tbl[r.name];
    /* ناخد أعلى نسخة معروفة (أكتر مباريات) عشان محدش يرجّع رقم قديم فوق الجديد */
-   if(!cur||(r.matches||0)>=(cur.matches||0)){tbl[r.name]=r;lbSave(tbl);}
+   if(!cur||(r.matches||0)>=(cur.matches||0)){
+    /* بنحافظ على أطول ستريك متسجل عندنا حتى لو النسخة الجاية أقدم شوية */
+    if(cur&&cur.bestStreak>(r.bestStreak||0))r.bestStreak=cur.bestStreak;
+    tbl[r.name]=r;lbSave(tbl);
+   }
   });
   lbCh.subscribe(function(status){
    if(status==='SUBSCRIBED'){
@@ -2520,51 +2594,112 @@ function lbEnsureChannel(){
  }catch(e){}
 }
 /* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب).
-   نظام zero-sum: الفايز بياخد النقط، الخاسر بتتخصم منه نفس القيمة
-   (من غير ما رصيده ينزل تحت الصفر). التعادل ملهوش تأثير على الطرفين. */
+   نظام zero-sum: الفايز بياخد النقط (+بونص ستريك)، الخاسر بتتخصم منه
+   نفس القيمة الأساسية (من غير ما رصيده ينزل تحت الصفر). التعادل بيصفر
+   ستريك الطرفين من غير أي نقط. */
 function recordMatchResult(name0,g0,name1,g1){
  if(mode===1)return; /* ضد الحاسوب — مش بيتحسب في التصنيف */
  if(!name0||!name1)return;
  var pts=matchPoints(g0,g1); /* 0 لو تعادل، وإلا القيمة المطلقة اللي هتتحرك */
- var p0,p1,won0,won1;
+ var p0,p1,won0,won1,drew=(g0===g1);
  if(g0>g1){p0=pts;p1=-pts;won0=true;won1=false;}
  else if(g1>g0){p0=-pts;p1=pts;won0=false;won1=true;}
  else{p0=0;p1=0;won0=false;won1=false;}
  var tbl=lbLoad();
- lbMergeOne(tbl,name0,p0,won0);
- lbMergeOne(tbl,name1,p1,won1);
+ var beforeTier0=tierOf((tbl[name0]||{}).points||0);
+ var beforeTier1=tierOf((tbl[name1]||{}).points||0);
+ var r0=lbMergeOne(tbl,name0,p0,won0,drew,name1);
+ var r1=lbMergeOne(tbl,name1,p1,won1,drew,name0);
  lbSave(tbl);
  lbEnsureChannel();
  setTimeout(function(){lbBroadcastRow(name0);lbBroadcastRow(name1);},400);
+ /* لو انت (اللاعب الأول محليًا) ترقيت لمستوى جديد، بنعرضلك رسالة احتفال */
+ var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
+ var afterMine=myN===name0?tierOf(r0.row.points):(myN===name1?tierOf(r1.row.points):null);
+ var beforeMine=myN===name0?beforeTier0:(myN===name1?beforeTier1:null);
+ if(afterMine&&beforeMine&&afterMine.id!==beforeMine.id&&TIERS.indexOf(afterMine)>TIERS.indexOf(beforeMine)){
+  pendingPromo=afterMine;
+ }
 }
+var pendingPromo=null;
 function fetchLeaderboard(){
  var tbl=lbLoad();
  var rows=Object.keys(tbl).map(function(k){return tbl[k];});
  rows.sort(function(a,b){return (b.points||0)-(a.points||0);});
  return rows.slice(0,100);
 }
-function openLeaderboard(){lbEnsureChannel();$('lbOv').classList.remove('hidden');loadLeaderboard();}
+function fetchSeasonLeaderboard(){
+ var tbl=lbLoad(),sk=currentSeasonKey();
+ var rows=Object.keys(tbl).map(function(k){return tbl[k];}).filter(function(r){return r.season===sk;});
+ rows.sort(function(a,b){return (b.seasonPoints||0)-(a.seasonPoints||0);});
+ return rows.slice(0,100);
+}
+function openLeaderboard(){lbEnsureChannel();$('lbOv').classList.remove('hidden');setLbTab('all');}
 function closeLeaderboard(){$('lbOv').classList.add('hidden');}
+function setLbTab(t){
+ lbTab=t;
+ $('lbt0').classList.toggle('sel',t==='all');
+ $('lbt1').classList.toggle('sel',t==='season');
+ $('lbt2').classList.toggle('sel',t==='h2h');
+ loadLeaderboard();
+}
+function tierBadgeHTML(pts){
+ var t=tierOf(pts);
+ return '<span class="lb-tier '+t.cls+'" title="'+t.label+'">'+t.ic+'</span>';
+}
+function lbRowHTML(r,i,useSeasonPts){
+ var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
+ var pts=useSeasonPts?(r.seasonPoints||0):(r.points||0);
+ var streakTag=(r.streak||0)>=2?'<span class="lb-streak">🔥×'+r.streak+'</span>':'';
+ return '<div class="lb-row"><div class="lb-rank">'+medal+'</div>'+tierBadgeHTML(r.points||0)+
+  '<div><div class="lb-name">'+streakTag+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.losses||0)+' خسارة • أطول ستريك '+(r.bestStreak||0)+'🔥</div></div>'+
+  '<div class="lb-pts">'+pts+' نقطة</div></div>';
+}
+function renderPromoBanner(){
+ if(pendingPromo){
+  $('lbPromo').innerHTML='<div class="promo-banner">🎉 مبروك! اترقّيت لمستوى <b>'+pendingPromo.ic+' '+pendingPromo.label+'</b></div>';
+  pendingPromo=null;
+ }else{
+  $('lbPromo').innerHTML='';
+ }
+}
 function loadLeaderboard(){
+ renderPromoBanner();
  $('lbMe').classList.add('hidden');
- var rows=fetchLeaderboard();
- if(!rows.length){$('lbList').innerHTML='<div class="status">لسه محدش لعب مباريات مسجّلة — كن أول واحد! 🚀</div>';return;}
  var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
+ if(lbTab==='h2h'){
+  renderH2H(myN);
+  return;
+ }
+ var useSeasonPts=(lbTab==='season');
+ var rows=useSeasonPts?fetchSeasonLeaderboard():fetchLeaderboard();
+ if(!rows.length){$('lbList').innerHTML='<div class="status">'+(useSeasonPts?'لسه محدش سجّل نقط في موسم الأسبوع ده':'لسه محدش لعب مباريات مسجّلة')+' — كن أول واحد! 🚀</div>';return;}
  var html='';
- rows.forEach(function(r,i){
-  var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
-  html+='<div class="lb-row"><div class="lb-rank">'+medal+'</div><div><div class="lb-name">'+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.losses||0)+' خسارة</div></div><div class="lb-pts">'+(r.points||0)+' نقطة</div></div>';
- });
+ rows.forEach(function(r,i){html+=lbRowHTML(r,i,useSeasonPts);});
  $('lbList').innerHTML=html;
  if(myN){
   var mine=null;
   for(var i=0;i<rows.length;i++){if(rows[i].name===myN){mine=rows[i];break;}}
   if(mine){
    var rank=rows.indexOf(mine)+1;
+   var pts=useSeasonPts?(mine.seasonPoints||0):(mine.points||0);
    $('lbMe').classList.remove('hidden');
-   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div><div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز • '+(mine.losses||0)+' خسارة</div></div><div class="lb-pts">'+(mine.points||0)+' نقطة</div>';
+   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div>'+tierBadgeHTML(mine.points||0)+'<div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز • '+(mine.losses||0)+' خسارة</div></div><div class="lb-pts">'+pts+' نقطة</div>';
   }
  }
+}
+function renderH2H(myN){
+ if(!myN){$('lbList').innerHTML='<div class="status">اكتب اسمك في الصفحة الرئيسية الأول عشان تشوف مواجهاتك</div>';return;}
+ var tbl=lbLoad();
+ var me=tbl[myN];
+ if(!me||!me.h2h||!Object.keys(me.h2h).length){$('lbList').innerHTML='<div class="status">لسه ملهوش مواجهات مسجّلة — العب مباراة ضد لاعب حقيقي وارجع تاني</div>';return;}
+ var opps=Object.keys(me.h2h).map(function(n){return {name:n,rec:me.h2h[n]};});
+ opps.sort(function(a,b){return (b.rec.w+b.rec.l+b.rec.d)-(a.rec.w+a.rec.l+a.rec.d);});
+ var html='';
+ opps.forEach(function(o){
+  html+='<div class="h2h-row"><div class="h2h-name">⚔️ '+o.name+'</div><div class="h2h-rec"><span class="w">'+o.rec.w+'ف</span> - <span class="l">'+o.rec.l+'خ</span> - <span class="d">'+o.rec.d+'ت</span></div></div>';
+ });
+ $('lbList').innerHTML=html;
 }
 var netCh=null;
 /* معرّف ثابت للجهاز — بيخلّي إعادة تحميل الصفحة ترجّعك لنفس مقعدك بدل ما تعمل لاعب جديد */
@@ -3900,6 +4035,7 @@ function endGame(){
  '⚽ نتيجة المباراة النهائية: '+sim.g0+' - '+sim.g1+'\n'+
  '🎮 العب مزاد النجوم بنفسك!';
  recordMatchResult(P[0].name,sim.g0,P[1].name,sim.g1);
+ if(pendingPromo){toast('🎉 اترقّيت لمستوى '+pendingPromo.ic+' '+pendingPromo.label+'!');}
  render();broadcast();
 }
 function renderPostCardsOverlay(){
