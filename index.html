@@ -569,7 +569,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
 <div id="lbOv" class="overlay hidden"><div class="obox">
 <h2>🏆 قائمة المتصدرين</h2>
-<div class="desc" style="margin-bottom:10px">كل ما تفوز في مباراة (مزاد النجوم / صناديق الحظ) تكسب نقط — كل ما فوزك يكون بفارق أهداف أقل كل ما نقطك تزيد (لحد 20 نقطة أقصى حد). التعادل والخسارة ملهمش نقط، ومباريات الحاسوب مش بتتحسب.</div>
+<div class="desc" style="margin-bottom:10px">كل ما تفوز في مباراة (مزاد النجوم / صناديق الحظ) ضد لاعب حقيقي تكسب نقط — كل ما فوزك يكون بفارق أهداف أقل كل ما نقطك تزيد (لحد 20 نقطة أقصى حد). التعادل، الخسارة، ومباريات الحاسوب ملهمش نقط. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
 <div id="lbMe" class="lb-me hidden"></div>
 <div id="lbList">جارٍ التحميل…</div>
 <button class="big-btn goldb" style="margin-top:10px" onclick="loadLeaderboard()">🔄 تحديث</button>
@@ -2452,22 +2452,16 @@ function sbClient(){
  return sbc;
 }
 /* ========= تصنيف المتصدرين (Leaderboard) =========
-   كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط
-   للاعب في جدول ثابت على Supabase. أقصى نقطة للفوز 20 (فارق هدف واحد
-   أو نتيجة متقاربة)، وكل ما فارق الأهداف يكبر كل ما النقط تقل، لحد حد أدنى 10
-   للفوز الكاسح. التعادل والخسارة = صفر.
-   ملحوظة: لازم تنشئ الجدول التالي مرة واحدة في Supabase SQL editor:
-   create table mz_leaderboard (
-     name text primary key,
-     points int default 0,
-     matches int default 0,
-     wins int default 0
-   );
-   alter table mz_leaderboard enable row level security;
-   create policy "public read" on mz_leaderboard for select using (true);
-   create policy "public write" on mz_leaderboard for insert with check (true);
-   create policy "public update" on mz_leaderboard for update using (true);
-*/
+   كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط.
+   ما بيحتاجش أي إعداد أو جدول تعمله بنفسك: النقط بتتخزن على جهازك
+   (localStorage) كمصدر أساسي مضمون 100%، وبرضو بتتبعت لحظيًا لكل
+   اللاعبين المتصلين حاليًا عبر نفس قناة المزامنة اللي شغالة أصلاً باللعبة
+   (بدون جدول قاعدة بيانات) عشان تتجمّع في تصنيف مشترك بينكم مع الوقت.
+   كل جهاز بيحتفظ بنسخته من التصنيف وبيدمج فيها أي نتائج بتوصله من لاعبين
+   تانيين لعبوا معاه أونلاين قبل كده. */
+var LB_KEY='mz_leaderboard_v1';
+var LB_CH_NAME='mzaida-leaderboard-global';
+var lbCh=null,lbChReady=false;
 function matchPoints(myGoals,oppGoals){
  if(myGoals<=oppGoals)return 0;
  var diff=myGoals-oppGoals;
@@ -2475,49 +2469,73 @@ function matchPoints(myGoals,oppGoals){
  if(pts<10)pts=10;
  return pts;
 }
-async function lbEnsureRow(name){
- var c=sbClient();if(!c)return null;
- try{
-  var sel=await c.from('mz_leaderboard').select('*').eq('name',name).maybeSingle();
-  if(sel.data)return sel.data;
-  var ins=await c.from('mz_leaderboard').insert({name:name,points:0,matches:0,wins:0}).select().maybeSingle();
-  return ins.data||null;
- }catch(e){return null;}
+function lbLoad(){
+ try{var raw=localStorage.getItem(LB_KEY);return raw?JSON.parse(raw):{};}catch(e){return {};}
 }
-async function lbAddResult(name,pts,won){
- var c=sbClient();if(!c||!name)return;
+function lbSave(obj){
+ try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
+}
+/* بيدمج نتيجة واحدة (اسم + نقط + فوز؟) جوه الجدول المحلي، بياخد بس لو أحدث/أعلى */
+function lbMergeOne(tbl,name,pts,won){
+ if(!name)return false;
+ var row=tbl[name]||{name:name,points:0,matches:0,wins:0};
+ row.points=(row.points||0)+pts;
+ row.matches=(row.matches||0)+1;
+ row.wins=(row.wins||0)+(won?1:0);
+ tbl[name]=row;
+ return true;
+}
+function lbBroadcastRow(name){
  try{
-  var row=await lbEnsureRow(name);
-  if(!row)return;
-  await c.from('mz_leaderboard').update({
-   points:(row.points||0)+pts,
-   matches:(row.matches||0)+1,
-   wins:(row.wins||0)+(won?1:0)
-  }).eq('name',name);
- }catch(e){/* لو الجدول مش موجود أو النت مقطوع، نتجاهل بهدوء */}
+  var tbl=lbLoad();var row=tbl[name];
+  if(row&&lbCh&&lbChReady)lbCh.send({type:'broadcast',event:'row',payload:row});
+ }catch(e){}
+}
+function lbEnsureChannel(){
+ if(lbCh||!sbReady())return;
+ try{
+  var c=sbClient();if(!c)return;
+  lbCh=c.channel(LB_CH_NAME,{config:{broadcast:{self:false,ack:false}}});
+  lbCh.on('broadcast',{event:'row'},function(m){
+   var r=m&&m.payload;if(!r||!r.name)return;
+   var tbl=lbLoad();
+   var cur=tbl[r.name];
+   /* ناخد أعلى نسخة معروفة (أكتر مباريات) عشان محدش يرجّع رقم قديم فوق الجديد */
+   if(!cur||(r.matches||0)>=(cur.matches||0)){tbl[r.name]=r;lbSave(tbl);}
+  });
+  lbCh.subscribe(function(status){
+   if(status==='SUBSCRIBED'){
+    lbChReady=true;
+    /* أول ما نتصل، نبعت كل اللي عندنا محليًا عشان نتشارك مع الحاضرين */
+    var tbl=lbLoad();
+    Object.keys(tbl).forEach(function(n){lbBroadcastRow(n);});
+   }
+  });
+ }catch(e){}
 }
 /* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب) */
 function recordMatchResult(name0,g0,name1,g1){
  if(mode===1)return; /* ضد الحاسوب — مش بيتحسب في التصنيف */
  if(!name0||!name1)return;
  var p0=matchPoints(g0,g1),p1=matchPoints(g1,g0);
- lbAddResult(name0,p0,g0>g1);
- lbAddResult(name1,p1,g1>g0);
+ var tbl=lbLoad();
+ lbMergeOne(tbl,name0,p0,g0>g1);
+ lbMergeOne(tbl,name1,p1,g1>g0);
+ lbSave(tbl);
+ lbEnsureChannel();
+ setTimeout(function(){lbBroadcastRow(name0);lbBroadcastRow(name1);},400);
 }
-async function fetchLeaderboard(){
- var c=sbClient();if(!c)return [];
- try{
-  var r=await c.from('mz_leaderboard').select('*').order('points',{ascending:false}).limit(100);
-  return r.data||[];
- }catch(e){return [];}
+function fetchLeaderboard(){
+ var tbl=lbLoad();
+ var rows=Object.keys(tbl).map(function(k){return tbl[k];});
+ rows.sort(function(a,b){return (b.points||0)-(a.points||0);});
+ return rows.slice(0,100);
 }
-function openLeaderboard(){$('lbOv').classList.remove('hidden');loadLeaderboard();}
+function openLeaderboard(){lbEnsureChannel();$('lbOv').classList.remove('hidden');loadLeaderboard();}
 function closeLeaderboard(){$('lbOv').classList.add('hidden');}
-async function loadLeaderboard(){
- $('lbList').innerHTML='جارٍ التحميل…';
+function loadLeaderboard(){
  $('lbMe').classList.add('hidden');
- var rows=await fetchLeaderboard();
- if(!sbReady()){$('lbList').innerHTML='<div class="status err">تعذّر الاتصال بالتصنيف الآن، حاول لاحقًا</div>';return;}
+ var rows=fetchLeaderboard();
  if(!rows.length){$('lbList').innerHTML='<div class="status">لسه محدش لعب مباريات مسجّلة — كن أول واحد! 🚀</div>';return;}
  var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
  var html='';
@@ -2527,8 +2545,8 @@ async function loadLeaderboard(){
  });
  $('lbList').innerHTML=html;
  if(myN){
-  var mine=rows.find?rows.find(function(r){return r.name===myN;}):null;
-  if(!mine){for(var i=0;i<rows.length;i++){if(rows[i].name===myN){mine=rows[i];break;}}}
+  var mine=null;
+  for(var i=0;i<rows.length;i++){if(rows[i].name===myN){mine=rows[i];break;}}
   if(mine){
    var rank=rows.indexOf(mine)+1;
    $('lbMe').classList.remove('hidden');
@@ -4007,6 +4025,7 @@ document.addEventListener('DOMContentLoaded',function(){
   $('mb4').onclick=function(){pickMode(4);};
   updateSfxBtn();
   if($('name1').value)initUserPeer();
+  lbEnsureChannel();
  }catch(e){}
 });
 </script>
