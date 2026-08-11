@@ -1348,6 +1348,7 @@ var MORE_PLAYERS_V2=[
 var ROUNDS=11;
 var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
+var roomFull=false;
 var roomPass='',isPublicRoom=false,rejectedAuth=false,hostRejecting=false,joinAttemptTries=0;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
@@ -1984,7 +1985,7 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';show('home');}
+function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;show('home');}
 function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);leaveHome();}
 function setView(v){
  view=v;
@@ -2015,63 +2016,108 @@ function sbClient(){
  return sbc;
 }
 var netCh=null;
+/* معرّف ثابت للجهاز — بيخلّي إعادة تحميل الصفحة ترجّعك لنفس مقعدك بدل ما تعمل لاعب جديد */
+var myCid=null;
+try{myCid=localStorage.getItem('mz_cid');if(!myCid){myCid=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('mz_cid',myCid);}}catch(e){myCid=Math.random().toString(36).slice(2);}
 function netClose(){
+ try{if(netCh&&netCh._kill)netCh._kill();}catch(e){}
  try{if(netCh&&netCh._ch&&sbClient())sbClient().removeChannel(netCh._ch);}catch(e){}
  netCh=null;
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
  var c=sbClient();
  if(!c){if(opts.onFail)opts.onFail('lib');return null;}
  var role=host?'h':'g',other=host?'g':'h';
- var H={},opened=false,waitTimer=null,dead=false;
+ var H={},opened=false,waitTimer=null,subTimer=null,dead=false,bound=null,myT=Date.now(),busy=false;
  function fire(e,a){var l=H[e]||[];for(var i=0;i<l.length;i++){try{l[i](a);}catch(_){}}}
  var shim={
-  open:false,peerCode:code,
+  open:false,peerCode:code,cid:myCid,
   on:function(e,f){(H[e]=H[e]||[]).push(f);return shim;},
-  send:function(o){if(dead)return;try{ch.send({type:'broadcast',event:'m',payload:{f:role,d:o}});}catch(e){}},
-  close:function(){/* إغلاق ناعم: القناة بتفضل قايمة عشان الرجوع التلقائي */
+  send:function(o){if(dead)return;try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,d:o}});}catch(e){}},
+  close:function(){/* إغلاق ناعم: القناة بتفضل قايمة عشان الرجوع التلقائي يبقى فوري */
    if(!shim.open)return;shim.open=false;opened=false;fire('close');
    if(host&&netCh===shim){conn=shim;}
   }
  };
- function markOpen(){
-  if(opened||dead)return;
+ function markOpen(cid){
+  if(dead||busy)return;
+  if(cid){if(bound&&bound!==cid)return;bound=cid;}
+  if(opened)return;
   opened=true;shim.open=true;clearTimeout(waitTimer);
   if(netCh===shim)conn=shim;
   lastRx=Date.now();netHeartbeat();
   fire('open');
  }
- var ch=c.channel('mzaida-'+code,{config:{broadcast:{self:false,ack:false},presence:{key:role}}});
+ var ch=c.channel('mzaida-'+code,{config:{broadcast:{self:false,ack:false},presence:{key:myCid}}});
  ch.on('broadcast',{event:'m'},function(m){
-  var p=m&&m.payload;if(!p||p.f===role)return;
-  markOpen();lastRx=Date.now();fire('data',p.d);
+  var p=m&&m.payload;if(!p||dead||busy)return;
+  if(p.c===myCid)return;
+  if(p.f===role)return;/* رسالة من نفس دورنا = دخيل، نتجاهلها */
+  if(bound&&p.c&&p.c!==bound)return;/* رسالة من طرف تالت مش صاحب المقعد */
+  markOpen(p.c);lastRx=Date.now();fire('data',p.d);
  });
+ function seats(){
+  var st={};try{st=ch.presenceState()||{};}catch(e){return null;}
+  var mine=[],theirs=[];
+  Object.keys(st).forEach(function(k){
+   var arr=st[k]||[];
+   for(var i=0;i<arr.length;i++){
+    var e=arr[i];if(!e||!e.c)continue;
+    if(e.c===myCid)continue;
+    if(e.r===role)mine.push(e); else if(e.r===other)theirs.push(e);
+   }
+  });
+  mine.sort(function(a,b){return (a.t||0)-(b.t||0);});
+  theirs.sort(function(a,b){return (a.t||0)-(b.t||0);});
+  return {mine:mine,theirs:theirs};
+ }
  function checkPresence(){
-  var st={};try{st=ch.presenceState()||{};}catch(e){}
-  if(st[other]&&st[other].length)markOpen();
-  else if(opened){opened=false;shim.open=false;fire('close');if(host&&netCh===shim)conn=shim;}
+  if(dead||busy)return;
+  var s=seats();if(!s)return;
+  /* لو في حد تاني بنفس الدور ودخل قبلي => المقعد محجوز، أنا دخيل ولازم أخرج */
+  if(s.mine.length&&(s.mine[0].t||0)<myT){
+   busy=true;
+   try{ch.untrack();}catch(e){}
+   if(opts.onBusy)opts.onBusy();
+   return;
+  }
+  if(s.theirs.length){
+   var partner=s.theirs[0].c;
+   if(bound&&bound!==partner&&opened){/* الطرف اتغيّر */ opened=false;shim.open=false;fire('close');}
+   bound=partner;
+   markOpen(partner);
+   if(opts.onPeer)opts.onPeer(partner);
+  }else if(opened){
+   opened=false;shim.open=false;fire('close');
+   if(host&&netCh===shim)conn=shim;
+  }
  }
  ch.on('presence',{event:'sync'},checkPresence);
  ch.on('presence',{event:'join'},checkPresence);
  ch.on('presence',{event:'leave'},checkPresence);
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub&&opts.onFail)opts.onFail('slow');},9000);
  ch.subscribe(function(status){
   if(dead)return;
   if(status==='SUBSCRIBED'){
-   try{ch.track({r:role,t:Date.now()});}catch(e){}
+   shim._sub=true;clearTimeout(subTimer);
+   myT=Date.now();
+   try{ch.track({r:role,c:myCid,t:myT});}catch(e){}
    if(opts.onReady)opts.onReady(shim);
-   setTimeout(checkPresence,300);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&opts.onNoHost)opts.onNoHost();},9000);}
-  }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-   if(opts.onFail)opts.onFail(status);
+   setTimeout(checkPresence,250);
+   setTimeout(checkPresence,1200);
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&opts.onNoHost)opts.onNoHost();},5000);}
+  }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+   clearTimeout(subTimer);
+   if(status!=='CLOSED'&&opts.onFail)opts.onFail(status);
   }
  });
  shim._ch=ch;
- shim._kill=function(){dead=true;clearTimeout(waitTimer);};
+ shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);try{ch.untrack();}catch(e){}};
  return shim;
 }
 
@@ -2096,7 +2142,7 @@ function shareRoomCode(){
 function createRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
  roomPass=(($('createPass')&&$('createPass').value)||'').trim();isPublicRoom=true;
- setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomCode=makeCode();savedCode=roomCode;
+ setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomFull=false;roomCode=makeCode();savedCode=roomCode;
  netClose();stopPeerMgr();
  conn=netCh=makeNetConn(roomCode,true,{
   onReady:function(){
@@ -2104,6 +2150,7 @@ function createRoom(){
    setStatus(roomPass?'✅ الغرفة جاهزة ومحمية بكلمة سر — بانتظار انضمام لاعب معاه الكلمة… (1/2)':'✅ الغرفة جاهزة ومعروضة في قائمة الغرف — بانتظار انضمام أي لاعب… (1/2)');
    lobbyAnnounce();
   },
+  onPeer:function(){roomFull=true;lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
  if(conn){wireConn();ensureVoicePeer();}
@@ -2142,6 +2189,14 @@ function connectToHost(code,silent){
  clearTimeout(openWatch);
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('جارٍ الاتصال بالغرفة '+code+'…');},
+  onBusy:function(){
+   clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;
+   netClose();conn=null;started=false;
+   $('reconn').classList.add('hidden');
+   setStatus('🚫 الغرفة ممتلئة (2/2) — اللعبة شغالة بالفعل، اختر غرفة تانية');
+   toast('🚫 الغرفة ممتلئة');
+   show('room');
+  },
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
    if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/2)');setTimeout(function(){connectToHost(code,true);},1000);return;}
@@ -2168,7 +2223,7 @@ function connectToHost(code,silent){
       انسخ الجزء الطويل ده بس (اللي بعد آخر / ) — ده الـ ID بتاعك.
    5) حطه تحت في ROOMS_BLOB_ID مكان القيمة الفاضية. */
 var ROOMS_BLOB_ID='019ff0ae-d030-7722-950d-a1f47dfd12e8';/* <-- الـ ID بتاع jsonblob.com الخاص بيك */
-var ROOM_TTL_MS=20000;/* أي غرفة من غير نبضة (heartbeat) لأكتر من 20 ثانية تتشال تلقائيًا من القائمة (يعني المضيف قفل أو الاتصال اتقطع) */
+var ROOM_TTL_MS=15000;/* أي غرفة من غير نبضة (heartbeat) لأكتر من 20 ثانية تتشال تلقائيًا من القائمة (يعني المضيف قفل أو الاتصال اتقطع) */
 var lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
 function apiFetch(url,opts,ms){
  opts=opts||{};
@@ -2196,7 +2251,7 @@ function lobbyAnnounce(){
  clearInterval(lobbyHbInt);
  lobbyAnnounceOnce();
  lobbyHbInt=setInterval(function(){
-  if(!online||!isHost||started||!roomCode){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
+  if(!online||!isHost||started||roomFull||!roomCode){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyAnnounceOnce();
  },7000);
 }
@@ -2234,6 +2289,7 @@ function refreshLobbyList(){
      var r=d[k];
      if(!r||!r.code)return;
      if(r.code===roomCode)return;/* متستبعدش غرفتك من نفسك */
+     if(r.full)return;/* غرفة مكتملة 2/2 متتعرضش */
      if(now-(r.ts||0)>ROOM_TTL_MS)return;/* غرفة قديمة/المضيف اتقفل */
      rooms.push(r);
     });
