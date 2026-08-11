@@ -2065,7 +2065,7 @@ function connectToHost(code,silent){
     if(conn&&conn.open)return;
     if(escalateRelay()){if(!silent)setStatus('جارٍ إعادة المحاولة بالوضع المضمون…');connectToHost(code,true);}
     else scheduleRejoin();
-   },12000);
+   },8000);
   },
   onRetry:function(t,i){if(!silent)setStatus('جارٍ التبديل لسيرفر اتصال آخر… ('+(i+1)+'/'+PEER_SERVERS.length+')');},
   onPeerUnavailable:function(){
@@ -2077,11 +2077,19 @@ function connectToHost(code,silent){
  });
 }
 
-/* ========= لوبي الغرف المفتوحة (عبر سيرفر اللعبة) ========= */
-/* كل غرفة تُنشأ تُسجّل نفسها في سيرفر اللعبة (Lovable Cloud) كل 10 ثوانٍ،
-   وأي لاعب يفتح "غرف اللاعبين المفتوحة" بيجيب القائمة الحيّة من نفس السيرفر.
-   ده أضمن بكتير من الطريقة القديمة اللي كانت بتعتمد على جهاز لاعب كمنسّق. */
-var ROOMS_API='/api/public/rooms';
+/* ========= لوبي الغرف المفتوحة (عبر jsonblob.com — بدون تسجيل أو فيزا) ========= */
+/* jsonblob.com خدمة مجانية بتخزّن ملف JSON واحد وتديك رابط ليه، من غير حساب
+   ولا إيميل ولا فيزا خالص. هنستخدمه كـ"دفتر" مشترك لكل الغرف المفتوحة.
+   خطوات التفعيل (دقيقتين، مرة واحدة بس):
+   1) افتح https://jsonblob.com في أي متصفح (من غير تسجيل دخول).
+   2) هتلاقي محرر JSON فاضي تقريبًا، امسح اللي فيه واكتب فيه: {}
+   3) دوس على زرار "Save" اللي فوق (مش تسجيل حساب، مجرد حفظ الملف).
+   4) رابط الصفحة في المتصفح هيتغيّر لحاجة شكلها:
+      https://jsonblob.com/1234567890abcdef12345678
+      انسخ الجزء الطويل ده بس (اللي بعد آخر / ) — ده الـ ID بتاعك.
+   5) حطه تحت في ROOMS_BLOB_ID مكان القيمة الفاضية. */
+var ROOMS_BLOB_ID='019ff0ae-d030-7722-950d-a1f47dfd12e8';/* <-- الـ ID بتاع jsonblob.com الخاص بيك */
+var ROOM_TTL_MS=20000;/* أي غرفة من غير نبضة (heartbeat) لأكتر من 20 ثانية تتشال تلقائيًا من القائمة (يعني المضيف قفل أو الاتصال اتقطع) */
 var lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
 function apiFetch(url,opts,ms){
  opts=opts||{};
@@ -2090,12 +2098,19 @@ function apiFetch(url,opts,ms){
  var t=setTimeout(function(){try{if(ctrl)ctrl.abort();}catch(e){}},ms||8000);
  return fetch(url,opts).finally(function(){clearTimeout(t);});
 }
+function roomsBlobUrl(){return 'https://jsonblob.com/api/jsonBlob/'+ROOMS_BLOB_ID;}
+function roomsBlobGet(){
+ return apiFetch(roomsBlobUrl(),{headers:{'Accept':'application/json'}},8000).then(function(r){if(!r.ok)throw new Error('http');return r.json();});
+}
+function roomsBlobPut(obj){
+ return apiFetch(roomsBlobUrl(),{method:'PUT',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(obj)},6000);
+}
 function lobbyAnnounceOnce(){
- if(!roomCode)return Promise.resolve();
- return apiFetch(ROOMS_API,{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({code:roomCode,name:myName(),gameType:gameType})
+ if(!roomCode||!ROOMS_BLOB_ID)return Promise.resolve();
+ return roomsBlobGet().then(function(d){
+  var obj=(d&&typeof d==='object'&&!Array.isArray(d))?d:{};
+  obj[roomCode]={code:roomCode,name:myName(),gameType:gameType,ts:Date.now()};
+  return roomsBlobPut(obj);
  }).catch(function(){});
 }
 function lobbyAnnounce(){
@@ -2104,17 +2119,17 @@ function lobbyAnnounce(){
  lobbyHbInt=setInterval(function(){
   if(!online||!isHost||started||!roomCode){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyAnnounceOnce();
- },10000);
+ },7000);
 }
 function lobbyStopAnnounce(){
  clearInterval(lobbyHbInt);lobbyHbInt=null;
- if(!roomCode)return;
+ if(!roomCode||!ROOMS_BLOB_ID)return;
  var code=roomCode;
- apiFetch(ROOMS_API,{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({action:'remove',code:code})
- },4000).catch(function(){});
+ roomsBlobGet().then(function(d){
+  var obj=(d&&typeof d==='object'&&!Array.isArray(d))?d:{};
+  delete obj[code];
+  return roomsBlobPut(obj);
+ }).catch(function(){});
 }
 function stopLobbyClient(){}
 function stopLobbyCoordinator(){}
@@ -2124,17 +2139,28 @@ function openLobbyBrowser(){
  else renderLobbyList('جارٍ البحث عن غرف مفتوحة…',true);
  refreshLobbyList();
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,5000);
+ lobbyRefreshInt=setInterval(refreshLobbyList,4000);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;
  show('room');
 }
 function refreshLobbyList(){
- apiFetch(ROOMS_API+'?exclude='+encodeURIComponent(roomCode||''),{headers:{'Accept':'application/json'}},8000)
-  .then(function(r){return r.json();})
+ if(!ROOMS_BLOB_ID){renderLobbyList('⚠️ لازم تضبط ROOMS_BLOB_ID الأول (شوف التعليمات فوق الكود) عشان القائمة تشتغل',false);return;}
+ roomsBlobGet()
   .then(function(d){
-   lobbyLastRooms=(d&&d.rooms)||[];
+   var now=Date.now(),rooms=[];
+   if(d&&typeof d==='object'&&!Array.isArray(d)){
+    Object.keys(d).forEach(function(k){
+     var r=d[k];
+     if(!r||!r.code)return;
+     if(r.code===roomCode)return;/* متستبعدش غرفتك من نفسك */
+     if(now-(r.ts||0)>ROOM_TTL_MS)return;/* غرفة قديمة/المضيف اتقفل */
+     rooms.push(r);
+    });
+   }
+   rooms.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+   lobbyLastRooms=rooms;
    renderLobbyList(null,false,lobbyLastRooms);
   })
   .catch(function(){
@@ -2167,7 +2193,7 @@ function scheduleRejoin(){
  clearTimeout(autoRejoin);
  clearTimeout(openWatch);
  rejoinTries++;
- if(rejoinTries===3)escalateRelay();
+ if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
  autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(800*rejoinTries,4000));
