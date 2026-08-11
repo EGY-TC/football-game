@@ -569,7 +569,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div id="friendsOv" class="overlay hidden"><div class="obox"><h2>👥 قائمة الأصدقاء</h2><div id="friendsList"></div><button class="big-btn red" style="margin-top:10px" onclick="closeFriends()">✖ إغلاق</button></div></div>
 <div id="lbOv" class="overlay hidden"><div class="obox">
 <h2>🏆 قائمة المتصدرين</h2>
-<div class="desc" style="margin-bottom:10px">كل ما تفوز في مباراة (مزاد النجوم / صناديق الحظ) ضد لاعب حقيقي تكسب نقط — كل ما فوزك يكون بفارق أهداف أقل كل ما نقطك تزيد (لحد 20 نقطة أقصى حد). التعادل، الخسارة، ومباريات الحاسوب ملهمش نقط. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
+<div class="desc" style="margin-bottom:10px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): تفوز تاخد نقط والخصم يتخصم منه نفس القيمة — كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر (لحد 20 نقطة). التعادل ملهوش تأثير. رصيدك متضمنلوش ينزل تحت الصفر. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
 <div id="lbMe" class="lb-me hidden"></div>
 <div id="lbList">جارٍ التحميل…</div>
 <button class="big-btn goldb" style="margin-top:10px" onclick="loadLeaderboard()">🔄 تحديث</button>
@@ -2462,9 +2462,13 @@ function sbClient(){
 var LB_KEY='mz_leaderboard_v1';
 var LB_CH_NAME='mzaida-leaderboard-global';
 var lbCh=null,lbChReady=false;
+/* بيرجع مقدار النقط (بالقيمة المطلقة) اللي هتنتقل بين الفريقين حسب فارق
+   الأهداف — فارق هدف واحد = 20 نقطة، وكل ما الفارق يكبر كل ما القيمة تقل
+   لحد أدنى 10. التعادل = صفر (مفيش نقط تتحرك). الفايز بياخدها موجبة،
+   الخاسر بتتخصم منه نفس القيمة (نظام zero-sum). */
 function matchPoints(myGoals,oppGoals){
- if(myGoals<=oppGoals)return 0;
- var diff=myGoals-oppGoals;
+ if(myGoals===oppGoals)return 0;
+ var diff=Math.abs(myGoals-oppGoals);
  var pts=20-(diff-1)*3; /* فرق هدف = 20، فرقين = 17، 3 = 14 ... */
  if(pts<10)pts=10;
  return pts;
@@ -2475,13 +2479,15 @@ function lbLoad(){
 function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
-/* بيدمج نتيجة واحدة (اسم + نقط + فوز؟) جوه الجدول المحلي، بياخد بس لو أحدث/أعلى */
+/* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟) جوه الجدول المحلي.
+   pts ممكن تكون سالبة (خسارة) — بنمنع رصيد اللاعب إنه ينزل تحت الصفر. */
 function lbMergeOne(tbl,name,pts,won){
  if(!name)return false;
- var row=tbl[name]||{name:name,points:0,matches:0,wins:0};
- row.points=(row.points||0)+pts;
+ var row=tbl[name]||{name:name,points:0,matches:0,wins:0,losses:0};
+ row.points=Math.max(0,(row.points||0)+pts);
  row.matches=(row.matches||0)+1;
  row.wins=(row.wins||0)+(won?1:0);
+ row.losses=(row.losses||0)+(won?0:(pts<0?1:0));
  tbl[name]=row;
  return true;
 }
@@ -2513,14 +2519,20 @@ function lbEnsureChannel(){
   });
  }catch(e){}
 }
-/* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب) */
+/* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب).
+   نظام zero-sum: الفايز بياخد النقط، الخاسر بتتخصم منه نفس القيمة
+   (من غير ما رصيده ينزل تحت الصفر). التعادل ملهوش تأثير على الطرفين. */
 function recordMatchResult(name0,g0,name1,g1){
  if(mode===1)return; /* ضد الحاسوب — مش بيتحسب في التصنيف */
  if(!name0||!name1)return;
- var p0=matchPoints(g0,g1),p1=matchPoints(g1,g0);
+ var pts=matchPoints(g0,g1); /* 0 لو تعادل، وإلا القيمة المطلقة اللي هتتحرك */
+ var p0,p1,won0,won1;
+ if(g0>g1){p0=pts;p1=-pts;won0=true;won1=false;}
+ else if(g1>g0){p0=-pts;p1=pts;won0=false;won1=true;}
+ else{p0=0;p1=0;won0=false;won1=false;}
  var tbl=lbLoad();
- lbMergeOne(tbl,name0,p0,g0>g1);
- lbMergeOne(tbl,name1,p1,g1>g0);
+ lbMergeOne(tbl,name0,p0,won0);
+ lbMergeOne(tbl,name1,p1,won1);
  lbSave(tbl);
  lbEnsureChannel();
  setTimeout(function(){lbBroadcastRow(name0);lbBroadcastRow(name1);},400);
@@ -2541,7 +2553,7 @@ function loadLeaderboard(){
  var html='';
  rows.forEach(function(r,i){
   var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
-  html+='<div class="lb-row"><div class="lb-rank">'+medal+'</div><div><div class="lb-name">'+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز</div></div><div class="lb-pts">'+(r.points||0)+' نقطة</div></div>';
+  html+='<div class="lb-row"><div class="lb-rank">'+medal+'</div><div><div class="lb-name">'+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.losses||0)+' خسارة</div></div><div class="lb-pts">'+(r.points||0)+' نقطة</div></div>';
  });
  $('lbList').innerHTML=html;
  if(myN){
@@ -2550,7 +2562,7 @@ function loadLeaderboard(){
   if(mine){
    var rank=rows.indexOf(mine)+1;
    $('lbMe').classList.remove('hidden');
-   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div><div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز</div></div><div class="lb-pts">'+(mine.points||0)+' نقطة</div>';
+   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div><div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز • '+(mine.losses||0)+' خسارة</div></div><div class="lb-pts">'+(mine.points||0)+' نقطة</div>';
   }
  }
 }
