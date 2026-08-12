@@ -4235,5 +4235,24 @@ function dismissOnbTip(){
 ">
   Developed by <strong>Mohamed Mustafa</strong>
 </footer>
+ <script>
+  // منع زر الفأرة الأيمن
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // منع تحديد النصوص وقصها أو نسخها
+  document.addEventListener('selectstart', e => e.preventDefault());
+
+  // منع اختصارات لوحة المفاتيح المخصصة للنسخ وفتح أدوات المطور
+  document.onkeydown = function(e) {
+    // F12
+    if (e.keyCode === 123) return false;
+    // Ctrl+U (عرض المصدر)
+    if (e.ctrlKey && e.keyCode === 85) return false;
+    // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (أدوات المطور)
+    if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) return false;
+    // Ctrl+S (حفظ الصفحة)
+    if (e.ctrlKey && e.keyCode === 83) return false;
+  };
+</script>
 </body>
 </html>
