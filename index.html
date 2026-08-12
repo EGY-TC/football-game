@@ -18,6 +18,12 @@
 <script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <style>
+ body {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge */
+  user-select: none;         /* Standard */
+}
 :root{--bg:#0d1117;--card:#161b22;--card2:#1c2128;--line:#2d333b;--txt:#e6edf3;--dim:#8b949e;--acc:#3fb950;--blue:#58a6ff;--gold:#d29922;--red:#f85149;--purple:#b14aff}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);min-height:100vh;color:var(--txt);padding:10px}
