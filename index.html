@@ -3580,10 +3580,11 @@ function wireConn(){
  clearInterval(hbInt);
  hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
  clearInterval(watchdog);
+ var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000){try{conn.send({type:'sync'});}catch(e){}}
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
   if(lastRx&&Date.now()-lastRx>14000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
@@ -3625,7 +3626,7 @@ function handleData(d){
    setTimeout(function(){try{if(conn)conn.close();}catch(e){}},300);
    return;
   }
-  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
+  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
   else{guestName=d.name;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
  }
  else if(d.type==='reject'&&!isHost){
@@ -3633,11 +3634,11 @@ function handleData(d){
   setStatus(d.reason==='pass'?'🔒 كلمة السر غلط — تأكد منها مع صاحب الغرفة':'تعذر الانضمام');
   show('room');
  }
- else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
+ else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
  else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
- else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
+ else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
   phase='bid';$('overlay').classList.add('hidden');pendingRematch=true;
