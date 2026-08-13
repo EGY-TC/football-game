@@ -3211,7 +3211,11 @@ function makeNetConn(code,host,opts){
    if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},3500);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
-   if(status==='CLOSED'&&!recovering)return;
+   /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
+      وده كان بيسيب الاتصال ميت للأبد من غير أي إعادة محاولة (الشاشة تفضل
+      عالقة على "جارٍ الاتصال" للأبد). دلوقتي بنحاول نعيد الاشتراك دايمًا
+      طالما القناة لسه حية (dead=false) — التدمير المتعمد بيتلقط أصلاً
+      من فحص dead في أول onStatus. */
    resubscribe(status);
   }
  }
