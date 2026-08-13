@@ -1,31 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
- <!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-<title>مزاد نجوم</title>    
-    <!-- منع تحديد النص عبر CSS -->
-    <style>
-      body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-    </style>
-</head>
-<body>
-
-    <!-- محتوى موقعك هنا -->
-
-    <!-- ربط ملف الجافا سكريبت المشفر -->
-    <script src="script.js"></script>
-</body>
-</html>
-<meta name="version" content="v4-202608101422">
-<meta http-equiv="Cache-Control" content="no-store">
  <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -35,9 +10,12 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070b14">
+<meta name="theme-color" content="#0b1220">
+<meta name="version" content="v5-light">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>⚽ مزاد النجوم</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
 <script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <style>
@@ -535,6 +513,26 @@ label{font-size:12.5px;letter-spacing:.2px}
 .mz-badge{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--card2);border:1px solid var(--line);font-size:17px;filter:grayscale(1);opacity:.4}
 .mz-badge.got{filter:none;opacity:1;border-color:var(--gold);box-shadow:0 0 10px -3px var(--gold)}
 
+
+/* ===== v5: تخفيف الواجهة + تحسين الديزاين ===== */
+:root{--bg:#0b1220;--card:#141c2b;--card2:#1a2334;--line:#28324a;--txt:#e8eef7;--dim:#93a1b8;--acc:#2ecc71;--blue:#5aa9ff;--gold:#e3b341;--red:#ff5f6d;--purple:#a468ff}
+body{padding:8px}
+*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.salawat,.box-item.pack,.box-item.pack::after,.opp-mic{animation:none!important}
+.pcard.enter,.box-item.opened{animation:none!important}
+.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.big-btn{box-shadow:none;letter-spacing:.2px}
+.gt-btn,.mode-btn,.diff-btn{box-shadow:none;transition:border-color .15s ease,background .15s ease}
+.gt-btn.sel,.mode-btn.sel,.diff-btn.sel{border-color:var(--acc);background:rgba(46,204,113,.10)}
+.hdr h1{font-size:19px;letter-spacing:.2px}
+.desc{font-size:12px;color:var(--dim)}
+.mz-card{padding:10px 12px}
+.mz-bar{height:7px}
+#settings{margin-top:10px}
+#settings .card{border-color:var(--acc)}
+.set-h{font-weight:900;font-size:14px;color:var(--acc);text-align:center;margin-bottom:6px}
+.blind-in-row input{font-size:18px;letter-spacing:2px;text-align:center}
+img{content-visibility:auto}
 </style>
 </head>
 <body>
@@ -553,7 +551,6 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 <div id="home" class="screen">
 <div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
-<div id="onbTip" class="onb-tip hidden"><span>👋 جديد هنا؟ (1) اكتب اسمك تحت (2) اختار "ضد الحاسوب" عشان تجرّب أول جولة سريعة (3) بعدين جرّب "لاعبان على جهاز واحد" أو "غرفة أونلاين" مع صحابك.</span><button onclick="dismissOnbTip()">✖</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card mz-card" id="metaCard"></div>
 <div class="card">
@@ -564,18 +561,8 @@ label{font-size:12.5px;letter-spacing:.2px}
 <button class="gt-btn" id="gt2" onclick="pickGameType('transferprice')"><span class="gt-ic">💰</span><span class="gt-nm">راجع سعرك</span><span class="gt-sub">خمّن سعر انتقال اللاعب الحقيقي</span></button>
 <button class="gt-btn" id="gt3" onclick="pickGameType('blind')"><span class="gt-ic">🕶️</span><span class="gt-nm">المزاد الأعمى</span><span class="gt-sub">ميزانية سرية — كل واحد يكتب سعره في السر</span></button>
 </div>
-<label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames();$('nameCodeBox').classList.add('hidden');$('name1').classList.remove('err-input')">
-<div id="nameCodeBox" class="hidden" style="background:var(--card2);border:1px solid var(--gold);border-radius:10px;padding:10px;margin:6px 0;font-size:12.5px">
- <div id="nameCodeAsk" class="hidden">
-  <div style="color:var(--gold);font-weight:800;margin-bottom:6px">🔑 الاسم ده مسجل قبل كده — اكتب كود الملكية بتاعك (4 أرقام)</div>
-  <input id="nameCodeInput" maxlength="4" inputmode="numeric" placeholder="مثال: 4821" style="text-align:center;letter-spacing:4px;font-size:18px">
- </div>
- <div id="nameCodeShow" class="hidden">
-  <div style="color:var(--gold);font-weight:800;margin-bottom:4px">🎉 أول مرة تستخدم الاسم ده! كود ملكيتك هو:</div>
-  <div id="nameCodeVal" style="text-align:center;letter-spacing:6px;font-size:22px;font-weight:900;color:var(--gold)"></div>
-  <div style="color:var(--dim);margin-top:4px">احفظ الكود ده — هتحتاجه لو دخلت بنفس الاسم من جهاز تاني</div>
- </div>
-</div>
+<label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames();$('name1').classList.remove('err-input')">
+
 <label>اسم اللاعب الثاني (نفس الجهاز)</label><input id="name2" placeholder="اكتب الاسم" oninput="saveNames()">
 <div class="modes">
 <button class="mode-btn hidden" id="mb4" onclick="pickMode(4)"><span class="ic">🧍</span>سولو (لوحدك)</button>
@@ -584,6 +571,29 @@ label{font-size:12.5px;letter-spacing:.2px}
 <button class="mode-btn" id="mb3" onclick="pickMode(3)"><span class="ic">🌐</span>غرفة عبر الإنترنت</button>
 </div>
 <div id="homeErr" class="status"></div>
+</div>
+<div id="settings" class="hidden">
+<div class="card">
+<div class="set-h">⚙️ إعدادات اللعبة</div>
+<div class="pc-ready" id="setGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
+<div id="tpDiffBox" class="hidden">
+<div class="opt-lbl" style="margin-top:0">🎯 مستوى الصعوبة</div>
+<div class="diff-grid">
+<button class="diff-btn sel" id="df0" onclick="pickTPDiff('easy')"><span class="diff-ic">🟢</span><span class="diff-nm">سهل</span><span class="diff-sub">صفقات مشهورة جدًا</span></button>
+<button class="diff-btn" id="df1" onclick="pickTPDiff('mid')"><span class="diff-ic">🟡</span><span class="diff-nm">متوسط</span><span class="diff-sub">صفقات معروفة</span></button>
+<button class="diff-btn" id="df2" onclick="pickTPDiff('hard')"><span class="diff-ic">🔴</span><span class="diff-nm">صعب</span><span class="diff-sub">أرقام أدق وأقل شهرة</span></button>
+</div>
+<div style="font-size:11px;color:var(--dim);margin-top:8px;line-height:1.8">💡 الأسعار بتتحدّث لايف من Transfermarkt وقت بدء التحدي. لو النت بطّئ أو السيرفر مش متاح، بترجع تلقائيًا للأرقام الموثّقة المخزّنة في اللعبة.</div>
+</div>
+<div id="timeBudBox">
+<div class="opt-lbl">⏱️ وقت التفكير <span id="timeVal">20 ث</span></div>
+<input type="range" id="rTime" min="0" max="60" step="5" value="20" oninput="updateTime(this.value)">
+<div style="font-size:11px;color:var(--dim);margin-top:-2px">اسحب لأقصى اليسار (0) لتعطيل التايمر تمامًا</div>
+<div class="opt-lbl" id="budRow">💰 ميزانية الفريق (50 مليون – 1 مليار) <span id="budVal">500 مليون</span></div>
+<input type="range" id="rBud" min="50" max="1000" step="50" value="500" oninput="updateBud(this.value)">
+</div>
+<button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
+</div>
 </div>
 </div>
 <div id="room" class="screen hidden">
@@ -607,29 +617,6 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div class="card">
 <div id="lobbyList"></div>
 <button class="big-btn goldb" style="margin-top:10px" onclick="refreshLobbyList()">🔄 تحديث القائمة</button>
-</div>
-</div>
-<div id="settings" class="screen hidden">
-<div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>الإعدادات</h1></div>
-<div class="card">
-<div class="pc-ready" id="setGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
-<div id="tpDiffBox" class="hidden">
-<div class="opt-lbl" style="margin-top:0">🎯 مستوى الصعوبة</div>
-<div class="diff-grid">
-<button class="diff-btn sel" id="df0" onclick="pickTPDiff('easy')"><span class="diff-ic">🟢</span><span class="diff-nm">سهل</span><span class="diff-sub">صفقات مشهورة جدًا</span></button>
-<button class="diff-btn" id="df1" onclick="pickTPDiff('mid')"><span class="diff-ic">🟡</span><span class="diff-nm">متوسط</span><span class="diff-sub">صفقات معروفة</span></button>
-<button class="diff-btn" id="df2" onclick="pickTPDiff('hard')"><span class="diff-ic">🔴</span><span class="diff-nm">صعب</span><span class="diff-sub">أرقام أدق وأقل شهرة</span></button>
-</div>
-<div style="font-size:11px;color:var(--dim);margin-top:8px;line-height:1.8">💡 الأسعار بتتحدّث لايف من Transfermarkt وقت بدء التحدي. لو النت بطّئ أو السيرفر مش متاح، بترجع تلقائيًا للأرقام الموثّقة المخزّنة في اللعبة.</div>
-</div>
-<div id="timeBudBox">
-<div class="opt-lbl">⏱️ وقت التفكير <span id="timeVal">20 ث</span></div>
-<input type="range" id="rTime" min="0" max="60" step="5" value="20" oninput="updateTime(this.value)">
-<div style="font-size:11px;color:var(--dim);margin-top:-2px">اسحب لأقصى اليسار (0) لتعطيل التايمر تمامًا</div>
-<div class="opt-lbl" id="budRow">💰 ميزانية الفريق (50 مليون – 1 مليار) <span id="budVal">500 مليون</span></div>
-<input type="range" id="rBud" min="50" max="1000" step="50" value="500" oninput="updateBud(this.value)">
-</div>
-<button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
 </div>
 </div>
 <div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
@@ -2671,7 +2658,20 @@ function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(functi
 function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function fmt(n){if(n>=1000){var v=n/1000;return (v%1===0?v:v.toFixed(1))+' مليار';}return n+' مليون';}
-function show(id){['home','room','lobby','settings','wait','game'].forEach(function(s){$(s).classList.add('hidden');});$(id).classList.remove('hidden');}
+function show(id){
+ var st=$('settings');
+ var screens=['home','room','lobby','wait','game'];
+ if(id==='settings'){
+  screens.forEach(function(s){if(s!=='home')$(s).classList.add('hidden');});
+  $('home').classList.remove('hidden');
+  if(st)st.classList.remove('hidden');
+  try{setTimeout(function(){st.scrollIntoView({behavior:'smooth',block:'center'});},60);}catch(e){}
+  return;
+ }
+ if(st)st.classList.add('hidden');
+ screens.forEach(function(s){$(s).classList.add('hidden');});
+ $(id).classList.remove('hidden');
+}
 function updateTime(v){CFG.timer=+v;$('timeVal').textContent=(+v===0?'بدون تايمر':v+' ث');}
 function updateBud(v){CFG.budget=+v;$('budVal').textContent=fmt(+v);}
 function setErr(t){var e=$('homeErr');e.textContent=t;e.className='status'+(t?' err':'');}
@@ -2700,97 +2700,47 @@ function pickGameType(t){
   $('gameDesc').innerHTML='7 جولات — كل جولة هتشوف لاعب وانتقاله الحقيقي (من نادي لنادي)، وكل واحد يكتب توقعه لقيمة الصفقة بالمليون يورو سرًا.<br>محدش بيشوف رقم التاني إلا بعد ما الاتنين يقفلوا توقعاتهم.<br>أقرب توقع للسعر الحقيقي ياخد نقطة الجولة — وصاحب أكبر عدد نقاط بعد 7 جولات هو البطل!';
  }
 }
-function genOwnerCode(){return String(Math.floor(1000+Math.random()*9000));}
-function myOwnerCodes(){
- try{return JSON.parse(localStorage.getItem('mz_owner_codes')||'{}');}catch(e){return {};}
-}
-function saveMyOwnerCode(name,code){
- try{var m=myOwnerCodes();m[name]=code;localStorage.setItem('mz_owner_codes',JSON.stringify(m));}catch(e){}
-}
-/* بيتأكد إن الاسم متاح للاستخدام. يرجع:
-   {ok:true} = تمام كمّل
-   {ok:false,needCode:true} = الاسم موجود ومحتاج كود ملكية
-   {ok:false,showCode:'1234'} = اسم جديد، لسه هيتسجل بكود جديد */
+/* ===== ملكية الاسم بالجهاز (بدون أكواد) =====
+   كل جهاز له معرّف ثابت. أول جهاز يسجّل اسم في التصنيف يبقى صاحبه،
+   وأي حد تاني يحاول يستخدم نفس الاسم بيتمنع ويختار اسم مختلف. */
+var MZ_DEV_ID=(function(){
+ try{
+  var d=localStorage.getItem('mz_device_id');
+  if(!d){d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);localStorage.setItem('mz_device_id',d);}
+  return d;
+ }catch(e){return 'd'+Math.random().toString(36).slice(2,10);}
+})();
+/* {ok:true} = الاسم بتاعك أو جديد | {ok:false,taken:true} = محجوز لحد تاني */
 function checkNameOwnership(n){
  try{
-  var tbl=lbLoad();
-  var row=tbl[n];
-  var mine=myOwnerCodes();
-  if(!row){
-   /* اسم جديد خالص - هنسجله بكود جديد */
-   var code=mine[n]||genOwnerCode();
-   return {ok:false,showCode:code};
-  }
-  /* الاسم موجود - لازم كود صحيح */
-  if(mine[n]&&row.ownerCode&&mine[n]===row.ownerCode)return {ok:true};
-  if(!row.ownerCode){
-   /* صف قديم من قبل نظام الكود - نديله كود دلوقتي ونعتبره ملك أول واحد يدخل بيه */
-   return {ok:true,assignCode:genOwnerCode()};
-  }
-  return {ok:false,needCode:true};
+  var row=lbLoad()[n];
+  if(!row)return {ok:true,fresh:true};
+  if(!row.owner||row.owner===MZ_DEV_ID)return {ok:true};
+  return {ok:false,taken:true};
  }catch(e){return {ok:true};}
 }
-function verifyEnteredCode(n,entered){
- try{
-  var tbl=lbLoad();var row=tbl[n];
-  if(!row||!row.ownerCode)return false;
-  return String(entered).trim()===String(row.ownerCode);
- }catch(e){return false;}
-}
-function registerNewName(n,code){
+function registerNewName(n){
  try{
   var tbl=lbLoad();
-  if(!tbl[n])tbl[n]=lbFreshRow(n,code);
-  else if(!tbl[n].ownerCode)tbl[n].ownerCode=code;
+  if(!tbl[n])tbl[n]=lbFreshRow(n,MZ_DEV_ID);
+  else if(!tbl[n].owner)tbl[n].owner=MZ_DEV_ID;
   lbSave(tbl);
-  saveMyOwnerCode(n,code);
   lbEnsureChannel();
   setTimeout(function(){lbBroadcastRow(n);},300);
  }catch(e){}
 }
-var pendingNameCheck=null; /* بيبقى فيه {name, action} لحد ما نتأكد من الكود */
+
 function pickMode(m){
  try{
   var n1=$('name1').value.trim();
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
   var chk=checkNameOwnership(n1);
-  if(chk.needCode){
-   var entered=$('nameCodeInput').value.trim();
-   if(!entered){
-    $('nameCodeBox').classList.remove('hidden');
-    $('nameCodeAsk').classList.remove('hidden');
-    $('nameCodeShow').classList.add('hidden');
-    setErr('⚠️ اكتب كود الملكية عشان تكمل بنفس الاسم');
-    $('nameCodeInput').focus();
-    return;
-   }
-   if(!verifyEnteredCode(n1,entered)){
-    $('nameCodeBox').classList.remove('hidden');
-    $('nameCodeAsk').classList.remove('hidden');
-    $('nameCodeShow').classList.add('hidden');
-    setErr('⚠️ الكود غلط — جرّب تاني أو اكتب اسم مختلف');
-    $('nameCodeInput').classList.add('err-input');$('nameCodeInput').focus();
-    return;
-   }
-   saveMyOwnerCode(n1,entered);
-   $('nameCodeBox').classList.add('hidden');
-  }else if(chk.showCode){
-   registerNewName(n1,chk.showCode);
-   $('nameCodeBox').classList.remove('hidden');
-   $('nameCodeAsk').classList.add('hidden');
-   $('nameCodeShow').classList.remove('hidden');
-   $('nameCodeVal').textContent=chk.showCode;
-   if(!pendingNameCheck||pendingNameCheck.name!==n1){
-    pendingNameCheck={name:n1,mode:m};
-    setErr('✅ احفظ الكود اللي فوق، وبعدين دوس على الزرار تاني عشان تكمل');
-    return;
-   }
-  }else if(chk.assignCode){
-   registerNewName(n1,chk.assignCode);
-   $('nameCodeBox').classList.add('hidden');
-  }else{
-   $('nameCodeBox').classList.add('hidden');
+  if(!chk.ok){
+   setErr('⚠️ الاسم ده محجوز لحد تاني في التصنيف — اختر اسم مختلف');
+   $('name1').classList.add('err-input');$('name1').focus();return;
   }
+  registerNewName(n1);
+
   $('name1').classList.remove('err-input');
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
   if(m===2&&$('name2').value.trim()===n1){setErr('⚠️ لازم اسم اللاعب الثاني يكون مختلف عن اسمك');$('name2').classList.add('err-input');$('name2').focus();return;}
@@ -2882,7 +2832,10 @@ function sbClient(){
    - رتب/مستويات 🎖️: برونزي/فضي/ذهبي/أسطوري حسب مجموع نقطك.
    - موسم أسبوعي 📅: نقط الموسم بتتصفر كل أسبوع (تصنيف منفصل عن الكلي).
    - مواجهات مباشرة ⚔️: سجل فوز/خسارة/تعادل بينك وبين كل خصم لعبت ضده. */
-var LB_KEY='mz_leaderboard_v1';
+/* v2: تصنيف جديد من الصفر (النقط القديمة اتصفرت) */
+var LB_KEY='mz_leaderboard_v2';
+try{localStorage.removeItem('mz_leaderboard_v1');localStorage.removeItem('mz_owner_codes');}catch(e){}
+
 var LB_CH_NAME='mzaida-leaderboard-global';
 var lbCh=null,lbChReady=false,lbTab='all';
 var LB_STREAK_BONUS=2,LB_STREAK_CAP=10;
@@ -2923,8 +2876,9 @@ function lbLoad(){
 function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
-function lbFreshRow(name,ownerCode){
- return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{},ownerCode:ownerCode||''};
+function lbFreshRow(name,owner){
+ return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{},owner:owner||''};
+
 }
 /* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟ + اسم الخصم) جوه الجدول المحلي.
    pts ممكن تكون سالبة (خسارة) — بنمنع رصيد اللاعب إنه ينزل تحت الصفر.
@@ -2972,11 +2926,17 @@ function lbEnsureChannel(){
    var tbl=lbLoad();
    var cur=tbl[r.name];
    /* ناخد أعلى نسخة معروفة (أكتر مباريات) عشان محدش يرجّع رقم قديم فوق الجديد */
+   if(cur&&cur.owner&&r.owner&&r.owner!==cur.owner){
+    /* حد تاني بيحاول ياخد اسم محجوز — بنتجاهل نسخته تمامًا */
+    return;
+   }
    if(!cur||(r.matches||0)>=(cur.matches||0)){
     /* بنحافظ على أطول ستريك متسجل عندنا حتى لو النسخة الجاية أقدم شوية */
     if(cur&&cur.bestStreak>(r.bestStreak||0))r.bestStreak=cur.bestStreak;
+    if(cur&&cur.owner)r.owner=cur.owner;
     tbl[r.name]=r;lbSave(tbl);
    }
+
   });
   lbCh.subscribe(function(status){
    if(status==='SUBSCRIBED'){
@@ -3115,6 +3075,16 @@ function makeNetConn(code,host,opts){
  if(!c){if(opts.onFail)opts.onFail('lib');return null;}
  var role=host?'h':'g',other=host?'g':'h';
  var H={},opened=false,waitTimer=null,subTimer=null,dead=false,bound=null,myT=Date.now(),busy=false;
+ var hbN=0,hbInt=null,seen={};
+ /* مقعد محجوز من جهاز تاني = لازم نتأكد إنه لسه حيّ فعلًا (مش أثر قديم في السيرفر) */
+ function aliveState(e){
+  var k=e.c,now=Date.now(),g=seen[k];
+  if(!g){seen[k]={n:e.n||0,since:now,live:false};return null;}
+  if((e.n||0)!==g.n){g.n=e.n||0;g.live=true;}
+  if(g.live)return true;
+  if(now-g.since>9000)return false;
+  return null;
+ }
  function fire(e,a){var l=H[e]||[];for(var i=0;i<l.length;i++){try{l[i](a);}catch(_){}}}
  var shim={
   open:false,peerCode:code,cid:myCid,
@@ -3162,10 +3132,15 @@ function makeNetConn(code,host,opts){
   var s=seats();if(!s)return;
   /* لو في حد تاني بنفس الدور ودخل قبلي => المقعد محجوز، أنا دخيل ولازم أخرج */
   if(s.mine.length&&(s.mine[0].t||0)<myT){
-   busy=true;
-   try{ch.untrack();}catch(e){}
-   if(opts.onBusy)opts.onBusy();
-   return;
+   var al=aliveState(s.mine[0]);
+   if(al===true){
+    busy=true;
+    try{ch.untrack();}catch(e){}
+    if(opts.onBusy)opts.onBusy();
+    return;
+   }
+   if(al===null){if(opts.onChecking)opts.onChecking();return;}
+   /* الطرف القديم مش حيّ (خرج بدون إغلاق) — نكمل ونأخد المقعد */
   }
   if(s.theirs.length){
    var partner=s.theirs[0].c;
@@ -3187,18 +3162,25 @@ function makeNetConn(code,host,opts){
   if(status==='SUBSCRIBED'){
    shim._sub=true;clearTimeout(subTimer);
    myT=Date.now();
-   try{ch.track({r:role,c:myCid,t:myT});}catch(e){}
+   try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
+   clearInterval(hbInt);
+   hbInt=setInterval(function(){
+    if(dead||busy){clearInterval(hbInt);return;}
+    hbN++;
+    try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
+    checkPresence();
+   },4000);
    if(opts.onReady)opts.onReady(shim);
    setTimeout(checkPresence,250);
    setTimeout(checkPresence,1200);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&opts.onNoHost)opts.onNoHost();},5000);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},12000);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    if(status!=='CLOSED'&&opts.onFail)opts.onFail(status);
   }
  });
  shim._ch=ch;
- shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);try{ch.untrack();}catch(e){}};
+ shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearInterval(hbInt);try{ch.untrack();}catch(e){}};
  return shim;
 }
 
@@ -3279,6 +3261,7 @@ function connectToHost(code,silent){
    try{lobbyDropRoom(code);}catch(e){}
    show('room');
   },
+  onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
    if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/2)');setTimeout(function(){connectToHost(code,true);},1000);return;}
@@ -3774,6 +3757,18 @@ function aiMove(){
 
 /* ========= 🕶️ المزاد الأعمى (ميزانية سرية + عروض سرية) ========= */
 var blindBid=[null,null],blindLocked=[false,false];
+var blindDraft='';
+function blindOnInput(el){blindDraft=el.value||'';}
+function blindParse(raw){
+ raw=String(raw==null?'':raw);
+ raw=raw.replace(/[\u0660-\u0669]/g,function(d){return String(d.charCodeAt(0)-1632);});
+ raw=raw.replace(/[\u06F0-\u06F9]/g,function(d){return String(d.charCodeAt(0)-1776);});
+ raw=raw.replace(/[^0-9.]/g,'');
+ if(raw==='' )return NaN;
+ var v=parseFloat(raw);
+ if(isNaN(v))return NaN;
+ return Math.round(v);
+}
 function isAuctionLike(){return gameType==='auction'||gameType==='blind';}
 function blindMax(seat){return Math.max(0,P[seat].budget);}
 function startBlindRound(){
@@ -3782,7 +3777,7 @@ function startBlindRound(){
  if(round>=stars.length)return startPostCards();
  curStar=stars[round];
  if(!curStar)return startPostCards();
- phase='blind';blindBid=[null,null];blindLocked=[false,false];bid=0;
+ phase='blind';blindBid=[null,null];blindLocked=[false,false];bid=0;blindDraft='';
  log('🕶️ الجولة '+(round+1)+': مزاد أعمى على '+curStar.ar+' ('+curStar.r+') — كل واحد يكتب سعره في السر');
  render();broadcast();startBlindTimer();
  if(mode===1)setTimeout(aiBlind,1200+Math.random()*900);
@@ -3807,11 +3802,14 @@ function startBlindTimer(){
 }
 function humanBlindLock(seat){
  if(phase!=='blind')return;
- var el=$('blindIn');if(!el)return;
- var v=parseInt(el.value,10);
- if(el.value.trim()===''||isNaN(v)||v<0){toast('اكتب مبلغ صحيح بالمليون (0 أو أكتر)');try{el.focus();}catch(e){}return;}
+ var el=$('blindIn');
+ var raw=el?el.value:blindDraft;
+ if(!String(raw||'').trim())raw=blindDraft;
+ var v=blindParse(raw);
+ if(isNaN(v)||v<0){toast('اكتب مبلغ بالأرقام (بالمليون) — مثال: 120');try{if(el)el.focus();}catch(e){}return;}
  if(v>blindMax(seat)){toast('المبلغ أكبر من ميزانيتك ('+fmt(blindMax(seat))+')');return;}
- el.value='';
+ blindDraft='';
+ if(el)el.value='';
  try{sfxCard();}catch(e){}
  if(online&&!isHost){blindLocked[mySeat]=true;blindBid[mySeat]=v;conn&&conn.open&&conn.send({type:'act',a:'blind',v:v});render();return;}
  submitBlind(seat,v);
@@ -3874,13 +3872,13 @@ function renderBlindPanel(){
  var actSeat=(mode===3?mySeat:(mode===1?0:(blindLocked[0]?1:0)));
  var canWrite=(!blindLocked[actSeat]&&(mode!==1||actSeat===0));
  /* توقيع الحالة: منعيد بناء اللوحة بس لما الحالة تتغيّر — عشان خانة السعر ماتتمسحش وانت بتكتب */
- var sig=[curStar.en,round,blindLocked[0]?1:0,blindLocked[1]?1:0,actSeat,canWrite?1:0,P[actSeat].budget].join('|');
+ var sig=[curStar.en,round,blindLocked[0]?1:0,blindLocked[1]?1:0,actSeat,canWrite?1:0].join('|');
  if(bp._blindSig!==sig||!bp.firstChild){
   var html='<div class="blind-title">🕶️ اكتب سعرك السري لـ '+curStar.flag+' '+curStar.ar+' ('+curStar.r+')</div>';
   html+='<div id="blindTime" class="time'+(CFG.timer>0?'':' hidden')+'"></div>';
   if(canWrite){
    html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم مخفي وهيتكشف بعد ما الاتنين يقفلوا</div>'+
-   '<div class="custom"><input id="blindIn" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
+   '<div class="custom blind-in-row"><input id="blindIn" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" value="'+blindDraft+'" oninput="blindOnInput(this)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
    '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
   }else{
    html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
@@ -3888,7 +3886,10 @@ function renderBlindPanel(){
   html+='<div class="blind-status" id="blindStat"></div>';
   bp.innerHTML=html;bp._blindSig=sig;
   var inp=$('blindIn');
-  if(inp){try{inp.focus({preventScroll:true});}catch(e){}}
+  if(inp){
+   inp.value=blindDraft||'';
+   try{inp.focus({preventScroll:true});inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}
+  }
  }
  var tEl=$('blindTime');
  if(tEl){
@@ -4001,9 +4002,7 @@ function renderMeta(){
  '<div class="mz-streak">🔥 '+(m.streak||1)+' يوم متتالي</div></div>'+
  '<div class="mz-bar"><i style="width:'+pct+'%"></i></div>'+
  '<div class="mz-xp">'+inLv+' / 300 XP — إجمالي '+(m.xp||0)+' XP</div>'+
- '<div class="mz-h">🎯 مهام النهاردة ('+doneN+'/'+ms.length+')</div>'+
- ms.map(function(x){return '<div class="mz-mis'+(x.done?' done':'')+'"><span>'+(x.done?'✅':'⬜')+' '+x.t+'</span><b>'+Math.min(x.n||0,x.goal)+'/'+x.goal+' • +'+x.xp+'</b></div>';}).join('')+
- '<div class="mz-h">🏅 شاراتك</div><div class="mz-badges">'+badges+'</div>';
+ '';
 }
 
 /* ========= صناديق الحظ (وضع اللعب الجديد) ========= */
@@ -4862,13 +4861,13 @@ document.addEventListener('DOMContentLoaded',function(){
   updateSfxBtn();
   if($('name1').value)initUserPeer();
   lbEnsureChannel();
-  if(!localStorage.getItem('mz_onb_seen'))$('onbTip').classList.remove('hidden');
+
   mzInit();
  }catch(e){}
 });
 function dismissOnbTip(){
  try{localStorage.setItem('mz_onb_seen','1');}catch(e){}
- $('onbTip').classList.add('hidden');
+ var t=$('onbTip');if(t)t.classList.add('hidden');
 }
 </script>
  <!-- توقيع المطور -->
@@ -4885,10 +4884,18 @@ function dismissOnbTip(){
 </footer>
  <script>
   // منع زر الفأرة الأيمن
-  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('contextmenu', function(e){
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    e.preventDefault();
+  });
 
   // منع تحديد النصوص وقصها أو نسخها
-  document.addEventListener('selectstart', e => e.preventDefault());
+  document.addEventListener('selectstart', function(e){
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    e.preventDefault();
+  });
 
   // منع اختصارات لوحة المفاتيح المخصصة للنسخ وفتح أدوات المطور
   document.onkeydown = function(e) {
