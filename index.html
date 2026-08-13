@@ -8,7 +8,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xzcxp2drrt");
 </script>
-<meta charset="UTF-8">
+a
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
 <meta name="version" content="v6-light">
@@ -3544,12 +3544,12 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*rejoinTries,2000));
 }
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
-  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else conn.send({type:'sync'});}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3576,14 +3576,14 @@ function wireConn(){
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000){try{conn.send({type:'sync'});}catch(e){}}
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>6000){try{conn.send({type:'sync'});}catch(e){}}
   if(lastRx&&Date.now()-lastRx>14000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
   }
- },2000);
+ },2500);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
