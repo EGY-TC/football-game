@@ -42,7 +42,7 @@ input:focus{outline:none;border-color:var(--acc)}
 input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .err-input{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(248,81,73,.15)}
 .modes{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.mode-btn{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;text-align:right}
+.mode-btn{display:flex;align-items:center;gap:10px;background:var(--card2);border:1.5px solid var(--line);color:var(--txt);border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;text-align:right}
 .lobby-row{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.15s}
 .lobby-row:active{transform:scale(.98);border-color:var(--purple)}
 .lobby-row-main{display:flex;flex-direction:column;gap:3px}
@@ -107,13 +107,13 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .time.low{color:var(--red);animation:pu 1s infinite}
 @keyframes pu{50%{opacity:.4}}
 #turnLbl{text-align:center;font-size:14px;font-weight:900;background:var(--card2);border-radius:10px;padding:8px}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
-.controls button{padding:14px 2px;border:none;border-radius:12px;font-size:13.5px;font-weight:900;cursor:pointer;min-height:52px}
-#raiseBtn{background:var(--acc);color:#04180a}
-#raise5Btn{background:var(--gold);color:#231303}
-#raise10Btn{background:var(--purple);color:#1a0426}
-#passBtn{background:var(--red);color:#1c0407}
-.controls button:disabled{opacity:.35;cursor:not-allowed}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px}
+.controls button{padding:14px 2px;border:2px solid transparent;border-radius:12px;font-size:14.5px;font-weight:900;cursor:pointer;min-height:54px;box-shadow:0 2px 0 rgba(0,0,0,.25);letter-spacing:.2px}
+#raiseBtn{background:var(--acc);color:#04180a;border-color:#79e08c}
+#raise5Btn{background:var(--gold);color:#231303;border-color:#f2c458}
+#raise10Btn{background:var(--purple);color:#1a0426;border-color:#d69bff}
+#passBtn{background:var(--red);color:#fff;border-color:#ff9d97}
+.controls button:disabled{opacity:.3;filter:grayscale(.4);cursor:not-allowed;box-shadow:none;border-color:transparent}
 .custom{display:flex;gap:8px}
 .custom input{flex:1;min-width:0}
 .custom button{padding:10px 14px;border:none;border-radius:10px;background:var(--blue);color:#04101c;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap}
@@ -559,6 +559,26 @@ body{padding:7px;overflow-x:hidden}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .blind-in-row input{font-size:20px;letter-spacing:3px;text-align:center;font-weight:900;color:var(--gold);-webkit-text-security:none}
+
+/* ===== v7: أداء أعلى على الجوال — إزالة الأنميشن الثقيل ===== */
+*{animation:none!important;will-change:auto!important}
+button,.big-btn,.gt-btn,.mode-btn,.diff-btn,.tabs button,.lobby-row,.pick-card,.tac-card,.box-item,.pcard,.chip,.card{
+ transition:none!important;transform:none!important;filter:none!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}
+button:active,.big-btn:active,.lobby-row:active{opacity:.85}
+.green{background:var(--acc)!important;color:#04180a}.blue{background:var(--blue)!important;color:#04101c}.red{background:var(--red)!important;color:#1c0407}.purple{background:var(--purple)!important;color:#1a0426}.goldb{background:var(--gold)!important;color:#231303}
+.card,.mz-card,.pcard{contain:content}
+.hype-flash,.hype-spark{display:none!important}
+img{content-visibility:auto;contain-intrinsic-size:64px 64px}
+body{text-rendering:optimizeSpeed}
+
+/* ===== إصلاح: خلفية الأزرار كانت بتتشال (background-image:none) فيفضل النص الغامق
+   على خلفية شفافة/غامقة ومش باين. هنا خلفية صلبة + نص أبيض واضح لكل زرار مزايدة ===== */
+#raiseBtn,#raise5Btn,#raise10Btn,#passBtn{background-image:none!important;text-shadow:0 1px 2px rgba(0,0,0,.35)!important}
+#raiseBtn{background-color:#16a34a!important;color:#ffffff!important;border-color:#0f7a37!important}
+#raise5Btn{background-color:#d97706!important;color:#ffffff!important;border-color:#a85c05!important}
+#raise10Btn{background-color:#7c3aed!important;color:#ffffff!important;border-color:#5f2bc0!important}
+#passBtn{background-color:#dc2626!important;color:#ffffff!important;border-color:#a91d1d!important}
+#raiseBtn:disabled,#raise5Btn:disabled,#raise10Btn:disabled,#passBtn:disabled{opacity:.35!important;filter:grayscale(.55)!important;text-shadow:none!important}
 </style>
 </head>
 <body>
@@ -3101,7 +3121,7 @@ function netClose(){
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},1500);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
@@ -3116,7 +3136,7 @@ function makeNetConn(code,host,opts){
   if(!g){seen[k]={n:e.n||0,since:now,live:false};return null;}
   if((e.n||0)!==g.n){g.n=e.n||0;g.live=true;}
   if(g.live)return true;
-  if(now-g.since>5000)return false;
+  if(now-g.since>7000)return false;
   return null;
  }
  function fire(e,a){var l=H[e]||[];for(var i=0;i<l.length;i++){try{l[i](a);}catch(_){}}}
@@ -3125,6 +3145,7 @@ function makeNetConn(code,host,opts){
   on:function(e,f){(H[e]=H[e]||[]).push(f);return shim;},
   send:function(o){if(dead)return;try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,d:o}});}catch(e){}},
   close:function(){/* إغلاق ناعم: القناة بتفضل قايمة عشان الرجوع التلقائي يبقى فوري */
+   clearCloseGrace();
    if(!shim.open)return;shim.open=false;opened=false;fire('close');
    if(host&&netCh===shim){conn=shim;}
   }
@@ -3159,6 +3180,8 @@ function makeNetConn(code,host,opts){
   theirs.sort(function(a,b){return (a.t||0)-(b.t||0);});
   return {mine:mine,theirs:theirs};
  }
+ var closeGraceTimer=null;
+ function clearCloseGrace(){if(closeGraceTimer){clearTimeout(closeGraceTimer);closeGraceTimer=null;}}
  function checkPresence(){
   if(dead||busy)return;
   var s=seats();if(!s)return;
@@ -3173,14 +3196,26 @@ function makeNetConn(code,host,opts){
    if(al===null){if(opts.onChecking)opts.onChecking();return;}
   }
   if(s.theirs.length){
+   clearCloseGrace();
    var partner=s.theirs[0].c;
    if(bound&&bound!==partner&&opened){opened=false;shim.open=false;fire('close');}
    bound=partner;
    markOpen(partner);
    if(opts.onPeer)opts.onPeer(partner);
   }else if(opened){
-   opened=false;shim.open=false;fire('close');
-   if(host&&netCh===shim)conn=shim;
+   /* لو الخصم اختفى من الحضور فجأة، ده غالبًا لاق مؤقت في السيرفر مش انفصال حقيقي.
+      منستناش نقفل الاتصال على طول — بننتظر شوية ونتأكد إنه فعلاً مش راجع قبل ما نعلن الانقطاع،
+      عشان منوقفش نقول "جار الاتصال" ونسيب اللاعب التاني يفضل شغال. */
+   if(!closeGraceTimer){
+    closeGraceTimer=setTimeout(function(){
+     closeGraceTimer=null;
+     if(dead||busy||!opened)return;
+     var s2=seats();
+     if(s2&&s2.theirs.length){checkPresence();return;}
+     opened=false;shim.open=false;fire('close');
+     if(host&&netCh===shim)conn=shim;
+    },3000);
+   }
   }
  }
  function onStatus(status){
@@ -3195,20 +3230,19 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },1500);
+   },3000);
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},120);
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},350);
+   [60,140,260,420,650,900,1200].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
    checkPresence();
    setTimeout(checkPresence,40);
    setTimeout(checkPresence,150);
    setTimeout(checkPresence,350);
-   setTimeout(checkPresence,700);
+   setTimeout(checkPresence,550);
+   setTimeout(checkPresence,850);
    setTimeout(checkPresence,1200);
-   setTimeout(checkPresence,1800);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},3500);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3235,19 +3269,19 @@ function makeNetConn(code,host,opts){
  }
  function resubscribe(reason){
   if(dead||busy||recovering)return;
-  if(subRetry>=8){if(opts.onFail)opts.onFail(reason||'error');return;}
+  if(subRetry>=10){if(opts.onFail)opts.onFail(reason||'error');return;}
   recovering=true;subRetry++;shim._sub=false;
-  var wait=Math.min(2000,250+subRetry*300);
+  var wait=Math.min(900,80+subRetry*120);
   setTimeout(function(){
    if(dead||busy){recovering=false;return;}
    try{c.removeChannel(ch);}catch(e){}
    ch=newChannel();shim._ch=ch;bindCh();
    recovering=false;
-   try{ch.subscribe(onStatus);}catch(e){recovering=false;setTimeout(function(){resubscribe('retry');},1000);}
+   try{ch.subscribe(onStatus);}catch(e){recovering=false;setTimeout(function(){resubscribe('retry');},700);}
   },wait);
  }
  bindCh();
- subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},5000);
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},1800);
  ch.subscribe(onStatus);
  /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
  function wake(){
@@ -3259,7 +3293,7 @@ function makeNetConn(code,host,opts){
  }
  var wakeVis=function(){if(document.visibilityState==='visible')wake();};
  try{window.addEventListener('online',wake);document.addEventListener('visibilitychange',wakeVis);}catch(e){}
- shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearInterval(hbInt);try{window.removeEventListener('online',wake);document.removeEventListener('visibilitychange',wakeVis);}catch(e){}try{ch.untrack();}catch(e){}};
+ shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearCloseGrace();clearInterval(hbInt);try{window.removeEventListener('online',wake);document.removeEventListener('visibilitychange',wakeVis);}catch(e){}try{ch.untrack();}catch(e){}};
  return shim;
 }
 
@@ -3295,7 +3329,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3321,37 +3355,49 @@ function joinRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
  var code=$('joinCode').value.trim().toUpperCase();
  if(code.length<4)return setStatus('أدخل رمزًا من 4 أحرف');
- isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('جارٍ الاتصال…');
+ isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('⚡ بندخلك الغرفة…');
  joinAttemptTries=0;
  connectToHost(code,false);
 }
+var joinHardTimer=null;
 function connectToHost(code,silent){
  if(!sbReady()){setTimeout(function(){connectToHost(code,silent);},200);return;}
  netClose();stopPeerMgr();
  clearTimeout(openWatch);
+ clearTimeout(joinHardTimer);
+ if(!started){joinHardTimer=setTimeout(function(){
+  if(conn&&conn.open)return;
+  netClose();conn=null;
+  try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
+  setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
+  toast('❌ الغرفة مش متاحة');
+  show('room');
+ },4000);}
  conn=netCh=makeNetConn(code,false,{
-  onReady:function(){if(!silent)setStatus('جارٍ الاتصال بالغرفة '+code+'…');},
+  onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
    clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;
    netClose();conn=null;started=false;
    $('reconn').classList.add('hidden');
    setStatus('🚫 الغرفة ممتلئة (2/2) — أقصى عدد لاعبين في الغرفة اتنين، اختر غرفة تانية من القائمة');
    toast('🚫 الغرفة ممتلئة (2/2)');
-   try{lobbyDropRoom(code);}catch(e){}
+   try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    show('room');
   },
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<1){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},300);return;}
-   setStatus('الغرفة غير موجودة أو أُغلقت — تأكد من الرمز مع صاحب الغرفة');show('room');
+   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},120);return;}
+   try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
+   clearTimeout(joinHardTimer);
+   setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
   },
   onFail:function(){
    if(started){scheduleRejoin();}
-   else{setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
+   else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3360,7 +3406,9 @@ function connectToHost(code,silent){
    "غرف اللاعبين المفتوحة" بيقرأ القناة دي ويشوف الغرف المتاحة لحظيًا.
    الغرفة بتختفي تلقائيًا من القائمة لو اتملت (2/2) أو المضيف قفل الصفحة. */
 var LOBBY_TOPIC='mzaida-lobby-v1';
-var ROOM_TTL_MS=120000;
+var ROOM_TTL_MS=30000;
+var lobbyDead={};
+function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
 var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
 function apiFetch(url,opts,ms){
  opts=opts||{};
@@ -3407,6 +3455,7 @@ function lobbyCollect(){
     var r=arr[i];
     if(!r||!r.code)continue;
     if(r.full)continue;/* غرفة ممتلئة (2/2) متتعرضش */
+    if(lobbyDead[r.code]&&now-lobbyDead[r.code]<60000)continue;/* غرفة اتقفلت أو اتملت */
     if(roomCode&&r.code===roomCode)continue;/* متستبعدش غرفتك من نفسك */
     if(r.ts&&now-r.ts>ROOM_TTL_MS)continue;
     if(seen[r.code])continue;
@@ -3432,7 +3481,7 @@ function lobbyAnnounce(){
   if(!online||!isHost||started||roomFull||!roomCode||!lobbyMine){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyMine.ts=Date.now();lobbyMine.name=myName();lobbyMine.gameType=gameType;lobbyMine.locked=!!roomPass;
   if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}
- },8000);
+ },5000);
 }
 function lobbyStopAnnounce(){
  clearInterval(lobbyHbInt);lobbyHbInt=null;lobbyMine=null;
@@ -3448,7 +3497,7 @@ function openLobbyBrowser(){
  lobbyJoinCh();
  setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,3000);
+ lobbyRefreshInt=setInterval(refreshLobbyList,5000);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;
@@ -3497,12 +3546,12 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*rejoinTries,2000));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
 }
 function wireConn(){
  conn.on('open',function(){
-  rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);
-  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else conn.send({type:'sync'});}
+  rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3524,19 +3573,19 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},1200);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
  clearInterval(watchdog);
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2500){try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>6000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000){try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>14000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
   }
- },1500);
+ },2000);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
@@ -3755,7 +3804,7 @@ function startTimer(){
    if(timeLeft<0){clearInterval(timerInt);
     if(!firstBidDone){log('انتهى وقت '+P[turn].name+' بدون عرض — تخطي الدور');turn=1-turn;render();broadcast();startTimer();maybeAI();return;}
     log('انتهى وقت '+P[turn].name+' — سُلّمت الصفقة');resolveRound(1-turn,turn);return;}
-  },250);
+  },500);
  }
 }
 function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
@@ -3906,7 +3955,7 @@ function startBlindTimer(){
     for(var s2=0;s2<2;s2++)if(!blindLocked[s2]){log('⏱️ '+P[s2].name+' خلص وقته — اتسجّل عرض 0');blindLocked[s2]=true;blindBid[s2]=0;}
     revealBlind();return;
    }
-  },250);
+  },500);
  }
 }
 function humanBlindLock(seat){
