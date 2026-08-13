@@ -2430,14 +2430,15 @@ var BOX_LBL={GK:'حارس مرمى',DEF:'مدافع',MID:'وسط ميدان',CAM
 var boxRound=0,boxSets=[[],[]],boxOpened=[[],[]],boxPicked=[null,null],boxUsedSet={};
 var ICE=[
  /* STUN: قائمة قصيرة وسريعة (السيرفرات الميتة كانت تبطّئ الاتصال) */
- {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478','stun:stun.relay.metered.ca:80']},
- /* TURN: فقط الخوادم المتأكد أنها شغّالة (UDP ثم TCP ثم TLS على 443 لتخطي الشبكات المقيّدة) */
+ {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},
+ /* TURN: حساب ExpressTurn الخاص بالموقع (100 جيجا/شهر مخصصة) — أولوية أولى */
+ {urls:'turn:free.expressturn.com:3478',username:'000000002102018145',credential:'LzT2VGswecxzHVEZtyW+3wdvYZ0='},
+ {urls:'turn:free.expressturn.com:3478?transport=tcp',username:'000000002102018145',credential:'LzT2VGswecxzHVEZtyW+3wdvYZ0='},
+ /* احتياطي: الحسابات العامة المشتركة (fallback فقط لو حساب ExpressTurn وصل لحده الشهري) */
  {urls:'turn:standard.relay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turn:standard.relay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
- {urls:'turn:standard.relay.metered.ca:80?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
  {urls:'turns:standard.relay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
- {urls:'turn:relay1.expressturn.com:3478',username:'ef4QARANH3IJ4HH2SO',credential:'p3wxLoVJdTG5PnMz'},
- {urls:'turn:relay1.expressturn.com:3478?transport=tcp',username:'ef4QARANH3IJ4HH2SO',credential:'p3wxLoVJdTG5PnMz'}
+ {urls:'turn:relay1.expressturn.com:3478',username:'ef4QARANH3IJ4HH2SO',credential:'p3wxLoVJdTG5PnMz'}
 ];
 /* قائمة خوادم التوصيل (Signaling) مع تبديل تلقائي لو واحد وقع */
 var PEER_SERVERS=[
@@ -2551,7 +2552,6 @@ function toggleMic(){
   localStream.getAudioTracks().forEach(function(t){t.enabled=true;});
   micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
   try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
-  if(!peer)ensureVoicePeer();
   startCallIfPossible();
   return;
  }
@@ -2559,7 +2559,6 @@ function toggleMic(){
  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
   localStream=stream;micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
   try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
-  if(!peer)ensureVoicePeer();
   startCallIfPossible();
  }).catch(function(){toast('تعذر الوصول للمايك — تأكد من إذن المتصفح للموقع');});
 }
@@ -2893,18 +2892,17 @@ function sbReady(){return !!sbLib();}
 function sbClient(){
  if(sbc)return sbc;
  var L=sbLib();if(!L)return null;
- sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:20}}});
+ sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:60}}});
  return sbc;
 }
 /* تسخين السوكِت من أول ما الصفحة تفتح: كده لما تدوس اتصال بيبقى الاتصال جاهز فورًا */
-/* لا نفتح اتصال Realtime عند فتح الموقع فقط؛ الاتصال يبدأ عند دخول غرفة/لوبي.
-   هذا يمنع كل زائر للموقع من استهلاك اتصال سيرفر وهو لا يلعب. */
 var sbWarmT=null;
 function sbWarm(){
  var c=sbClient();
- if(!c)return;
+ if(!c){sbWarmT=setTimeout(sbWarm,300);return;}
  try{if(c.realtime&&!c.realtime.isConnected())c.realtime.connect();}catch(e){}
 }
+try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')sbWarm();});}catch(e){}
 /* ========= تصنيف المتصدرين (Leaderboard) =========
    كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط.
    ما بيحتاجش أي إعداد أو جدول تعمله بنفسك: النقط بتتخزن على جهازك
@@ -3156,7 +3154,7 @@ function netClose(){
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},8000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
@@ -3249,7 +3247,7 @@ function makeNetConn(code,host,opts){
      if(s2&&s2.theirs.length){checkPresence();return;}
      opened=false;shim.open=false;fire('close');
      if(host&&netCh===shim)conn=shim;
-    },8000);
+    },3000);
    }
   }
  }
@@ -3265,13 +3263,10 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },8000);
+   },3000);
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
-   if(host){
-    [120,700,1600].forEach(function(ms){setTimeout(function(){if(!dead&&!busy&&shim.open)try{shim.send({type:'__hello_req'});}catch(e){}},ms);});
-   }
    [60,140,260,420,650,900,1200].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
    checkPresence();
    setTimeout(checkPresence,40);
@@ -3280,7 +3275,7 @@ function makeNetConn(code,host,opts){
    setTimeout(checkPresence,550);
    setTimeout(checkPresence,850);
    setTimeout(checkPresence,1200);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},12000);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3299,10 +3294,6 @@ function makeNetConn(code,host,opts){
    if(bound&&p.c&&p.c!==bound)return;
    markOpen(p.c);lastRx=Date.now();
    if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
-   if(p.d&&p.d.type==='__hello_req'&&!host){
-    try{shim.send({type:'hello',name:myName(),pass:roomPass,cid:myCid,ts:Date.now()});}catch(e){}
-    return;
-   }
    fire('data',p.d);
   });
   ch.on('presence',{event:'sync'},checkPresence);
@@ -3371,7 +3362,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3381,7 +3372,7 @@ function ensureVoicePeer(){
  stopPeerMgr();
  peerMgr=makePeer(null,{
   onSpawn:function(pr){peer=pr;wireVoiceOnPeer(pr);},
-  onOpen:function(pr){try{if(conn&&conn.open)conn.send({type:'peerid',id:pr.id});}catch(e){};setTimeout(startCallIfPossible,50);},
+  onOpen:function(pr){try{if(conn&&conn.open)conn.send({type:'peerid',id:pr.id});}catch(e){}},
   onFail:function(){},onError:function(){}
  });
 }
@@ -3414,7 +3405,7 @@ function connectToHost(code,silent){
   setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
   toast('❌ الغرفة مش متاحة');
   show('room');
- },10000);}
+ },4000);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3429,7 +3420,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<3){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/3)');setTimeout(function(){connectToHost(code,true);},500*joinAttemptTries);return;}
+   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},120);return;}
    try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    clearTimeout(joinHardTimer);
    setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
@@ -3439,7 +3430,7 @@ function connectToHost(code,silent){
    else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3588,22 +3579,12 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*Math.pow(1.7,rejoinTries-1),5000));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
 }
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
-  if(!isHost){
-   var helloLeft=8;
-   function sendHello(){
-    if(isHost||!conn||!conn.open||helloLeft<=0)return;
-    helloLeft--;
-    try{conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid,ts:Date.now()});}catch(e){}
-    if(helloLeft>0)setTimeout(sendHello,500);
-   }
-   sendHello();
-   if(!started)show('wait');else{try{conn.send({type:'sync'});}catch(e){}setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},500);}
-  }
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3627,20 +3608,20 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},8000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2000);
  clearInterval(watchdog);
  var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>30000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>3000&&Date.now()-lastSyncReq>2000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>6000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
   }
- },2000);
+ },1000);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
@@ -3669,7 +3650,6 @@ function handleData(d){
  if(d.type==='ping')return;
  if(d.type==='sys'){toast(d.t);return;}
  if(d.type==='hello'&&isHost){
-  try{conn.send({type:'hello_ack',ok:true,ts:Date.now()});}catch(e){}
   if(roomPass&&d.pass!==roomPass){
    hostRejecting=true;
    try{conn.send({type:'reject',reason:'pass'});}catch(e){}
@@ -3677,11 +3657,7 @@ function handleData(d){
    return;
   }
   if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
-  else{guestName=d.name||'الخصم';lobbyStopAnnounce();roomFull=true;toast('✅ انضم '+guestName+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');try{conn.send({type:'hello_ack',ok:true,ts:Date.now()});}catch(e){}try{conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});}catch(e){}show('settings');var sb=$('startBtn');if(sb)sb.textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
- }
- else if(d.type==='hello_ack'&&!isHost){
-  clearTimeout(joinHardTimer);rejoinTries=0;$('connLbl').textContent='🟢 تم الاتصال بالمضيف';
-  if(!started)show('wait');
+  else{guestName=d.name;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
  }
  else if(d.type==='reject'&&!isHost){
   rejectedAuth=true;netClose();
