@@ -3228,20 +3228,19 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },3500);
+   },3000);
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},120);
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},350);
+   [60,140,260,420,650,900,1200].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
    checkPresence();
    setTimeout(checkPresence,40);
    setTimeout(checkPresence,150);
    setTimeout(checkPresence,350);
-   setTimeout(checkPresence,700);
+   setTimeout(checkPresence,550);
+   setTimeout(checkPresence,850);
    setTimeout(checkPresence,1200);
-   setTimeout(checkPresence,1800);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1800);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3270,7 +3269,7 @@ function makeNetConn(code,host,opts){
   if(dead||busy||recovering)return;
   if(subRetry>=8){if(opts.onFail)opts.onFail(reason||'error');return;}
   recovering=true;subRetry++;shim._sub=false;
-  var wait=Math.min(2000,250+subRetry*300);
+  var wait=Math.min(1200,120+subRetry*180);
   setTimeout(function(){
    if(dead||busy){recovering=false;return;}
    try{c.removeChannel(ch);}catch(e){}
@@ -3280,7 +3279,7 @@ function makeNetConn(code,host,opts){
   },wait);
  }
  bindCh();
- subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},5000);
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},2500);
  ch.subscribe(onStatus);
  /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
  function wake(){
@@ -3328,7 +3327,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3354,7 +3353,7 @@ function joinRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
  var code=$('joinCode').value.trim().toUpperCase();
  if(code.length<4)return setStatus('أدخل رمزًا من 4 أحرف');
- isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('جارٍ الاتصال…');
+ isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('⚡ بندخلك الغرفة…');
  joinAttemptTries=0;
  connectToHost(code,false);
 }
@@ -3371,9 +3370,9 @@ function connectToHost(code,silent){
   setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
   toast('❌ الغرفة مش متاحة');
   show('room');
- },6000);}
+ },4000);}
  conn=netCh=makeNetConn(code,false,{
-  onReady:function(){if(!silent)setStatus('جارٍ الاتصال بالغرفة '+code+'…');},
+  onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
    clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;
    netClose();conn=null;started=false;
@@ -3386,7 +3385,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<1){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},300);return;}
+   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},120);return;}
    try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    clearTimeout(joinHardTimer);
    setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
@@ -3396,7 +3395,7 @@ function connectToHost(code,silent){
    else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3545,12 +3544,12 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*rejoinTries,2000));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
 }
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
-  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else conn.send({type:'sync'});}
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3577,14 +3576,14 @@ function wireConn(){
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>6000){try{conn.send({type:'sync'});}catch(e){}}
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000){try{conn.send({type:'sync'});}catch(e){}}
   if(lastRx&&Date.now()-lastRx>14000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
   }
- },2500);
+ },2000);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
