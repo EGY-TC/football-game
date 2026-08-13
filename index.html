@@ -579,6 +579,16 @@ body{text-rendering:optimizeSpeed}
 #raise10Btn{background-color:#7c3aed!important;color:#ffffff!important;border-color:#5f2bc0!important}
 #passBtn{background-color:#dc2626!important;color:#ffffff!important;border-color:#a91d1d!important}
 #raiseBtn:disabled,#raise5Btn:disabled,#raise10Btn:disabled,#passBtn:disabled{opacity:.35!important;filter:grayscale(.55)!important;text-shadow:none!important}
+/* ===== إصلاح تاني: نفس المشكلة كانت مأثّرة على زرار "اقفل عرضك" (المزاد الأعمى)،
+   وزرار المبلغ المخصص، وزرار إرسال الشات، وزرار طلب الصداقة — كلهم كانوا شفافين
+   تمامًا وبيندمجوا مع الخلفية الغامقة لأنهم فقدوا التدرّج بدون خلفية بديلة ===== */
+.custom button,.chat-in button{background-image:none!important;color:#ffffff!important;text-shadow:0 1px 2px rgba(0,0,0,.35)!important;background-color:#2f7ce0!important;border-color:#1f5aa8!important}
+/* زرار قفل العرض في المزاد الأعمى: أهم زرار في الجولة، فلازم يبان واضح وبارز.
+   بدل ما يتزنق جنب الخانة وينكتب صغير، بقى صف لوحده تحت الخانة وبعرض كامل
+   عشان محدش يحس إنه غير واضح أو إنه مجرد أيقونة زغيرة */
+.blind-in-row{flex-direction:column;align-items:stretch}
+.lockBtn{background-color:#16a34a!important;color:#ffffff!important;border:2px solid #0f7a37!important;font-size:16px!important;min-height:54px!important;letter-spacing:.3px;width:100%;flex-shrink:0;white-space:normal}
+.lockBtn:active{opacity:.85}
 </style>
 </head>
 <body>
@@ -1327,7 +1337,7 @@ var D=[
 var PLAYERS=D.map(function(x){return{ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]};});
 /* ===== تحديث FC 26: أعلام + طاقات + لاعبين جدد ===== */
 var FC26_FLAGS={"Thibaut Courtois": "🇧🇪", "Jan Oblak": "🇸🇮", "David de Gea": "🇪🇸", "Diogo Costa": "🇵🇹", "Wojciech Szczęsny": "🇵🇱", "David Raya": "🇪🇸", "William Saliba": "🇫🇷", "Gleison Bremer": "🇧🇷", "Pau Cubarsí": "🇪🇸", "Pau Torres": "🇪🇸", "Robin Le Normand": "🇪🇸", "Marquinhos": "🇧🇷", "Alessandro Buongiorno": "🇮🇹", "Cristian Romero": "🇦🇷", "Lisandro Martínez": "🇦🇷", "Micky van de Ven": "🇳🇱", "Diogo Dalot": "🇵🇹", "Noussair Mazraoui": "🇲🇦", "Jeremie Frimpong": "🇳🇱", "Alphonso Davies": "🇨🇦", "Antonee Robinson": "🇺🇸", "Pedri": "🇪🇸", "Bruno Guimarães": "🇧🇷", "Alexis Mac Allister": "🇦🇷", "Dominik Szoboszlai": "🇭🇺", "Davide Frattesi": "🇮🇹", "Teun Koopmeiners": "🇳🇱", "Rúben Neves": "🇵🇹", "Xavi Simons": "🇳🇱", "Wesley Sneijder": "🇳🇱", "Mohamed Salah": "🇪🇬", "Lamine Yamal": "🇪🇸", "Rodrygo": "🇧🇷", "Christian Pulisic": "🇺🇸", "Leroy Sané": "🇩🇪", "Serge Gnabry": "🇩🇪", "Neymar": "🇧🇷", "Gabriel Martinelli": "🇧🇷", "Robert Lewandowski": "🇵🇱", "Julián Álvarez": "🇦🇷", "Dušan Vlahović": "🇷🇸", "Matheus Cunha": "🇧🇷", "Gonçalo Ramos": "🇵🇹", "Nicolas Jackson": "🇸🇳", "Edin Džeko": "🇧🇦", "Aleksandar Mitrović": "🇷🇸", "Radamel Falcao": "🇨🇴", "Franco Mastantuono": "🇦🇷", "Bruno Fernandes": "🇵🇹", "Iván Zamorano": "🇨🇱", "Hernán Crespo": "🇦🇷", "Gabriel Batistuta": "🇦🇷", "Pablo Aimar": "🇦🇷", "Edinson Cavani": "🇺🇾", "Gheorghe Hagi": "🇷🇴", "Davor Šuker": "🇭🇷", "Joe Gomez": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Marc Guéhi": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Kyle Walker": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Reece James": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Ben White": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Ben Chilwell": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Declan Rice": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Kobbie Mainoo": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "James Maddison": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Bukayo Saka": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Wayne Rooney": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"};
-var FC26_RATINGS={"Kylian Mbappé": 91, "Erling Haaland": 91, "Ousmane Dembélé": 91, "Rodri": 90, "Lamine Yamal": 90, "Jude Bellingham": 90, "Harry Kane": 90, "Thibaut Courtois": 90, "Mohamed Salah": 89, "Vinícius Júnior": 89, "Virgil van Dijk": 89, "Gianluigi Donnarumma": 89, "Lautaro Martínez": 89, "Federico Valverde": 89, "Raphinha": 89, "Alisson": 88, "Florian Wirtz": 88, "Pedri": 88, "Declan Rice": 88, "Achraf Hakimi": 88, "Vitinha": 88, "Bruno Fernandes": 88, "Lionel Messi": 88, "Cole Palmer": 87, "Viktor Gyökeres": 87, "Alexander Isak": 87, "Jamal Musiala": 87, "Bukayo Saka": 87, "Martin Ødegaard": 87, "Khvicha Kvaratskhelia": 87, "Victor Osimhen": 87, "Julián Álvarez": 87, "David Raya": 87, "William Saliba": 87, "Nuno Mendes": 87, "Phil Foden": 86, "Antoine Griezmann": 86, "Ederson": 86, "Joško Gvardiol": 86, "Antonio Rüdiger": 86, "Trent Alexander-Arnold": 86, "Alexis Mac Allister": 86, "Martín Zubimendi": 86, "Kevin De Bruyne": 86, "Robert Lewandowski": 86, "Nico Williams": 86, "João Neves": 86, "Marquinhos": 86, "Rafael Leão": 85, "Ibrahima Konaté": 85, "Dominik Szoboszlai": 85, "Cristiano Ronaldo": 85, "Jérémy Doku": 84, "Pau Cubarsí": 84, "Estêvão": 82, "Kobbie Mainoo": 79, "Alejandro Garnacho": 79, "Marcus Rashford": 82, "Mohammed Kudus": 82, "Rodrygo": 85, "Luka Modrić": 86, "Neymar": 83, "Casemiro": 81};
+var FC26_RATINGS={"Kylian Mbappé": 92, "Erling Haaland": 91, "Ousmane Dembélé": 91, "Harry Kane": 91, "Kevin De Bruyne": 91, "Vinícius Júnior": 91, "Rodri": 89, "Lamine Yamal": 90, "Jude Bellingham": 90, "Thibaut Courtois": 90, "Mohamed Salah": 90, "Virgil van Dijk": 89, "Gianluigi Donnarumma": 89, "Lautaro Martínez": 89, "Federico Valverde": 89, "Raphinha": 89, "Alisson": 88, "Florian Wirtz": 88, "Pedri": 88, "Declan Rice": 88, "Achraf Hakimi": 88, "Vitinha": 88, "Bruno Fernandes": 88, "Lionel Messi": 88, "Cole Palmer": 87, "Viktor Gyökeres": 87, "Alexander Isak": 87, "Jamal Musiala": 87, "Bukayo Saka": 87, "Martin Ødegaard": 87, "Khvicha Kvaratskhelia": 87, "Victor Osimhen": 87, "Julián Álvarez": 87, "David Raya": 87, "William Saliba": 87, "Nuno Mendes": 87, "Phil Foden": 86, "Antoine Griezmann": 86, "Ederson": 86, "Joško Gvardiol": 86, "Antonio Rüdiger": 86, "Trent Alexander-Arnold": 86, "Alexis Mac Allister": 86, "Martín Zubimendi": 86, "Robert Lewandowski": 86, "Nico Williams": 86, "João Neves": 86, "Marquinhos": 86, "Rafael Leão": 85, "Ibrahima Konaté": 85, "Dominik Szoboszlai": 85, "Cristiano Ronaldo": 85, "Jérémy Doku": 84, "Pau Cubarsí": 84, "Estêvão": 82, "Kobbie Mainoo": 79, "Alejandro Garnacho": 79, "Marcus Rashford": 82, "Mohammed Kudus": 82, "Rodrygo": 85, "Luka Modrić": 86, "Neymar": 83, "Casemiro": 81};
 var FC26_NEW=[["أردا جولر", "Arda Güler", "CAM", "🇹🇷", "ريال مدريد", 83], ["نيكو باز", "Nico Paz", "CAM", "🇦🇷", "كومو", 82], ["دين هويسن", "Dean Huijsen", "CB", "🇪🇸", "ريال مدريد", 82], ["هوجو إيكيتيكي", "Hugo Ekitiké", "ST", "🇫🇷", "ليفربول", 82], ["ريان شرقي", "Rayan Cherki", "CAM", "🇫🇷", "مانشستر سيتي", 83], ["إيبيريتشي إيزي", "Eberechi Eze", "CAM", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "أرسنال", 84], ["مورجان روجرز", "Morgan Rogers", "CAM", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "أستون فيلا", 82], ["ليني يورو", "Leny Yoro", "CB", "🇫🇷", "مانشستر يونايتد", 80], ["يوريل هاتو", "Jorrel Hato", "CB", "🇳🇱", "تشيلسي", 79], ["جيريمي دوكو", "Jérémy Doku", "LW", "🇧🇪", "مانشستر سيتي", 84], ["أنطوان سيمينيو", "Antoine Semenyo", "RW", "🇬🇭", "بورنموث", 82], ["إيجور بايشاو", "Igor Paixão", "LW", "🇧🇷", "مارسيليا", 80], ["ماليك فوفانا", "Malick Fofana", "LW", "🇧🇪", "ليون", 79], ["جوب بيلينجهام", "Jobe Bellingham", "CM", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "بوروسيا دورتموند", 77], ["لينارت كارل", "Lennart Karl", "RW", "🇩🇪", "بايرن ميونخ", 73], ["سعيد المُلا", "Said El Mala", "LW", "🇩🇪", "كولن", 73], ["لوكاس شوفالييه", "Lucas Chevalier", "GK", "🇫🇷", "باريس سان جيرمان", 83], ["جورجي مامارداشفيلي", "Giorgi Mamardashvili", "GK", "🇬🇪", "ليفربول", 82], ["جوليلمو فيكاريو", "Guglielmo Vicario", "GK", "🇮🇹", "توتنهام", 82], ["ياسين بونو", "Yassine Bounou", "GK", "🇲🇦", "الهلال", 84], ["بارت فيربروجن", "Bart Verbruggen", "GK", "🇳🇱", "برايتون", 81], ["سين لامنس", "Senne Lammens", "GK", "🇧🇪", "مانشستر يونايتد", 76], ["إيميليانو مارتينيز", "Emiliano Martínez", "GK", "🇦🇷", "أستون فيلا", 85], ["مانويل أوجارتي", "Manuel Ugarte", "CDM", "🇺🇾", "مانشستر يونايتد", 79], ["إليوت أندرسون", "Elliot Anderson", "CM", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "نوتنجهام فورست", 80], ["آدم وارتون", "Adam Wharton", "CM", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "كريستال بالاس", 79], ["بلال الخنوس", "Bilal El Khannouss", "CAM", "🇲🇦", "شتوتجارت", 78], ["أيوب بوعدي", "Ayyoub Bouaddi", "CDM", "🇫🇷", "ليل", 77], ["لي كانج إن", "Kang-in Lee", "CAM", "🇰🇷", "باريس سان جيرمان", 81], ["أليكسيس سايلمايكرز", "Alexis Saelemaekers", "RW", "🇧🇪", "ميلان", 79], ["سانتياجو كاسترو", "Santiago Castro", "ST", "🇦🇷", "بولونيا", 78], ["ماتيو ريتيجي", "Mateo Retegui", "ST", "🇮🇹", "القادسية", 84], ["يوناتان بوركارت", "Jonathan Burkardt", "ST", "🇩🇪", "آينتراخت فرانكفورت", 79], ["نيك فولتيماده", "Nick Woltemade", "ST", "🇩🇪", "نيوكاسل", 80], ["بنيامين شيشكو", "Benjamin Šeško", "ST", "🇸🇮", "مانشستر يونايتد", 82], ["كريم أديمي", "Karim Adeyemi", "LW", "🇩🇪", "بوروسيا دورتموند", 81], ["سيرهو جيراسي", "Serhou Guirassy", "ST", "🇬🇳", "بوروسيا دورتموند", 84], ["عمر مرموش", "Omar Marmoush", "ST", "🇪🇬", "مانشستر سيتي", 84], ["جواو بيدرو", "João Pedro", "ST", "🇧🇷", "تشيلسي", 82]];
 PLAYERS.forEach(function(p){
  if(FC26_FLAGS[p.en])p.flag=FC26_FLAGS[p.en];
@@ -1969,6 +1979,28 @@ var MORE_PLAYERS_V4=[
   PLAYERS.push({ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]});
  });
 })();
+/* ===== V5: أساطير ناقصة (بوشكاش وستيفانو) + مواهب صاعدة في موسم 25/26 ===== */
+var MORE_PLAYERS_V5=[
+["فيرينتس بوشكاش","Ferenc Puskás","ST","🇭🇺","معتزل",93],
+["ألفريدو دي ستيفانو","Alfredo Di Stéfano","ST","🇦🇷","معتزل",94],
+["إيثان نواناري","Ethan Nwaneri","RW","🏴󠁧󠁢󠁥󠁮󠁧󠁿","أرسنال",76],
+["مايلز لويس سكيلي","Myles Lewis-Skelly","LB","🏴󠁧󠁢󠁥󠁮󠁧󠁿","أرسنال",78],
+["جيوفاني كويندا","Geovany Quenda","RW","🇵🇹","سبورتنج لشبونة",80],
+["تشيدو أوبي","Chido Obi","ST","🇩🇰","مانشستر يونايتد",71],
+["سامو أجيهوا","Samu Aghehowa","ST","🇪🇸","أتلتيكو مدريد",78],
+["كينان يلديز","Kenan Yıldız","LW","🇹🇷","يوفنتوس",84],
+["دين هويسن","Dean Huijsen","CB","🇪🇸","ريال مدريد",83],
+["أرشي جراي","Archie Gray","CM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","توتنهام",76],
+["إستيفاو ويليان","Estêvão","RW","🇧🇷","تشيلسي",83],
+["فرانكو ماستانتونو","Franco Mastantuono","CAM","🇦🇷","ريال مدريد",82]
+];
+(function(){
+ var have={};PLAYERS.forEach(function(p){have[p.en]=1;});
+ MORE_PLAYERS_V5.forEach(function(x){
+  if(have[x[1]])return;have[x[1]]=1;
+  PLAYERS.push({ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]});
+ });
+})();
 /* ===== ضبط نهائي للطاقات: كريستيانو وميسي أعلى طاقة، أساطير كبار أعلى من العاديين ===== */
 var LEGEND_RATING_FIX={
  "Lionel Messi":100,"Cristiano Ronaldo":100,
@@ -1983,7 +2015,8 @@ var LEGEND_RATING_FIX={
  "David Beckham":90,"Steven Gerrard":92,"Frank Lampard":90,"Ryan Giggs":90,
  "Michel Platini":91,"George Best":90,"Eusébio":92,"Lothar Matthäus":91,
  "Gerd Müller":95,"Bobby Moore":91,"Garrincha":94,"Bobby Charlton":91,
- "Gary Lineker":89,"Kevin Keegan":88,"Xavi Hernández":92
+ "Gary Lineker":89,"Kevin Keegan":88,"Xavi Hernández":92,
+ "Ferenc Puskás":95,"Alfredo Di Stéfano":96
 };
 Object.keys(LEGEND_RATING_FIX).forEach(function(en){
  PLAYERS.forEach(function(p){if(p.en===en)p.r=LEGEND_RATING_FIX[en];});
@@ -2666,7 +2699,10 @@ var WIKI_TITLE_OVERRIDE={
  "Anderson":"Anderson (footballer, born 1988)",
  "Léo":"Léo (footballer)",
  "Ganso":"Paulo Henrique Ganso",
- "Vinícius Júnior":"Vinícius Júnior"
+ "Vinícius Júnior":"Vinícius Júnior",
+ "Kang-in Lee":"Lee Kang-in",
+ "Ferenc Puskás":"Ferenc Puskás",
+ "Alfredo Di Stéfano":"Alfredo Di Stéfano"
 };
 function wikiImg(en,el){
  if(!en)return;
@@ -2681,25 +2717,18 @@ function wikiImg(en,el){
   return (p&&p.thumbnail)?p.thumbnail.source:'';
  }
  try{
-  /* لو عندنا اسم صفحة مظبوط في الأوفررايد، ندور بيه مباشرة (أدق من البحث العام) */
-  if(WIKI_TITLE_OVERRIDE[en]){
-   fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
-    var u2=fromPages(j2);
-    if(u2){IMG[en]=u2;el.src=u2;return;}
-    return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
-     var u=fromPages(j);IMG[en]=u;if(u)el.src=u;
-    });
-   }).catch(function(){IMG[en]='';});
-   return;
-  }
-  fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
-   var u=fromPages(j);
-   if(u){IMG[en]=u;el.src=u;return;}
-   return fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
-    var u2=fromPages(j2);IMG[en]=u2;if(u2)el.src=u2;
+  /* مهم: بنجرب الاسم المظبوط لصفحة ويكيبيديا (direct) الأول دايمًا، مش البحث العام (search)،
+     لأن البحث العام بيرجع "أقرب نتيجة" حتى لو مش نفس اللاعب خالص (أسامي زي "Fred" أو "Kevin"
+     كانت بترجع صور ناس تانية تمامًا). الأوفررايد لو موجود بيدّينا اسم الصفحة الصح، ولو مش
+     موجود بنجرب بالاسم زي ما هو الأول لأن أغلب صفحات اللاعبين عنوانها اسمهم بالظبط. */
+  fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
+   var u2=fromPages(j2);
+   if(u2){IMG[en]=u2;el.src=u2;return;}
+   return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
+    var u=fromPages(j);IMG[en]=u;if(u)el.src=u;
    });
   }).catch(function(){
-   try{fetch(directUrl).then(function(r){return r.json();}).then(function(j2){var u2=fromPages(j2);IMG[en]=u2;if(u2)el.src=u2;}).catch(function(){IMG[en]='';});}catch(e){IMG[en]='';}
+   try{fetch(searchUrl).then(function(r){return r.json();}).then(function(j){var u=fromPages(j);IMG[en]=u;if(u)el.src=u;}).catch(function(){IMG[en]='';});}catch(e){IMG[en]='';}
   });
  }catch(e){}
 }
@@ -4052,7 +4081,7 @@ function renderBlindPanel(){
   html+='<div id="blindTime" class="time'+(CFG.timer>0?'':' hidden')+'"></div>';
   if(canWrite){
    html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم ظاهر لك أنت بس وهيتكشف للخصم بعد ما الاتنين يقفلوا</div>'+
-   '<div class="custom blind-in-row"><input id="blindIn" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" value="'+blindDraft+'" oninput="blindOnInput(this)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
+   '<div class="custom blind-in-row"><input id="blindIn" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" value="'+blindDraft+'" oninput="blindOnInput(this)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button class="lockBtn" onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
    '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
   }else{
    html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
