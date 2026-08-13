@@ -1976,7 +1976,7 @@ var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',gu
 var roomFull=false;
 var roomPass='',isPublicRoom=false,rejectedAuth=false,hostRejecting=false,joinAttemptTries=0;
 var CFG={budget:500,timer:20};
-var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
+var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timeEndAt=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
 var firstBidDone=false;
 var msgSeq=0,lastAppliedSeq=-1;
 /* الكروت بقت مجانية بالكامل — بتتوزع عشوائي على كل لاعب في أول اللعبة */
@@ -3534,7 +3534,16 @@ function wireConn(){
  },3000);
 }
 document.addEventListener('visibilitychange',function(){
- if(document.hidden||!online)return;
+ if(document.hidden)return;
+ /* المضيف (أو اللعب المحلي): لما التبويب يرجع من الخلفية، اتصفحات بتبطئ setInterval
+    فبنعيد حساب الوقت المتبقي فورًا من timeEndAt بدل ما نستنى التيك الجاي، عشان
+    الوقت المعروض يبقى دقيق على طول ومايفضلش "واقف" شكليًا. */
+ if(timerInt&&timeEndAt&&(phase==='bid'||phase==='blind')){
+  timeLeft=Math.ceil((timeEndAt-Date.now())/1000);
+  if(timeLeft<0)timeLeft=0;
+  render();if(online&&isHost)broadcast();
+ }
+ if(!online)return;
  if(isHost)return;
  if(conn&&conn.open)conn.send({type:'sync'});
  else scheduleRejoin();
@@ -3714,14 +3723,18 @@ function startTimer(){
  if(online&&!isHost)return;
  if(CFG.timer>0&&phase==='bid'){
   timeLeft=CFG.timer;
+  timeEndAt=Date.now()+CFG.timer*1000;
+  var lastTick=timeLeft;
   timerInt=setInterval(function(){
-   timeLeft--;
-   if(timeLeft>=0&&timeLeft<=5)sfxTick();
+   /* بيتحسب من الفرق الحقيقي في الوقت مش عدّ يدوي، عشان لو المتصفح أبطأ
+      الـ setInterval (تبويب في الخلفية) الوقت المعروض يفضل صحيح ومايتجمدش */
+   timeLeft=Math.ceil((timeEndAt-Date.now())/1000);
+   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();}
    if(timeLeft<0){clearInterval(timerInt);
     if(!firstBidDone){log('انتهى وقت '+P[turn].name+' بدون عرض — تخطي الدور');turn=1-turn;render();broadcast();startTimer();maybeAI();return;}
     log('انتهى وقت '+P[turn].name+' — سُلّمت الصفقة');resolveRound(1-turn,turn);return;}
    render();if(online&&isHost)broadcast();
-  },1000);
+  },250);
  }
 }
 function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
@@ -3743,7 +3756,7 @@ function humanCustom(){
  if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise',v:v});
  doRaise(v);
 }
-function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;if(CFG.timer>0)timeLeft+=3;sfxRaise();render();broadcast();startTimer();maybeAI();}
+function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;sfxRaise();render();broadcast();startTimer();maybeAI();}
 function doPass(){if(phase!=='bid')return;log(P[turn].name+' سلّم الصفقة للخصم');sfxPass();resolveRound(1-turn,turn);}
 function maybeAI(){if(mode===1&&!online&&turn===1&&phase==='bid'){busy=true;render();setTimeout(function(){if(phase!=='bid')return;busy=false;aiMove();},900+Math.random()*800);}}
 var AI_TARGETS={GK:1,DEF:4,MID:4,ATT:2};
@@ -3861,17 +3874,19 @@ function startBlindTimer(){
  if(online&&!isHost)return;
  if(CFG.timer>0&&phase==='blind'){
   timeLeft=CFG.timer+10;
+  timeEndAt=Date.now()+timeLeft*1000;
+  var lastTick=timeLeft;
   timerInt=setInterval(function(){
    if(phase!=='blind'){clearInterval(timerInt);return;}
-   timeLeft--;
-   if(timeLeft>=0&&timeLeft<=5)sfxTick();
+   timeLeft=Math.ceil((timeEndAt-Date.now())/1000);
+   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();}
    if(timeLeft<0){
     clearInterval(timerInt);
     for(var s2=0;s2<2;s2++)if(!blindLocked[s2]){log('⏱️ '+P[s2].name+' خلص وقته — اتسجّل عرض 0');blindLocked[s2]=true;blindBid[s2]=0;}
     revealBlind();return;
    }
    render();broadcast();
-  },1000);
+  },250);
  }
 }
 function humanBlindLock(seat){
