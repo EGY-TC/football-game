@@ -3578,6 +3578,7 @@ function handleData(d){
  else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
  else if(d.type==='start'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
+ else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
@@ -3621,6 +3622,22 @@ function broadcast(){
  /* في المزاد الأعمى: الضيف يشوف رقمه هو بس — عرض المضيف يفضل مخفي لحد الكشف */
  if(s.phase==='blind')s.blindBid=[null,(blindBid&&blindBid[1]!==undefined)?blindBid[1]:null];
  conn.send({type:'S',s:s});
+}
+/* تحديث خفيف لشريط/عداد الوقت فقط (من غير إعادة بناء الصفحة كلها) — بيتنفذ كل ثانية
+   بدل ما كانت اللعبة بتعيد رسم كل حاجة (الفرق والكروت واللوج) 4 مرات في الثانية،
+   وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
+function renderTimerBar(){
+ var tb=$('tbarBox'),tf=$('tfill'),tl=$('timeLbl');
+ if(!tb||!tf||!tl)return;
+ var tmax=CFG.timer;
+ if(tmax>0){tb.classList.remove('hidden');tl.classList.remove('hidden');tl.textContent='⏱️ '+Math.max(0,timeLeft)+' ثانية';var pct=Math.min(100,Math.max(0,timeLeft/tmax*100));tf.style.width=pct+'%';tf.classList.toggle('low',timeLeft<=5);tl.classList.toggle('low',timeLeft<=5);}
+ else{tb.classList.add('hidden');tl.classList.add('hidden');}
+}
+/* بث خفيف لرقم العداد بس (بدل بث كل حالة اللعبة كل ربع ثانية) — بيقلل حجم البيانات
+   المرسلة عبر سيرفر المزامنة (Supabase) بشكل كبير جدًا */
+function broadcastTick(){
+ if(!(online&&isHost&&conn&&conn.open))return;
+ try{conn.send({type:'T',t:timeLeft});}catch(e){}
 }
 function applySnap(s){
  if(!s)return;
@@ -3730,11 +3747,10 @@ function startTimer(){
    /* بيتحسب من الفرق الحقيقي في الوقت مش عدّ يدوي، عشان لو المتصفح أبطأ
       الـ setInterval (تبويب في الخلفية) الوقت المعروض يفضل صحيح ومايتجمدش */
    timeLeft=Math.ceil((timeEndAt-Date.now())/1000);
-   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();}
+   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();renderTimerBar();if(online&&isHost)broadcastTick();}
    if(timeLeft<0){clearInterval(timerInt);
     if(!firstBidDone){log('انتهى وقت '+P[turn].name+' بدون عرض — تخطي الدور');turn=1-turn;render();broadcast();startTimer();maybeAI();return;}
     log('انتهى وقت '+P[turn].name+' — سُلّمت الصفقة');resolveRound(1-turn,turn);return;}
-   render();if(online&&isHost)broadcast();
   },250);
  }
 }
@@ -3880,13 +3896,12 @@ function startBlindTimer(){
   timerInt=setInterval(function(){
    if(phase!=='blind'){clearInterval(timerInt);return;}
    timeLeft=Math.ceil((timeEndAt-Date.now())/1000);
-   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();}
+   if(timeLeft!==lastTick){lastTick=timeLeft;if(timeLeft>=0&&timeLeft<=5)sfxTick();renderTimerBar();if(online&&isHost)broadcastTick();}
    if(timeLeft<0){
     clearInterval(timerInt);
     for(var s2=0;s2<2;s2++)if(!blindLocked[s2]){log('⏱️ '+P[s2].name+' خلص وقته — اتسجّل عرض 0');blindLocked[s2]=true;blindBid[s2]=0;}
     revealBlind();return;
    }
-   render();broadcast();
   },250);
  }
 }
