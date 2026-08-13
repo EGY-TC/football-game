@@ -501,6 +501,30 @@ label{font-size:12.5px;letter-spacing:.2px}
 .end-actions{display:flex;gap:8px;margin-top:10px}
 .end-actions .big-btn{flex:1}
 .share-box{background:var(--card2);border:1px dashed var(--gold);border-radius:12px;padding:10px;margin:10px 0;font-size:11.5px;color:var(--dim);line-height:1.9;white-space:pre-wrap;text-align:right}
+/* ===== المزاد الأعمى + لوحة التقدّم ===== */
+.blind-title{font-weight:900;font-size:15px;text-align:center;color:var(--gold)}
+.blind-who{text-align:center;font-size:12.5px;color:var(--dim);font-weight:700;line-height:1.7}
+.blind-hint{font-size:11.5px;color:var(--dim);text-align:center;line-height:1.8}
+.blind-status{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.blind-reveal{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0}
+.blind-reveal .br-row{display:flex;justify-content:space-between;font-size:13px;font-weight:800;padding:3px 0}
+.blind-reveal .br-row b{color:var(--gold)}
+.mz-card{text-align:right}
+.mz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.mz-lv{font-weight:900;font-size:14px;color:var(--gold)}
+.mz-lv small{color:var(--dim);font-weight:800;font-size:11px}
+.mz-streak{font-weight:900;font-size:12.5px;color:var(--red);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+.mz-bar{height:8px;background:var(--card2);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.mz-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--blue))}
+.mz-xp{font-size:11px;color:var(--dim);margin-top:4px;font-weight:700}
+.mz-h{font-weight:900;font-size:13px;margin:10px 0 6px}
+.mz-mis{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:5px;font-size:12px;font-weight:700}
+.mz-mis b{color:var(--gold);font-size:11px;white-space:nowrap}
+.mz-mis.done{opacity:.65;border-color:var(--acc)}
+.mz-badges{display:flex;gap:6px;flex-wrap:wrap}
+.mz-badge{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--card2);border:1px solid var(--line);font-size:17px;filter:grayscale(1);opacity:.4}
+.mz-badge.got{filter:none;opacity:1;border-color:var(--gold);box-shadow:0 0 10px -3px var(--gold)}
+
 </style>
 </head>
 <body>
@@ -521,12 +545,14 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
 <div id="onbTip" class="onb-tip hidden"><span>👋 جديد هنا؟ (1) اكتب اسمك تحت (2) اختار "ضد الحاسوب" عشان تجرّب أول جولة سريعة (3) بعدين جرّب "لاعبان على جهاز واحد" أو "غرفة أونلاين" مع صحابك.</span><button onclick="dismissOnbTip()">✖</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
+<div class="card mz-card" id="metaCard"></div>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
 <div class="gt-grid3">
 <button class="gt-btn sel" id="gt0" onclick="pickGameType('auction')"><span class="gt-ic">⚽</span><span class="gt-nm">مزاد النجوم</span><span class="gt-sub">مزاد على 11 لاعبًا</span></button>
 <button class="gt-btn" id="gt1" onclick="pickGameType('boxes')"><span class="gt-ic">🎁</span><span class="gt-nm">صناديق الحظ</span><span class="gt-sub">اختر لاعبك من 4 صناديق لكل مركز</span></button>
 <button class="gt-btn" id="gt2" onclick="pickGameType('transferprice')"><span class="gt-ic">💰</span><span class="gt-nm">راجع سعرك</span><span class="gt-sub">خمّن سعر انتقال اللاعب الحقيقي</span></button>
+<button class="gt-btn" id="gt3" onclick="pickGameType('blind')"><span class="gt-ic">🕶️</span><span class="gt-nm">المزاد الأعمى</span><span class="gt-sub">ميزانية سرية — كل واحد يكتب سعره في السر</span></button>
 </div>
 <label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames();$('nameCodeBox').classList.add('hidden');$('name1').classList.remove('err-input')">
 <div id="nameCodeBox" class="hidden" style="background:var(--card2);border:1px solid var(--gold);border-radius:10px;padding:10px;margin:6px 0;font-size:12.5px">
@@ -608,7 +634,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 </div>
 <div id="futBox"></div>
 <div id="firstBidNote" class="first-bid-note hidden">⚠️ يجب تقديم عرض أول قبل التمرير</div>
-<div class="bid-panel">
+<div class="bid-panel" id="auctionPanel">
 <div class="bid-num" id="bidNum">0</div>
 <div class="tbar hidden" id="tbarBox"><div id="tfill"></div></div>
 <div class="time hidden" id="timeLbl"></div>
@@ -624,6 +650,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <button id="customBtn" onclick="humanCustom()">تقديم العرض</button>
 </div>
 </div>
+<div class="bid-panel hidden" id="blindPanel"></div>
 <div class="log" id="log"></div>
 <div id="chatBox" class="chat hidden"><div class="chat-hdr"><span>💬 دردشة <span id="oppMicLbl" class="opp-mic hidden">🎤 خصمك بيتكلم</span></span><button id="micBtn" class="mic-btn" onclick="toggleMic()" title="اتكلم صوت مع خصمك">🎤 المايك مقفول</button></div><div id="chatMsgs"></div><div class="chat-in"><input id="chatIn" placeholder="رسالة…" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">إرسال</button></div></div>
 <audio id="remoteAudio" autoplay playsinline style="display:none"></audio>
@@ -1887,7 +1914,8 @@ var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
 var firstBidDone=false;
 var msgSeq=0,lastAppliedSeq=-1;
-var CARD_PRICES={wild:0,gift:15,norisk:25,protect:40,steal:80};
+/* الكروت بقت مجانية بالكامل — بتتوزع عشوائي على كل لاعب في أول اللعبة */
+var CARD_PRICES={wild:0,gift:0,norisk:0,protect:0,steal:0};
 var CARD_DEFS=[
  ['steal','🔁','كارت التبديل','بدّل لاعب من عندك بلاعب من الخصم'],
  ['protect','🛡️','الحماية','امنع لاعبك من التبديل أو السرقة'],
@@ -1901,6 +1929,7 @@ var BOX_CARD_DEFS=[
 ];
 var CARD_UNLOCK_ROUND=Math.max(0,ROUNDS-4);
 var cardsReady=[false,false];
+var usedCards=[{},{}];
 /* ========= راجع سعرك ========= */
 var tpDiff='easy';
 var TP_ROUNDS=7;
@@ -2599,7 +2628,8 @@ function pickGameType(t){
  $('gt0').classList.toggle('sel',t==='auction');
  $('gt1').classList.toggle('sel',t==='boxes');
  $('gt2').classList.toggle('sel',t==='transferprice');
- var lbl=t==='auction'?'⚽ مزاد النجوم':(t==='boxes'?'🎁 صناديق الحظ':'💰 راجع سعرك');
+ $('gt3').classList.toggle('sel',t==='blind');
+ var lbl=t==='auction'?'⚽ مزاد النجوم':(t==='boxes'?'🎁 صناديق الحظ':(t==='blind'?'🕶️ المزاد الأعمى':'💰 راجع سعرك'));
  $('roomGameType').textContent='نوع اللعبة: '+lbl+' — يقدر يتغيّر من الصفحة الرئيسية قبل إنشاء/دخول الغرفة';
  $('setGameType').textContent='نوع اللعبة: '+lbl;
  $('budRow').classList.toggle('hidden',t==='boxes');
@@ -2608,7 +2638,9 @@ function pickGameType(t){
  $('timeBudBox').classList.toggle('hidden',t==='transferprice');
  $('mb4').classList.toggle('hidden',t!=='transferprice');
  if(mode===4&&t!=='transferprice')mode=1;
- if(t==='auction'){
+ if(t==='blind'){
+  $('gameDesc').innerHTML='🕶️ <b>المزاد الأعمى</b>: 11 جولة — في كل جولة يظهر نجم، وكل لاعب يكتب سعره <b>في السر</b> (محدش يشوف رقم التاني ولا ميزانيته).<br>أعلى عرض ياخد النجم ويدفع رقمه بالظبط، والتاني ياخد لاعب عشوائي من نفس المركز.<br>الميزانيات سرية طول اللعبة — فالحسابات كلها تخمين وأعصاب! وبعدين كروت عشوائية، كابتن، وماتش يحسم اللقب.';
+ }else if(t==='auction'){
   $('gameDesc').innerHTML='مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا (حارس + 4 دفاع + 3 وسط + 3 هجوم).<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.';
  }else if(t==='boxes'){
   $('gameDesc').innerHTML='تشكيلة خماسية: حارس، مدافع، وسط، وسط مهاجم، مهاجم.<br>لكل مركز 4 صناديق مغلقة — افتح صندوقًا واحدًا واقبله (Deal)، أو جرّب صندوقًا تانيًا (No Deal) لكن هتاخده إجباري ومفيش رجوع للأول.<br>🃏 بعض الصناديق فيها مفاجأة: كارت حماية أو كارت تبديل تكسبه لو قبلت الصندوق ده! بعد الـ5 مراكز تقدر تستخدم اللي كسبته، ثم كابتن، ثم مباراة تحسم اللقب.';
@@ -2727,7 +2759,14 @@ function pickTPDiff(d){
  $('df2').classList.toggle('sel',d==='hard');
 }
 function myName(){return $('name1').value.trim()||'اللاعب الأول';}
-function defaultCards(){return gameType==='boxes'?{steal:0,protect:0}:{steal:1,protect:1,wild:1,norisk:1,gift:1};}
+function randomCards(){
+ var all=['steal','protect','wild','norisk','gift'];
+ var c={steal:0,protect:0,wild:0,norisk:0,gift:0};
+ var pick=shuffle(all).slice(0,2);
+ pick.forEach(function(k){c[k]=1;});
+ return c;
+}
+function defaultCards(){return gameType==='boxes'?{steal:0,protect:0}:randomCards();}
 function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0,cards:defaultCards()};}
 function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
@@ -3422,6 +3461,7 @@ function handleData(d){
   if(d.a==='ready'){cardsReady[1]=true;log(P[1].name+' انتهى من الكروت');checkCardsReady();return;}
   if(d.a==='openbox'){doOpenBox(1,d.idx);return;}
   if(d.a==='pickbox'){doPickBox(1,d.idx);return;}
+  if(d.a==='blind'){submitBlind(1,d.v);return;}
   if(d.a==='tpguess'){tpSubmitGuess(1,d.v);return;}
   if(d.a==='tpnext'){tpNextRound();return;}
   if(phase==='bid'&&turn===1){
@@ -3438,13 +3478,19 @@ function handleData(d){
   }
  }
 }
-function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked,tpRound:tpRound,tpCur:tpCur,tpGuess:tpGuess,tpLocked:tpLocked,tpScore:tpScore,tpHistory:tpHistory,tpPhase:tpPhase};}
-function broadcast(){if(online&&isHost&&conn&&conn.open)conn.send({type:'S',s:snap()});}
+function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked,tpRound:tpRound,tpCur:tpCur,tpGuess:tpGuess,tpLocked:tpLocked,tpScore:tpScore,tpHistory:tpHistory,tpPhase:tpPhase,blindBid:blindBid,blindLocked:blindLocked};}
+function broadcast(){
+ if(!(online&&isHost&&conn&&conn.open))return;
+ var s=snap();
+ /* في المزاد الأعمى: الضيف يشوف رقمه هو بس — عرض المضيف يفضل مخفي لحد الكشف */
+ if(s.phase==='blind')s.blindBid=[null,(blindBid&&blindBid[1]!==undefined)?blindBid[1]:null];
+ conn.send({type:'S',s:s});
+}
 function applySnap(s){
  if(!s)return;
  if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;}
  phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.P;curStar=s.star;logArr=s.log||[];ovH=s.ovH||'';ovG=s.ovG||'';endH=s.endH||'';firstBidDone=!!s.firstBidDone;captainIdx=s.captainIdx||[-1,-1];cardsReady=s.cardsReady||[false,false];boxRound=s.boxRound||0;boxSets=s.boxSets||[[],[]];boxOpened=s.boxOpened||[[],[]];boxPicked=s.boxPicked||[null,null];
- tpRound=s.tpRound||0;tpCur=s.tpCur||null;tpGuess=s.tpGuess||[null,null];tpLocked=s.tpLocked||[false,false];tpScore=s.tpScore||[0,0];tpHistory=s.tpHistory||[];tpPhase=s.tpPhase||'guess';
+ tpRound=s.tpRound||0;tpCur=s.tpCur||null;tpGuess=s.tpGuess||[null,null];tpLocked=s.tpLocked||[false,false];tpScore=s.tpScore||[0,0];tpHistory=s.tpHistory||[];tpPhase=s.tpPhase||'guess';blindLocked=s.blindLocked||[false,false];if(s.blindBid)blindBid=[s.blindBid[0],s.blindBid[1]];
  render();
 }
 function sendChat(){var t=$('chatIn').value.trim();if(!t||!conn||!conn.open)return;conn.send({type:'chat',t:t,from:mySeat});addChat(P[mySeat].name,t);$('chatIn').value='';}
@@ -3492,7 +3538,7 @@ function startFromSettings(){
   if(online&&isHost){
    if(!conn||!conn.open){toast('لا يوجد خصم متصل بعد');btn.disabled=false;btn.textContent=prevTxt;return;}
    P=[mkP(myName()),mkP(guestName||'الخصم')];
-   if(gameType==='auction'){var bs=balancedStars();stars=bs.stars;pool=bs.pool;}
+   if(isAuctionLike()){var bs=balancedStars();stars=bs.stars;pool=bs.pool;}
    else if(isTP){stars=[];pool=[];}
    else{stars=[];pool=[];boxUsedSet={};}
    lastAppliedSeq=-1;msgSeq=0;
@@ -3502,7 +3548,7 @@ function startFromSettings(){
    initGame();
   }else{
    P=(mode===4)?[mkP(myName())]:[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))];
-   if(gameType==='auction'){var bs2=balancedStars();stars=bs2.stars;pool=bs2.pool;}
+   if(isAuctionLike()){var bs2=balancedStars();stars=bs2.stars;pool=bs2.pool;}
    else if(isTP){stars=[];pool=[];}
    else{stars=[];pool=[];boxUsedSet={};}
    btn.disabled=false;btn.textContent=prevTxt;
@@ -3516,17 +3562,17 @@ function startFromSettings(){
  }
 }
 function updateGameTitleUI(){
- $('gameTitle').textContent=gameType==='boxes'?'🎁 صناديق الحظ':(gameType==='transferprice'?'💰 راجع سعرك':'⚽ مزاد النجوم');
- $('tabBid').textContent=gameType==='boxes'?'الصناديق':(gameType==='transferprice'?'التحدي':'المزايدة');
+ $('gameTitle').textContent=gameType==='boxes'?'🎁 صناديق الحظ':(gameType==='transferprice'?'💰 راجع سعرك':(gameType==='blind'?'🕶️ المزاد الأعمى':'⚽ مزاد النجوم'));
+ $('tabBid').textContent=gameType==='boxes'?'الصناديق':(gameType==='transferprice'?'التحدي':(gameType==='blind'?'المزايدة السرية':'المزايدة'));
  $('tabsRow').classList.toggle('hidden',gameType==='transferprice');
 }
 function initGame(){
- round=0;boxRound=0;tpRound=0;tpScore=[0,0];tpHistory=[];logArr=[];prevBid=-1;lastCardRound=-1;started=true;captainIdx=[-1,-1];cardsReady=[false,false];
+ round=0;boxRound=0;tpRound=0;usedCards=[{},{}];blindBid=[null,null];blindLocked=[false,false];tpScore=[0,0];tpHistory=[];logArr=[];prevBid=-1;lastCardRound=-1;started=true;captainIdx=[-1,-1];cardsReady=[false,false];
  if(gameType==='boxes')planBoxCardsOnce();
  updateGameTitleUI();
  show('game');
  setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));
- if(gameType==='auction')nextRound();else if(gameType==='transferprice')startTPRound();else startBoxRound();
+ if(gameType==='auction')nextRound();else if(gameType==='blind')startBlindRound();else if(gameType==='transferprice')startTPRound();else startBoxRound();
 }
 function nextRound(){
  clearInterval(timerInt);
@@ -3654,6 +3700,226 @@ function aiMove(){
   var target=Math.min(P[1].budget,Math.min(v,bid+jump));
   doRaise(Math.max(next,target));
  }else doPass();
+}
+
+
+/* ========= 🕶️ المزاد الأعمى (ميزانية سرية + عروض سرية) ========= */
+var blindBid=[null,null],blindLocked=[false,false];
+function isAuctionLike(){return gameType==='auction'||gameType==='blind';}
+function blindMax(seat){return Math.max(0,P[seat].budget);}
+function startBlindRound(){
+ clearInterval(timerInt);
+ if(online&&!isHost)return;
+ if(round>=stars.length)return startPostCards();
+ curStar=stars[round];
+ if(!curStar)return startPostCards();
+ phase='blind';blindBid=[null,null];blindLocked=[false,false];bid=0;
+ log('🕶️ الجولة '+(round+1)+': مزاد أعمى على '+curStar.ar+' ('+curStar.r+') — كل واحد يكتب سعره في السر');
+ render();broadcast();startBlindTimer();
+ if(mode===1)setTimeout(aiBlind,1200+Math.random()*900);
+}
+function startBlindTimer(){
+ clearInterval(timerInt);
+ if(online&&!isHost)return;
+ if(CFG.timer>0&&phase==='blind'){
+  timeLeft=CFG.timer+10;
+  timerInt=setInterval(function(){
+   if(phase!=='blind'){clearInterval(timerInt);return;}
+   timeLeft--;
+   if(timeLeft>=0&&timeLeft<=5)sfxTick();
+   if(timeLeft<0){
+    clearInterval(timerInt);
+    for(var s2=0;s2<2;s2++)if(!blindLocked[s2]){log('⏱️ '+P[s2].name+' خلص وقته — اتسجّل عرض 0');blindLocked[s2]=true;blindBid[s2]=0;}
+    revealBlind();return;
+   }
+   render();broadcast();
+  },1000);
+ }
+}
+function humanBlindLock(seat){
+ if(phase!=='blind')return;
+ var el=$('blindIn');if(!el)return;
+ var v=parseInt(el.value,10);
+ if(isNaN(v)||v<0){toast('اكتب مبلغ صحيح بالمليون (0 أو أكتر)');return;}
+ if(v>blindMax(seat)){toast('المبلغ أكبر من ميزانيتك ('+fmt(blindMax(seat))+')');return;}
+ el.value='';
+ try{sfxCard();}catch(e){}
+ if(online&&!isHost){blindLocked[mySeat]=true;blindBid[mySeat]=v;conn&&conn.open&&conn.send({type:'act',a:'blind',v:v});render();return;}
+ submitBlind(seat,v);
+}
+function submitBlind(seat,v){
+ if(phase!=='blind'||blindLocked[seat])return;
+ v=Math.max(0,Math.min(blindMax(seat),Math.floor(v||0)));
+ blindBid[seat]=v;blindLocked[seat]=true;
+ log('🔒 '+P[seat].name+' قفل عرضه السري');
+ if(blindLocked[0]&&blindLocked[1])revealBlind();
+ else{render();broadcast();}
+}
+function aiBlind(){
+ if(phase!=='blind'||blindLocked[1])return;
+ var v=aiValue(curStar);
+ v=Math.round(v*(0.85+Math.random()*0.35));
+ submitBlind(1,v);
+}
+function revealBlind(){
+ clearInterval(timerInt);
+ var b0=blindBid[0]||0,b1=blindBid[1]||0;
+ var win=(b0>b1)?0:((b1>b0)?1:(Math.random()<0.5?0:1));
+ var passer=1-win,price=(win===0?b0:b1);
+ var s=curStar;if(!s)return;
+ phase='reveal';
+ P[win].squad.push({ar:s.ar,en:s.en,pos:s.pos,flag:s.flag,club:s.club,r:s.r});
+ P[win].budget-=price;P[win].spent+=price;
+ var g=posGroup(s);
+ var rp=pickRandom(g)||{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:75};
+ P[passer].squad.push(rp);
+ if(win===(online?mySeat:0)&&s.r>=85)mzEvent('star');
+ log('🕶️ '+P[win].name+' كسب '+s.ar+' بعرض '+fmt(price)+' — '+P[passer].name+' عرض '+fmt(win===0?b1:b0)+' وحصل على '+rp.ar);
+ var tie=(b0===b1);
+ var content='<h2>🕶️ نتيجة الجولة '+(round+1)+'</h2>'+
+ '<div class="blind-reveal"><div class="br-row"><span>'+P[0].name+'</span><b>'+fmt(b0)+'</b></div><div class="br-row"><span>'+P[1].name+'</span><b>'+fmt(b1)+'</b></div></div>'+
+ (tie?'<div class="phase-title">🤝 نفس المبلغ بالظبط — القرعة اختارت '+P[win].name+'</div>':'')+
+ '<div class="reveal">'+
+ '<div>'+pcardHTML(s,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
+ '<div>'+pcardHTML(rp,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">حصل عليه <b style="color:var(--blue)">'+P[passer].name+'</b> — نفس المركز ('+GLBL[g]+')</div></div></div>';
+ ovH=content+'<button class="big-btn green" onclick="closeOverlay()">الجولة التالية</button>';
+ ovG=content+'<div class="status">بانتظار المضيف…</div>';
+ try{sfxRaise();}catch(e){}
+ render();broadcast();bindWiki($('obox'));
+}
+function renderBlindPanel(){
+ if(!curStar||!P[0]||!P[1])return;
+ if(round!==lastCardRound)updateStarCard();
+ $('roundLbl').textContent='الجولة '+(round+1)+' / '+stars.length+' • 🕶️ سري';
+ $('auctionPanel').classList.add('hidden');
+ var bp=$('blindPanel');bp.classList.remove('hidden');
+ for(var i=0;i<2;i++){
+  var hideBud=(mode===3?(i!==mySeat):(mode===1?(i===1):true));
+  var tot=P[i].squad.reduce(function(t,p){return t+p.r;},0);
+  $('tname'+i).textContent=(blindLocked[i]?'🔒 ':'✍️ ')+P[i].name;
+  $('tstats'+i).innerHTML='المتبقي: <b>'+(hideBud?'سري 🔒':fmt(P[i].budget))+'</b> — القوة: <b>'+tot+'</b> — اللاعبون: <b>'+P[i].squad.length+'/11</b>';
+  $('squad'+i).innerHTML=orderedSquad(P[i].squad).map(function(o){var p=o.p;return '<span class="chip'+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>';
+  $('team'+i).classList.toggle('turn',!blindLocked[i]);
+ }
+ var actSeat=(mode===3?mySeat:(mode===1?0:(blindLocked[0]?1:0)));
+ var html='<div class="blind-title">🕶️ اكتب سعرك السري لـ '+curStar.flag+' '+curStar.ar+' ('+curStar.r+')</div>';
+ if(CFG.timer>0)html+='<div class="time'+(timeLeft<=5?' low':'')+'">⏱️ '+Math.max(0,timeLeft)+' ثانية</div>';
+ if(!blindLocked[actSeat]&&(mode!==1||actSeat===0)){
+  html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم مخفي وهيتكشف بعد ما الاتنين يقفلوا</div>'+
+  '<div class="custom"><input id="blindIn" type="password" inputmode="numeric" autocomplete="off" placeholder="مبلغ بالمليون (سري)"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
+  '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
+ }else{
+  html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
+ }
+ html+='<div class="blind-status">'+[0,1].map(function(i){return '<span class="chip">'+(blindLocked[i]?'🔒 قفل':'⏳ بيفكر')+' — '+P[i].name+'</span>';}).join(' ')+'</div>';
+ bp.innerHTML=html;
+ $('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
+ if(view==='squads')renderSquads();
+}
+
+/* ========= 🎯 التقدّم: XP + مستويات + ستريك دخول + مهام يومية ========= */
+var MZ_MISSION_POOL=[
+ {id:'play2',t:'العب جولتين (أي لعبة)',goal:2,ev:'play',xp:60},
+ {id:'win1',t:'اكسب مباراة واحدة',goal:1,ev:'win',xp:80},
+ {id:'blind1',t:'العب جولة مزاد أعمى 🕶️',goal:1,ev:'blind',xp:70},
+ {id:'card2',t:'استخدم كارتين خاصين',goal:2,ev:'card',xp:50},
+ {id:'tp1',t:'العب جولة "راجع سعرك" 💰',goal:1,ev:'tp',xp:50},
+ {id:'boxes1',t:'العب جولة صناديق الحظ 🎁',goal:1,ev:'boxes',xp:50},
+ {id:'star85',t:'ضم لاعب تقييمه 85 أو أكتر',goal:1,ev:'star',xp:60}
+];
+var MZ_BADGES=[
+ {id:'first',ic:'🎬',t:'أول لعبة',ok:function(m){return (m.games||0)>=1;}},
+ {id:'w1',ic:'🥇',t:'أول فوز',ok:function(m){return (m.wins||0)>=1;}},
+ {id:'w10',ic:'🏆',t:'10 انتصارات',ok:function(m){return (m.wins||0)>=10;}},
+ {id:'g25',ic:'🎮',t:'25 لعبة',ok:function(m){return (m.games||0)>=25;}},
+ {id:'st3',ic:'🔥',t:'ستريك 3 أيام',ok:function(m){return (m.bestStreak||0)>=3;}},
+ {id:'st7',ic:'⚡',t:'ستريك أسبوع',ok:function(m){return (m.bestStreak||0)>=7;}},
+ {id:'lv5',ic:'🎖️',t:'مستوى 5',ok:function(m){return mzLevel(m.xp||0)>=5;}},
+ {id:'blindm',ic:'🕶️',t:'سيد المزاد الأعمى',ok:function(m){return (m.blindWins||0)>=3;}}
+];
+function mzToday(d){d=d||new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function mzLoad(){try{var m=JSON.parse(localStorage.getItem('mz_meta')||'{}')||{};return m;}catch(e){return {};}}
+function mzSave(m){try{localStorage.setItem('mz_meta',JSON.stringify(m));}catch(e){}}
+function mzLevel(xp){return Math.floor((xp||0)/300)+1;}
+function mzTier(l){var n=['مبتدئ','ناشئ','محترف','نجم','أسطورة'];return n[Math.min(n.length-1,Math.floor((l-1)/3))];}
+function mzInit(){
+ var m=mzLoad();
+ m.xp=m.xp||0;m.games=m.games||0;m.wins=m.wins||0;m.badges=m.badges||[];
+ var t=mzToday();
+ if(m.day!==t){
+  var yk=mzToday(new Date(Date.now()-86400000));
+  m.streak=(m.day===yk)?((m.streak||0)+1):1;
+  if((m.streak||0)>(m.bestStreak||0))m.bestStreak=m.streak;
+  m.day=t;
+  m.missions=shuffle(MZ_MISSION_POOL).slice(0,3).map(function(x){return{id:x.id,t:x.t,goal:x.goal,ev:x.ev,xp:x.xp,n:0,done:false};});
+  m.dailyGiven=false;
+ }
+ if(!m.dailyGiven){
+  var bonus=20+Math.min(80,(m.streak||1)*10);
+  m.xp+=bonus;m.dailyGiven=true;
+  mzSave(m);
+  setTimeout(function(){toast('🔥 ستريك '+(m.streak||1)+' يوم — مكافأة دخول +'+bonus+' XP');},900);
+ }
+ mzSave(m);mzSyncBadges();renderMeta();
+}
+function mzSyncBadges(){
+ var m=mzLoad();m.badges=m.badges||[];
+ MZ_BADGES.forEach(function(b){
+  if(m.badges.indexOf(b.id)<0&&b.ok(m)){m.badges.push(b.id);setTimeout(function(){toast('🏅 شارة جديدة: '+b.ic+' '+b.t);},700);}
+ });
+ mzSave(m);
+}
+function mzEvent(ev,n){
+ try{
+  var m=mzLoad();if(!m.missions)return;
+  var lvBefore=mzLevel(m.xp||0),gained=0,names=[];
+  m.missions.forEach(function(ms){
+   if(ms.ev!==ev||ms.done)return;
+   ms.n=(ms.n||0)+(n||1);
+   if(ms.n>=ms.goal){ms.done=true;gained+=ms.xp;names.push(ms.t);}
+  });
+  m.xp=(m.xp||0)+gained;
+  mzSave(m);
+  if(names.length)setTimeout(function(){toast('✅ مهمة اكتملت: '+names[0]+' (+'+gained+' XP)');},400);
+  if(mzLevel(m.xp)>lvBefore)setTimeout(function(){toast('🎖️ اترقيت للمستوى '+mzLevel(m.xp)+' — '+mzTier(mzLevel(m.xp)));},1200);
+  mzSyncBadges();renderMeta();
+ }catch(e){}
+}
+function mzGameEnd(champ,kind){
+ try{
+  var mine=(online?mySeat:0);
+  var won=(champ===mine);
+  var m=mzLoad();
+  var lvBefore=mzLevel(m.xp||0);
+  m.games=(m.games||0)+1;
+  if(won){m.wins=(m.wins||0)+1;if(kind==='blind')m.blindWins=(m.blindWins||0)+1;}
+  m.xp=(m.xp||0)+(won?100:40);
+  mzSave(m);
+  if(mzLevel(m.xp)>lvBefore)setTimeout(function(){toast('🎖️ اترقيت للمستوى '+mzLevel(m.xp)+' — '+mzTier(mzLevel(m.xp)));},1500);
+  mzEvent('play');
+  if(won)mzEvent('win');
+  if(kind)mzEvent(kind);
+  mzSyncBadges();renderMeta();
+ }catch(e){}
+}
+function renderMeta(){
+ var el=$('metaCard');if(!el)return;
+ var m=mzLoad();
+ var lv=mzLevel(m.xp||0),inLv=(m.xp||0)%300,pct=Math.round(inLv/300*100);
+ var ms=(m.missions||[]);
+ var doneN=ms.filter(function(x){return x.done;}).length;
+ var badges=MZ_BADGES.map(function(b){
+  var got=(m.badges||[]).indexOf(b.id)>=0;
+  return '<span class="mz-badge'+(got?' got':'')+'" title="'+b.t+'">'+b.ic+'</span>';
+ }).join('');
+ el.innerHTML=
+ '<div class="mz-top"><div class="mz-lv">🎖️ مستوى '+lv+' <small>'+mzTier(lv)+'</small></div>'+
+ '<div class="mz-streak">🔥 '+(m.streak||1)+' يوم متتالي</div></div>'+
+ '<div class="mz-bar"><i style="width:'+pct+'%"></i></div>'+
+ '<div class="mz-xp">'+inLv+' / 300 XP — إجمالي '+(m.xp||0)+' XP</div>'+
+ '<div class="mz-h">🎯 مهام النهاردة ('+doneN+'/'+ms.length+')</div>'+
+ ms.map(function(x){return '<div class="mz-mis'+(x.done?' done':'')+'"><span>'+(x.done?'✅':'⬜')+' '+x.t+'</span><b>'+Math.min(x.n||0,x.goal)+'/'+x.goal+' • +'+x.xp+'</b></div>';}).join('')+
+ '<div class="mz-h">🏅 شاراتك</div><div class="mz-badges">'+badges+'</div>';
 }
 
 /* ========= صناديق الحظ (وضع اللعب الجديد) ========= */
@@ -3982,6 +4248,7 @@ function endTPGame(){
  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
  (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+tpScore[0]+' - '+tpScore[1]+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
  '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
+ mzGameEnd(champ,'tp');
  shareText='💰 راجع سعرك — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل '+tpScore[0]+' - '+tpScore[1]:'🏆 البطل: '+P[champ].name+' ('+tpScore[0]+' - '+tpScore[1]+')')+'\n'+
  '📊 متوسط خطأ '+P[0].name+': '+avg0+' مليون €\n'+
@@ -4113,6 +4380,7 @@ function applyCard(actor,c,i,j){
  if(P[actor].cards[c]===undefined||P[actor].cards[c]<1)return false;
  var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);
  if(price>P[actor].budget)return false;
+ if(!usedCards[actor])usedCards[actor]={};
  if(c==='protect'){
   if(!P[actor].squad[i]||P[actor].squad[i].protected)return false;
   P[actor].cards.protect=0;P[actor].budget-=price;P[actor].spent+=price;P[actor].squad[i].protected=true;
@@ -4138,6 +4406,8 @@ function applyCard(actor,c,i,j){
   pool.splice(pool.indexOf(weak),1);P[other].squad.push(weak);P[actor].cards.gift=0;P[actor].budget-=price;P[actor].spent+=price;
   log('🎁 '+P[actor].name+' لبّس '+P[other].name+' اللاعب '+weak.ar+(price?' (مقابل '+fmt(price)+')':'')+'!');
  }else return false;
+ usedCards[actor][c]=true;
+ if(actor===(online?mySeat:0))mzEvent('card');
  render();broadcast();return true;
 }
 
@@ -4190,6 +4460,7 @@ function resolveRound(win,passer){
  var g=posGroup(s);
  var rp=pickRandom(g)||{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:75};
  P[passer].squad.push(rp);
+ if(win===(online?mySeat:0)&&s.r>=85)mzEvent('star');
  log(P[win].name+' ضمّ '+s.ar+' مقابل '+fmt(price)+' — '+P[passer].name+' حصل على '+rp.ar+' ('+GLBL[g]+')');
  var content='<h2>نتيجة الجولة '+(round+1)+'</h2><div class="reveal">'+
  '<div>'+pcardHTML(s,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
@@ -4198,7 +4469,7 @@ function resolveRound(win,passer){
  ovG=content+'<div class="status">بانتظار المضيف…</div>';
  render();broadcast();bindWiki($('obox'));
 }
-function closeOverlay(){if(online&&!isHost)return;round++;nextRound();}
+function closeOverlay(){if(online&&!isHost)return;round++;if(gameType==='blind')startBlindRound();else nextRound();}
 function poisson(l){var L=Math.exp(-l),k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
 function scorerPick(sq){
  var w={ST:6,RW:5,LW:5,CAM:4,CM:2,CDM:2,RB:1,LB:1,CB:1,GK:0.3};
@@ -4319,24 +4590,25 @@ function endGame(){
  '<tr><td>أفضل لاعب</td><td>'+s0.best+'</td><td>'+s1.best+'</td></tr>'+
  '<tr><td>الكابتن</td><td>'+(captainIdx[0]>=0&&P[0].squad[captainIdx[0]]?P[0].squad[captainIdx[0]].ar:'—')+'</td><td>'+(captainIdx[1]>=0&&P[1].squad[captainIdx[1]]?P[1].squad[captainIdx[1]].ar:'—')+'</td></tr>'+
  '<tr><td>لاعبون 85+</td><td>'+s0.stars+'</td><td>'+s1.stars+'</td></tr>'+
- (gameType==='auction'?('<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
+ (isAuctionLike()?('<tr><td>المصروف</td><td>'+fmt(P[0].spent)+'</td><td>'+fmt(P[1].spent)+'</td></tr>'+
  '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr>'):'')+'</table>'+
  [0,1].map(function(i){return '<div class="squad-end"><b style="color:var(--acc)">'+P[i].name+':</b><br>'+sq(i)+'</div>';}).join('')+
  (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+sim.g0+' - '+sim.g1+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
  '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
- shareText='⚽ '+(gameType==='boxes'?'صناديق الحظ':'مزاد النجوم')+' — النتيجة النهائية\n'+
+ shareText='⚽ '+(gameType==='boxes'?'صناديق الحظ':(gameType==='blind'?'المزاد الأعمى 🕶️':'مزاد النجوم'))+' — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل بين '+P[0].name+' و'+P[1].name:'🏆 البطل: '+P[champ].name)+'\n'+
  '💪 '+P[0].name+': قوة '+s0.tot+' (متوسط '+s0.avg+')\n'+
  '💪 '+P[1].name+': قوة '+s1.tot+' (متوسط '+s1.avg+')\n'+
  '⚽ نتيجة المباراة النهائية: '+sim.g0+' - '+sim.g1+'\n'+
  '🎮 العب مزاد النجوم بنفسك!';
  recordMatchResult(P[0].name,sim.g0,P[1].name,sim.g1);
+ mzGameEnd(champ,gameType==='blind'?'blind':(gameType==='boxes'?'boxes':'auction'));
  if(pendingPromo){toast('🎉 اترقّيت لمستوى '+pendingPromo.ic+' '+pendingPromo.label+'!');}
  render();broadcast();
 }
 function renderPostCardsOverlay(){
  var me=online?mySeat:0;
- var html='<h2>🃏 مرحلة الكروت الخاصة</h2><div class="phase-title">'+(gameType==='boxes'?'استخدم أي كارت كسبته من الصناديق (لو كسبت حاجة)':'استخدم كروتك المتاحة قبل اختيار الكابتن')+'</div>';
+ var html='<h2>🃏 مرحلة الكروت الخاصة</h2><div class="phase-title">'+(gameType==='boxes'?'استخدم أي كارت كسبته من الصناديق (لو كسبت حاجة)':'🎲 كروتك اتوزعت عشوائي في أول اللعبة — استخدمها كلها مجانًا قبل اختيار الكابتن')+'</div>';
  var defs=gameType==='boxes'?BOX_CARD_DEFS:CARD_DEFS;
  var seatsToShow=(mode===2)?[0,1]:[me];
  seatsToShow.forEach(function(seat){
@@ -4352,28 +4624,28 @@ function renderPostCardsOverlay(){
     html+='اختار لاعبك للحماية:</div><div class="pick-grid">';
     orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
-    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد'+(gameType==='auction'?(' (مقابل '+fmt(CARD_PRICES.protect)+')'):'')+'</button>';
+    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='steal'){
     html+='١) اختار لاعب من عندك هتديه للخصم:</div><div class="pick-grid">';
     orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div><div class="phase-title">٢) اختار لاعب الخصم اللي هتاخده بدله:</div><div class="pick-grid">';
     orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
-    if(cardFlow.sel>=0&&cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">🔁 تأكيد التبديل'+(gameType==='auction'?(' (مقابل '+fmt(CARD_PRICES.steal)+')'):'')+'</button>';
+    if(cardFlow.sel>=0&&cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">🔁 تأكيد التبديل (مجاني)</button>';
    }else if(c==='wild'||c==='norisk'){
     html+='اختار لاعبك اللي هيتغيّر (هيجيلك بدله لاعب عشوائي من نفس المركز):</div><div class="pick-grid">';
     orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
-    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد'+(c==='wild'?' (مجاني)':(' (مقابل '+fmt(CARD_PRICES.norisk)+')'))+'</button>';
+    if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='gift'){
-    html+='</div><button class="big-btn goldb" onclick="confirmCard()">🎁 لبّسه! (مقابل '+fmt(CARD_PRICES.gift)+')</button>';
+    html+='</div><button class="big-btn goldb" onclick="confirmCard()">🎁 لبّسه! (مجاني)</button>';
    }
    html+='<button class="big-btn red" style="margin-top:6px" onclick="cancelCard()">↩ رجوع</button>';
   }else{
    html+='<div class="cards-grid">';
    defs.forEach(function(d){
     var n=P[seat].cards[d[0]];var price=gameType==='boxes'?0:(CARD_PRICES[d[0]]||0);var afford=price<=P[seat].budget;
-    html+='<div class="card-item'+((n<1||!afford)?' off':'')+'" onclick="'+((n<1||!afford)?'':('openPostCardPicker('+seat+');selectCard(\''+d[0]+'\')'))+'"><div class="ci-ic">'+d[1]+'</div><div class="ci-nm">'+d[2]+'</div><div class="ci-left">'+(n>0?(afford?'متاح ✅':'الرصيد لا يكفي'):(gameType==='boxes'?'لم تفز بيه 🎲':'مستخدم ❌'))+'</div><div class="ci-price">'+(price>0?fmt(price):'مجاني 🎉')+'</div></div>';
+    html+='<div class="card-item'+((n<1||!afford)?' off':'')+'" onclick="'+((n<1||!afford)?'':('openPostCardPicker('+seat+');selectCard(\''+d[0]+'\')'))+'"><div class="ci-ic">'+d[1]+'</div><div class="ci-nm">'+d[2]+'</div><div class="ci-left">'+(n>0?'متاح ✅':(gameType==='boxes'?'لم تفز بيه 🎲':(usedCards[seat]&&usedCards[seat][d[0]]?'مستخدم ❌':'مش معاك 🎲')))+'</div><div class="ci-price">'+(price>0?fmt(price):'مجاني 🎉')+'</div></div>';
    });
    html+='</div><button class="big-btn green" style="margin-top:8px" onclick="markReady('+seat+')">✅ تم — كمّل</button>';
   }
@@ -4433,8 +4705,10 @@ function render(){
  $('overlay').classList.add('hidden');
  if(gameType==='boxes'){renderBoxesView();$('roundLbl').textContent='صناديق الحظ';$('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');return;}
  if(gameType==='transferprice'){renderTP();$('roundLbl').textContent='راجع سعرك';return;}
+ if(gameType==='blind'){renderBlindPanel();return;}
  if(!curStar||!P[0]||!P[1])return;
  if(round!==lastCardRound)updateStarCard();
+ $('blindPanel').classList.add('hidden');$('auctionPanel').classList.remove('hidden');
  $('roundLbl').textContent='الجولة '+(round+1)+' / '+stars.length;
  var bn=$('bidNum');bn.textContent=bid===0?'0':fmt(bid);
  if(bid!==prevBid){prevBid=bid;bn.classList.remove('pop');void bn.offsetWidth;bn.classList.add('pop');}
@@ -4472,6 +4746,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if($('name1').value)initUserPeer();
   lbEnsureChannel();
   if(!localStorage.getItem('mz_onb_seen'))$('onbTip').classList.remove('hidden');
+  mzInit();
  }catch(e){}
 });
 function dismissOnbTip(){
