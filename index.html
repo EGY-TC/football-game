@@ -3269,6 +3269,9 @@ function makeNetConn(code,host,opts){
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
+   if(host){
+    [120,700,1600].forEach(function(ms){setTimeout(function(){if(!dead&&!busy&&shim.open)try{shim.send({type:'__hello_req'});}catch(e){}},ms);});
+   }
    [60,140,260,420,650,900,1200].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
    checkPresence();
    setTimeout(checkPresence,40);
@@ -3277,7 +3280,7 @@ function makeNetConn(code,host,opts){
    setTimeout(checkPresence,550);
    setTimeout(checkPresence,850);
    setTimeout(checkPresence,1200);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},5000);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},12000);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3296,6 +3299,10 @@ function makeNetConn(code,host,opts){
    if(bound&&p.c&&p.c!==bound)return;
    markOpen(p.c);lastRx=Date.now();
    if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
+   if(p.d&&p.d.type==='__hello_req'&&!host){
+    try{shim.send({type:'hello',name:myName(),pass:roomPass,cid:myCid,ts:Date.now()});}catch(e){}
+    return;
+   }
    fire('data',p.d);
   });
   ch.on('presence',{event:'sync'},checkPresence);
@@ -3586,7 +3593,17 @@ function scheduleRejoin(){
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
-  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
+  if(!isHost){
+   var helloLeft=8;
+   function sendHello(){
+    if(isHost||!conn||!conn.open||helloLeft<=0)return;
+    helloLeft--;
+    try{conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid,ts:Date.now()});}catch(e){}
+    if(helloLeft>0)setTimeout(sendHello,500);
+   }
+   sendHello();
+   if(!started)show('wait');else{try{conn.send({type:'sync'});}catch(e){}setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},500);}
+  }
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3652,6 +3669,7 @@ function handleData(d){
  if(d.type==='ping')return;
  if(d.type==='sys'){toast(d.t);return;}
  if(d.type==='hello'&&isHost){
+  try{conn.send({type:'hello_ack',ok:true,ts:Date.now()});}catch(e){}
   if(roomPass&&d.pass!==roomPass){
    hostRejecting=true;
    try{conn.send({type:'reject',reason:'pass'});}catch(e){}
@@ -3659,7 +3677,11 @@ function handleData(d){
    return;
   }
   if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
-  else{guestName=d.name;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
+  else{guestName=d.name||'الخصم';lobbyStopAnnounce();roomFull=true;toast('✅ انضم '+guestName+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');try{conn.send({type:'hello_ack',ok:true,ts:Date.now()});}catch(e){}try{conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});}catch(e){}show('settings');var sb=$('startBtn');if(sb)sb.textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
+ }
+ else if(d.type==='hello_ack'&&!isHost){
+  clearTimeout(joinHardTimer);rejoinTries=0;$('connLbl').textContent='🟢 تم الاتصال بالمضيف';
+  if(!started)show('wait');
  }
  else if(d.type==='reject'&&!isHost){
   rejectedAuth=true;netClose();
