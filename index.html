@@ -3688,10 +3688,18 @@ function broadcast(){
    وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
 function renderTimerBar(){
  var tb=$('tbarBox'),tf=$('tfill'),tl=$('timeLbl');
- if(!tb||!tf||!tl)return;
- var tmax=CFG.timer;
- if(tmax>0){tb.classList.remove('hidden');tl.classList.remove('hidden');tl.textContent='⏱️ '+Math.max(0,timeLeft)+' ثانية';var pct=Math.min(100,Math.max(0,timeLeft/tmax*100));tf.style.width=pct+'%';tf.classList.toggle('low',timeLeft<=5);tl.classList.toggle('low',timeLeft<=5);}
- else{tb.classList.add('hidden');tl.classList.add('hidden');}
+ if(tb&&tf&&tl){
+  var tmax=CFG.timer;
+  if(tmax>0){tb.classList.remove('hidden');tl.classList.remove('hidden');tl.textContent='⏱️ '+Math.max(0,timeLeft)+' ثانية';var pct=Math.min(100,Math.max(0,timeLeft/tmax*100));tf.style.width=pct+'%';tf.classList.toggle('low',timeLeft<=5);tl.classList.toggle('low',timeLeft<=5);}
+  else{tb.classList.add('hidden');tl.classList.add('hidden');}
+ }
+ /* لوحة المزاد الأعمى بتستخدم عنصر تايمر منفصل (blindTime) جوه blindPanel،
+    فلازم يتحدّث هنا كمان وإلا بيفضل واقف على آخر رقم وقت ما الجولة تتغيّر */
+ var tEl=$('blindTime');
+ if(tEl){
+  if(CFG.timer>0){tEl.className='time'+(timeLeft<=5?' low':'');tEl.textContent='⏱️ '+Math.max(0,timeLeft)+' ثانية';}
+  else tEl.className='time hidden';
+ }
 }
 /* بث خفيف لرقم العداد بس (بدل بث كل حالة اللعبة كل ربع ثانية) — بيقلل حجم البيانات
    المرسلة عبر سيرفر المزامنة (Supabase) بشكل كبير جدًا */
