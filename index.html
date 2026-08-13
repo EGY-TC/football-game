@@ -852,14 +852,16 @@ function sendRematchChallenge(loserName,winnerName,scoreText){
    ونوع اللعبة، جاهز يبدأ مباشرة من غير ما يعيد كتابة أي حاجة */
 function quickRematch(){
  clearInterval(timerInt);
+ phase='bid';$('overlay').classList.add('hidden');
  if(online){
   if(conn&&conn.open){
-   started=false;ovH='';ovG='';endH='';cardFlow=null;
+   started=false;ovH='';ovG='';endH='';cardFlow=null;pendingRematch=true;
    try{conn.send({type:'rematch'});}catch(e){}
    if(isHost){show('settings');toast('🔁 نفس الخصم لسه متصل — ظبط الإعدادات واضغط ابدأ');}
    else{show('wait');var w=$('waitTxt');if(w)w.innerHTML='🔁 جولة جديدة مع نفس الخصم<br>بانتظار المضيف يبدأ…';toast('🔁 بانتظار المضيف يبدأ جولة جديدة');}
    return;
   }
+  toast('⚠️ الاتصال بالخصم مقطوع — مينفعش تلعبوا تاني دلوقتي');
   leaveHome();return;
  }
  started=false;show('settings');
@@ -1997,6 +1999,7 @@ var roomFull=false;
 var roomPass='',isPublicRoom=false,rejectedAuth=false,hostRejecting=false,joinAttemptTries=0;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timeEndAt=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
+var pendingRematch=false;
 var firstBidDone=false;
 var msgSeq=0,lastAppliedSeq=-1;
 /* الكروت بقت مجانية بالكامل — بتتوزع عشوائي على كل لاعب في أول اللعبة */
@@ -2832,7 +2835,7 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;show('home');}
+function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;show('home');}
 function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);leaveHome();}
 function setView(v){
  view=v;
@@ -3562,9 +3565,11 @@ function wireConn(){
   conn=null;
   if(isHost){
    if(hostRejecting){hostRejecting=false;}
+   else if(pendingRematch){pendingRematch=false;toast('🚪 الخصم غادر قبل ما يبدأ الجولة الجديدة');setStatus('🚪 الخصم غادر — بانتظار انضمام لاعب تاني بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else{toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
   }
   else if(rejectedAuth){rejectedAuth=false;}
+  else if(pendingRematch){pendingRematch=false;toast('🚪 الخصم غادر قبل ما يبدأ الجولة الجديدة');setStatus('🚪 المضيف غادر قبل بدء الجولة الجديدة — اختر غرفة تانية');show('room');}
   else if(!started){setStatus('تعذر الانضمام — تأكد من الرمز أو اختر غرفة من القائمة');show('room');}
   else{$('connLbl').textContent='🟡 إعادة الاتصال…';scheduleRejoin();}
  });
@@ -3629,12 +3634,13 @@ function handleData(d){
   show('room');
  }
  else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
- else if(d.type==='start'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
+ else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
+  phase='bid';$('overlay').classList.add('hidden');pendingRematch=true;
   if(isHost){show('settings');toast('🔁 '+(guestName||'الخصم')+' عايز يلعب تاني — ابدأ الجولة الجديدة');}
   else{show('wait');var wt=$('waitTxt');if(wt)wt.innerHTML='🔁 جولة جديدة مع نفس الخصم<br>بانتظار المضيف يبدأ…';toast('🔁 المضيف بيجهّز جولة جديدة');}
  }
@@ -3743,6 +3749,7 @@ function startFromSettings(){
   if(deckOrNull)tpDeck=deckOrNull;
   if(online&&isHost){
    if(!conn||!conn.open){toast('لا يوجد خصم متصل بعد');btn.disabled=false;btn.textContent=prevTxt;return;}
+   pendingRematch=false;
    P=balanceCards([mkP(myName()),mkP(guestName||'الخصم')]);
    if(isAuctionLike()){var bs=balancedStars();stars=bs.stars;pool=bs.pool;}
    else if(isTP){stars=[];pool=[];}
