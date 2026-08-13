@@ -2842,6 +2842,14 @@ function sbClient(){
  sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:60}}});
  return sbc;
 }
+/* تسخين السوكِت من أول ما الصفحة تفتح: كده لما تدوس اتصال بيبقى الاتصال جاهز فورًا */
+var sbWarmT=null;
+function sbWarm(){
+ var c=sbClient();
+ if(!c){sbWarmT=setTimeout(sbWarm,300);return;}
+ try{if(c.realtime&&!c.realtime.isConnected())c.realtime.connect();}catch(e){}
+}
+try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')sbWarm();});}catch(e){}
 /* ========= تصنيف المتصدرين (Leaderboard) =========
    كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط.
    ما بيحتاجش أي إعداد أو جدول تعمله بنفسك: النقط بتتخزن على جهازك
@@ -3189,9 +3197,16 @@ function makeNetConn(code,host,opts){
     checkPresence();
    },3000);
    if(opts.onReady)opts.onReady(shim);
-   setTimeout(checkPresence,200);
-   setTimeout(checkPresence,900);
-   setTimeout(checkPresence,2000);
+   /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
+   try{shim.send({type:'__hs',r:role});}catch(e){}
+   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},250);
+   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},700);
+   checkPresence();
+   setTimeout(checkPresence,80);
+   setTimeout(checkPresence,300);
+   setTimeout(checkPresence,700);
+   setTimeout(checkPresence,1400);
+   setTimeout(checkPresence,2500);
    if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},14000);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
@@ -3205,7 +3220,9 @@ function makeNetConn(code,host,opts){
    if(p.c===myCid)return;
    if(p.f===role)return;
    if(bound&&p.c&&p.c!==bound)return;
-   markOpen(p.c);lastRx=Date.now();fire('data',p.d);
+   markOpen(p.c);lastRx=Date.now();
+   if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
+   fire('data',p.d);
   });
   ch.on('presence',{event:'sync'},checkPresence);
   ch.on('presence',{event:'join'},checkPresence);
@@ -3273,7 +3290,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();ensureVoicePeer();}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3304,7 +3321,7 @@ function joinRoom(){
  connectToHost(code,false);
 }
 function connectToHost(code,silent){
- if(!sbReady()){setTimeout(function(){connectToHost(code,silent);},800);return;}
+ if(!sbReady()){setTimeout(function(){connectToHost(code,silent);},200);return;}
  netClose();stopPeerMgr();
  clearTimeout(openWatch);
  conn=netCh=makeNetConn(code,false,{
@@ -3329,7 +3346,7 @@ function connectToHost(code,silent){
    else{setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();ensureVoicePeer();}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,1200);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
