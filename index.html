@@ -11,7 +11,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<meta name="version" content="v5-light">
+<meta name="version" content="v6-light">
 <meta http-equiv="Cache-Control" content="no-store">
 <title>⚽ مزاد النجوم</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -533,6 +533,32 @@ body{padding:8px}
 .set-h{font-weight:900;font-size:14px;color:var(--acc);text-align:center;margin-bottom:6px}
 .blind-in-row input{font-size:18px;letter-spacing:2px;text-align:center}
 img{content-visibility:auto}
+
+/* ===== v6: تخفيف أكبر + سلاسة على الجوال ===== */
+html{-webkit-text-size-adjust:100%}
+body{padding:7px;overflow-x:hidden}
+*{animation-duration:.18s!important}
+.salawat,.box-item.pack,.box-item.pack::after,.opp-mic,.hype-spark,.hype-flash,.time.low,.mic-btn.on .mic-dot{animation:none!important}
+.card,.mz-card,.gt-btn,.mode-btn,.diff-btn,.big-btn,.pcard,.chip,.box-item{box-shadow:none!important;text-shadow:none!important}
+.card{background:var(--card);border-radius:14px;padding:12px}
+.pcard{border-radius:12px}
+.big-btn{border-radius:12px;padding:12px 14px;font-size:15px}
+.desc,.blind-hint,.mz-xp{line-height:1.65}
+.scrollable,.tl,#lbList,.squad{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.mz-badge.got{box-shadow:none!important}
+.hype-card{box-shadow:none!important;animation:none!important}
+@media(max-width:520px){
+ body{padding:6px}
+ h1{font-size:18px}
+ h2{font-size:16px}
+ .card{padding:11px;margin-bottom:10px}
+ .desc{font-size:11.5px}
+ .chip{font-size:11px}
+ .big-btn{padding:11px 12px;font-size:14.5px}
+ input,select{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.blind-in-row input{font-size:20px;letter-spacing:3px;text-align:center;font-weight:900;color:var(--gold);-webkit-text-security:none}
 </style>
 </head>
 <body>
@@ -2833,8 +2859,8 @@ function sbClient(){
    - موسم أسبوعي 📅: نقط الموسم بتتصفر كل أسبوع (تصنيف منفصل عن الكلي).
    - مواجهات مباشرة ⚔️: سجل فوز/خسارة/تعادل بينك وبين كل خصم لعبت ضده. */
 /* v2: تصنيف جديد من الصفر (النقط القديمة اتصفرت) */
-var LB_KEY='mz_leaderboard_v2';
-try{localStorage.removeItem('mz_leaderboard_v1');localStorage.removeItem('mz_owner_codes');}catch(e){}
+var LB_KEY='mz_leaderboard_v3';
+try{localStorage.removeItem('mz_leaderboard_v1');localStorage.removeItem('mz_leaderboard_v2');localStorage.removeItem('mz_owner_codes');localStorage.removeItem('mz_names_v1');}catch(e){}
 
 var LB_CH_NAME='mzaida-leaderboard-global';
 var lbCh=null,lbChReady=false,lbTab='all';
@@ -3104,14 +3130,12 @@ function makeNetConn(code,host,opts){
   lastRx=Date.now();netHeartbeat();
   fire('open');
  }
- var ch=c.channel('mzaida-'+code,{config:{broadcast:{self:false,ack:false},presence:{key:myCid}}});
- ch.on('broadcast',{event:'m'},function(m){
-  var p=m&&m.payload;if(!p||dead||busy)return;
-  if(p.c===myCid)return;
-  if(p.f===role)return;/* رسالة من نفس دورنا = دخيل، نتجاهلها */
-  if(bound&&p.c&&p.c!==bound)return;/* رسالة من طرف تالت مش صاحب المقعد */
-  markOpen(p.c);lastRx=Date.now();fire('data',p.d);
- });
+ /* اتصال أقوى: نفس اسم القناة للطرفين + إعادة اشتراك تلقائية عند أي تعطل،
+    ورجوع فوري لما النت يرجع أو التطبيق يفتح تاني */
+ var subRetry=0,recovering=false;
+ var CH_TOPIC='mzaida-'+code;
+ function newChannel(){return c.channel(CH_TOPIC,{config:{broadcast:{self:false,ack:false},presence:{key:myCid}}});}
+ var ch=newChannel();
  function seats(){
   var st={};try{st=ch.presenceState()||{};}catch(e){return null;}
   var mine=[],theirs=[];
@@ -3130,7 +3154,6 @@ function makeNetConn(code,host,opts){
  function checkPresence(){
   if(dead||busy)return;
   var s=seats();if(!s)return;
-  /* لو في حد تاني بنفس الدور ودخل قبلي => المقعد محجوز، أنا دخيل ولازم أخرج */
   if(s.mine.length&&(s.mine[0].t||0)<myT){
    var al=aliveState(s.mine[0]);
    if(al===true){
@@ -3140,11 +3163,10 @@ function makeNetConn(code,host,opts){
     return;
    }
    if(al===null){if(opts.onChecking)opts.onChecking();return;}
-   /* الطرف القديم مش حيّ (خرج بدون إغلاق) — نكمل ونأخد المقعد */
   }
   if(s.theirs.length){
    var partner=s.theirs[0].c;
-   if(bound&&bound!==partner&&opened){/* الطرف اتغيّر */ opened=false;shim.open=false;fire('close');}
+   if(bound&&bound!==partner&&opened){opened=false;shim.open=false;fire('close');}
    bound=partner;
    markOpen(partner);
    if(opts.onPeer)opts.onPeer(partner);
@@ -3153,14 +3175,10 @@ function makeNetConn(code,host,opts){
    if(host&&netCh===shim)conn=shim;
   }
  }
- ch.on('presence',{event:'sync'},checkPresence);
- ch.on('presence',{event:'join'},checkPresence);
- ch.on('presence',{event:'leave'},checkPresence);
- subTimer=setTimeout(function(){if(!dead&&!shim._sub&&opts.onFail)opts.onFail('slow');},9000);
- ch.subscribe(function(status){
+ function onStatus(status){
   if(dead)return;
   if(status==='SUBSCRIBED'){
-   shim._sub=true;clearTimeout(subTimer);
+   shim._sub=true;subRetry=0;recovering=false;clearTimeout(subTimer);
    myT=Date.now();
    try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
    clearInterval(hbInt);
@@ -3169,18 +3187,57 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },4000);
+   },3000);
    if(opts.onReady)opts.onReady(shim);
-   setTimeout(checkPresence,250);
-   setTimeout(checkPresence,1200);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},12000);}
+   setTimeout(checkPresence,200);
+   setTimeout(checkPresence,900);
+   setTimeout(checkPresence,2000);
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},14000);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
-   if(status!=='CLOSED'&&opts.onFail)opts.onFail(status);
+   if(status==='CLOSED'&&!recovering)return;
+   resubscribe(status);
   }
- });
- shim._ch=ch;
- shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearInterval(hbInt);try{ch.untrack();}catch(e){}};
+ }
+ function bindCh(){
+  ch.on('broadcast',{event:'m'},function(m){
+   var p=m&&m.payload;if(!p||dead||busy)return;
+   if(p.c===myCid)return;
+   if(p.f===role)return;
+   if(bound&&p.c&&p.c!==bound)return;
+   markOpen(p.c);lastRx=Date.now();fire('data',p.d);
+  });
+  ch.on('presence',{event:'sync'},checkPresence);
+  ch.on('presence',{event:'join'},checkPresence);
+  ch.on('presence',{event:'leave'},checkPresence);
+ }
+ function resubscribe(reason){
+  if(dead||busy||recovering)return;
+  if(subRetry>=8){if(opts.onFail)opts.onFail(reason||'error');return;}
+  recovering=true;subRetry++;shim._sub=false;
+  var wait=Math.min(4000,400+subRetry*500);
+  setTimeout(function(){
+   if(dead||busy){recovering=false;return;}
+   try{c.removeChannel(ch);}catch(e){}
+   ch=newChannel();shim._ch=ch;bindCh();
+   recovering=false;
+   try{ch.subscribe(onStatus);}catch(e){recovering=false;setTimeout(function(){resubscribe('retry');},1000);}
+  },wait);
+ }
+ bindCh();
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},9000);
+ ch.subscribe(onStatus);
+ /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
+ function wake(){
+  if(dead||busy)return;
+  if(!shim._sub){resubscribe('wake');return;}
+  hbN++;
+  try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
+  checkPresence();
+ }
+ var wakeVis=function(){if(document.visibilityState==='visible')wake();};
+ try{window.addEventListener('online',wake);document.addEventListener('visibilitychange',wakeVis);}catch(e){}
+ shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearInterval(hbInt);try{window.removeEventListener('online',wake);document.removeEventListener('visibilitychange',wakeVis);}catch(e){}try{ch.untrack();}catch(e){}};
  return shim;
 }
 
@@ -3877,8 +3934,8 @@ function renderBlindPanel(){
   var html='<div class="blind-title">🕶️ اكتب سعرك السري لـ '+curStar.flag+' '+curStar.ar+' ('+curStar.r+')</div>';
   html+='<div id="blindTime" class="time'+(CFG.timer>0?'':' hidden')+'"></div>';
   if(canWrite){
-   html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم مخفي وهيتكشف بعد ما الاتنين يقفلوا</div>'+
-   '<div class="custom blind-in-row"><input id="blindIn" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" value="'+blindDraft+'" oninput="blindOnInput(this)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
+   html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم ظاهر لك أنت بس وهيتكشف للخصم بعد ما الاتنين يقفلوا</div>'+
+   '<div class="custom blind-in-row"><input id="blindIn" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" value="'+blindDraft+'" oninput="blindOnInput(this)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
    '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
   }else{
    html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
