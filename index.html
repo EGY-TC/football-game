@@ -2447,7 +2447,7 @@ var PEER_SERVERS=[
 ];
 var peerSrvIdx=parseInt(localStorage.getItem('mz_srv')||'0',10)||0;
 if(peerSrvIdx>=PEER_SERVERS.length)peerSrvIdx=0;
-var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:10,bundlePolicy:'max-bundle',rtcpMuxPolicy:'require'},debug:0,pingInterval:2000,referrerPolicy:'no-referrer'};
+var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:6,bundlePolicy:'max-bundle',rtcpMuxPolicy:'require'},debug:0,pingInterval:2000,referrerPolicy:'no-referrer'};
 /* على شبكات الجوال (خصوصًا خلف NAT مشترك بين المشتركين) أحيانًا الاتصال المباشر بين الجهازين
    يفشل تمامًا حتى لو نجح الاتصال بسيرفر التوصيل؛ الحل هو إجبار المرور عبر خادم TURN فقط (relay) */
 var forceRelay=false;
@@ -2487,12 +2487,12 @@ function makePeer(id,opts){
   if(tries>=MAX){dead=true;if(opts.onFail)opts.onFail(reason);return;}
   bumpPeerServer();
   if(opts.onRetry)opts.onRetry(tries,peerSrvIdx);
-  setTimeout(spawn,150+tries*200);
+  setTimeout(spawn,400+tries*300);
  }
  function spawn(){
   if(dead)return;
   try{pr=id?new Peer(id,PEERCFG):new Peer(PEERCFG);}catch(e){return fail('exception');}
-  openTimer=setTimeout(function(){fail('timeout');},4500);
+  openTimer=setTimeout(function(){fail('timeout');},7000);
   pr.on('open',function(){clearTimeout(openTimer);if(opts.onOpen)opts.onOpen(pr);});
   pr.on('connection',function(c){if(opts.onConn)opts.onConn(c);});
   pr.on('disconnected',function(){if(!dead){try{pr.reconnect();}catch(e){}}});
@@ -2551,6 +2551,7 @@ function toggleMic(){
   localStream.getAudioTracks().forEach(function(t){t.enabled=true;});
   micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
   try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
+  if(!peer)ensureVoicePeer();
   startCallIfPossible();
   return;
  }
@@ -2558,6 +2559,7 @@ function toggleMic(){
  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
   localStream=stream;micOn=true;updateMicBtn();toast('🎤 المايك شغال — اتكلم مع خصمك!');
   try{if(conn&&conn.open)conn.send({type:'mic',on:true});}catch(e){}
+  if(!peer)ensureVoicePeer();
   startCallIfPossible();
  }).catch(function(){toast('تعذر الوصول للمايك — تأكد من إذن المتصفح للموقع');});
 }
@@ -2891,17 +2893,18 @@ function sbReady(){return !!sbLib();}
 function sbClient(){
  if(sbc)return sbc;
  var L=sbLib();if(!L)return null;
- sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:60}}});
+ sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:20}}});
  return sbc;
 }
 /* تسخين السوكِت من أول ما الصفحة تفتح: كده لما تدوس اتصال بيبقى الاتصال جاهز فورًا */
+/* لا نفتح اتصال Realtime عند فتح الموقع فقط؛ الاتصال يبدأ عند دخول غرفة/لوبي.
+   هذا يمنع كل زائر للموقع من استهلاك اتصال سيرفر وهو لا يلعب. */
 var sbWarmT=null;
 function sbWarm(){
  var c=sbClient();
- if(!c){sbWarmT=setTimeout(sbWarm,300);return;}
+ if(!c)return;
  try{if(c.realtime&&!c.realtime.isConnected())c.realtime.connect();}catch(e){}
 }
-try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')sbWarm();});}catch(e){}
 /* ========= تصنيف المتصدرين (Leaderboard) =========
    كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط.
    ما بيحتاجش أي إعداد أو جدول تعمله بنفسك: النقط بتتخزن على جهازك
@@ -3153,7 +3156,7 @@ function netClose(){
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},8000);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
@@ -3246,7 +3249,7 @@ function makeNetConn(code,host,opts){
      if(s2&&s2.theirs.length){checkPresence();return;}
      opened=false;shim.open=false;fire('close');
      if(host&&netCh===shim)conn=shim;
-    },3000);
+    },8000);
    }
   }
  }
@@ -3262,7 +3265,7 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },3000);
+   },8000);
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
@@ -3274,7 +3277,7 @@ function makeNetConn(code,host,opts){
    setTimeout(checkPresence,550);
    setTimeout(checkPresence,850);
    setTimeout(checkPresence,1200);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},5000);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3361,7 +3364,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
+ if(conn){wireConn();}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3371,7 +3374,7 @@ function ensureVoicePeer(){
  stopPeerMgr();
  peerMgr=makePeer(null,{
   onSpawn:function(pr){peer=pr;wireVoiceOnPeer(pr);},
-  onOpen:function(pr){try{if(conn&&conn.open)conn.send({type:'peerid',id:pr.id});}catch(e){}},
+  onOpen:function(pr){try{if(conn&&conn.open)conn.send({type:'peerid',id:pr.id});}catch(e){};setTimeout(startCallIfPossible,50);},
   onFail:function(){},onError:function(){}
  });
 }
@@ -3404,7 +3407,7 @@ function connectToHost(code,silent){
   setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
   toast('❌ الغرفة مش متاحة');
   show('room');
- },4000);}
+ },10000);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3419,7 +3422,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},120);return;}
+   if(joinAttemptTries<3){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/3)');setTimeout(function(){connectToHost(code,true);},500*joinAttemptTries);return;}
    try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    clearTimeout(joinHardTimer);
    setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
@@ -3429,7 +3432,7 @@ function connectToHost(code,silent){
    else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
+ if(conn){wireConn();}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3578,7 +3581,7 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*Math.pow(1.7,rejoinTries-1),5000));
 }
 function wireConn(){
  conn.on('open',function(){
@@ -3607,14 +3610,14 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},8000);
  clearInterval(watchdog);
  var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2500&&Date.now()-lastSyncReq>1500){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>9000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>30000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
@@ -3666,7 +3669,7 @@ function handleData(d){
  else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
  else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
- else if(d.type==='T'&&!isHost){if(typeof d.t==='number'&&d.t>=0){timeLeft=d.t;renderTimerBar();}}
+ else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
