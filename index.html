@@ -528,7 +528,18 @@ label{font-size:12.5px;letter-spacing:.2px}
 <button class="gt-btn" id="gt1" onclick="pickGameType('boxes')"><span class="gt-ic">🎁</span><span class="gt-nm">صناديق الحظ</span><span class="gt-sub">اختر لاعبك من 4 صناديق لكل مركز</span></button>
 <button class="gt-btn" id="gt2" onclick="pickGameType('transferprice')"><span class="gt-ic">💰</span><span class="gt-nm">راجع سعرك</span><span class="gt-sub">خمّن سعر انتقال اللاعب الحقيقي</span></button>
 </div>
-<label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames()">
+<label>اسمك (إجباري)</label><input id="name1" placeholder="اكتب اسمك" oninput="saveNames();$('nameCodeBox').classList.add('hidden');$('name1').classList.remove('err-input')">
+<div id="nameCodeBox" class="hidden" style="background:var(--card2);border:1px solid var(--gold);border-radius:10px;padding:10px;margin:6px 0;font-size:12.5px">
+ <div id="nameCodeAsk" class="hidden">
+  <div style="color:var(--gold);font-weight:800;margin-bottom:6px">🔑 الاسم ده مسجل قبل كده — اكتب كود الملكية بتاعك (4 أرقام)</div>
+  <input id="nameCodeInput" maxlength="4" inputmode="numeric" placeholder="مثال: 4821" style="text-align:center;letter-spacing:4px;font-size:18px">
+ </div>
+ <div id="nameCodeShow" class="hidden">
+  <div style="color:var(--gold);font-weight:800;margin-bottom:4px">🎉 أول مرة تستخدم الاسم ده! كود ملكيتك هو:</div>
+  <div id="nameCodeVal" style="text-align:center;letter-spacing:6px;font-size:22px;font-weight:900;color:var(--gold)"></div>
+  <div style="color:var(--dim);margin-top:4px">احفظ الكود ده — هتحتاجه لو دخلت بنفس الاسم من جهاز تاني</div>
+ </div>
+</div>
 <label>اسم اللاعب الثاني (نفس الجهاز)</label><input id="name2" placeholder="اكتب الاسم" oninput="saveNames()">
 <div class="modes">
 <button class="mode-btn hidden" id="mb4" onclick="pickMode(4)"><span class="ic">🧍</span>سولو (لوحدك)</button>
@@ -2605,21 +2616,98 @@ function pickGameType(t){
   $('gameDesc').innerHTML='7 جولات — كل جولة هتشوف لاعب وانتقاله الحقيقي (من نادي لنادي)، وكل واحد يكتب توقعه لقيمة الصفقة بالمليون يورو سرًا.<br>محدش بيشوف رقم التاني إلا بعد ما الاتنين يقفلوا توقعاتهم.<br>أقرب توقع للسعر الحقيقي ياخد نقطة الجولة — وصاحب أكبر عدد نقاط بعد 7 جولات هو البطل!';
  }
 }
-function nameTaken(n){
+function genOwnerCode(){return String(Math.floor(1000+Math.random()*9000));}
+function myOwnerCodes(){
+ try{return JSON.parse(localStorage.getItem('mz_owner_codes')||'{}');}catch(e){return {};}
+}
+function saveMyOwnerCode(name,code){
+ try{var m=myOwnerCodes();m[name]=code;localStorage.setItem('mz_owner_codes',JSON.stringify(m));}catch(e){}
+}
+/* بيتأكد إن الاسم متاح للاستخدام. يرجع:
+   {ok:true} = تمام كمّل
+   {ok:false,needCode:true} = الاسم موجود ومحتاج كود ملكية
+   {ok:false,showCode:'1234'} = اسم جديد، لسه هيتسجل بكود جديد */
+function checkNameOwnership(n){
  try{
-  var mine=localStorage.getItem('mz_name1_owned')||'';
-  if(mine&&mine===n)return false; /* ده اسمك انت المسجل عندك، مسموح تكمل بيه */
   var tbl=lbLoad();
-  return !!tbl[n];
+  var row=tbl[n];
+  var mine=myOwnerCodes();
+  if(!row){
+   /* اسم جديد خالص - هنسجله بكود جديد */
+   var code=mine[n]||genOwnerCode();
+   return {ok:false,showCode:code};
+  }
+  /* الاسم موجود - لازم كود صحيح */
+  if(mine[n]&&row.ownerCode&&mine[n]===row.ownerCode)return {ok:true};
+  if(!row.ownerCode){
+   /* صف قديم من قبل نظام الكود - نديله كود دلوقتي ونعتبره ملك أول واحد يدخل بيه */
+   return {ok:true,assignCode:genOwnerCode()};
+  }
+  return {ok:false,needCode:true};
+ }catch(e){return {ok:true};}
+}
+function verifyEnteredCode(n,entered){
+ try{
+  var tbl=lbLoad();var row=tbl[n];
+  if(!row||!row.ownerCode)return false;
+  return String(entered).trim()===String(row.ownerCode);
  }catch(e){return false;}
 }
+function registerNewName(n,code){
+ try{
+  var tbl=lbLoad();
+  if(!tbl[n])tbl[n]=lbFreshRow(n,code);
+  else if(!tbl[n].ownerCode)tbl[n].ownerCode=code;
+  lbSave(tbl);
+  saveMyOwnerCode(n,code);
+  lbEnsureChannel();
+  setTimeout(function(){lbBroadcastRow(n);},300);
+ }catch(e){}
+}
+var pendingNameCheck=null; /* بيبقى فيه {name, action} لحد ما نتأكد من الكود */
 function pickMode(m){
  try{
   var n1=$('name1').value.trim();
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
-  if(nameTaken(n1)){setErr('⚠️ الاسم ده مستخدم قبل كده — اكتب اسم مختلف');$('name1').classList.add('err-input');$('name1').focus();return;}
+  var chk=checkNameOwnership(n1);
+  if(chk.needCode){
+   var entered=$('nameCodeInput').value.trim();
+   if(!entered){
+    $('nameCodeBox').classList.remove('hidden');
+    $('nameCodeAsk').classList.remove('hidden');
+    $('nameCodeShow').classList.add('hidden');
+    setErr('⚠️ اكتب كود الملكية عشان تكمل بنفس الاسم');
+    $('nameCodeInput').focus();
+    return;
+   }
+   if(!verifyEnteredCode(n1,entered)){
+    $('nameCodeBox').classList.remove('hidden');
+    $('nameCodeAsk').classList.remove('hidden');
+    $('nameCodeShow').classList.add('hidden');
+    setErr('⚠️ الكود غلط — جرّب تاني أو اكتب اسم مختلف');
+    $('nameCodeInput').classList.add('err-input');$('nameCodeInput').focus();
+    return;
+   }
+   saveMyOwnerCode(n1,entered);
+   $('nameCodeBox').classList.add('hidden');
+  }else if(chk.showCode){
+   registerNewName(n1,chk.showCode);
+   $('nameCodeBox').classList.remove('hidden');
+   $('nameCodeAsk').classList.add('hidden');
+   $('nameCodeShow').classList.remove('hidden');
+   $('nameCodeVal').textContent=chk.showCode;
+   if(!pendingNameCheck||pendingNameCheck.name!==n1){
+    pendingNameCheck={name:n1,mode:m};
+    setErr('✅ احفظ الكود اللي فوق، وبعدين دوس على الزرار تاني عشان تكمل');
+    return;
+   }
+  }else if(chk.assignCode){
+   registerNewName(n1,chk.assignCode);
+   $('nameCodeBox').classList.add('hidden');
+  }else{
+   $('nameCodeBox').classList.add('hidden');
+  }
   $('name1').classList.remove('err-input');
-  try{if(!localStorage.getItem('mz_name1_owned'))localStorage.setItem('mz_name1_owned',n1);}catch(e){}
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
   if(m===2&&$('name2').value.trim()===n1){setErr('⚠️ لازم اسم اللاعب الثاني يكون مختلف عن اسمك');$('name2').classList.add('err-input');$('name2').focus();return;}
   if(m===4&&gameType!=='transferprice'){setErr('⚠️ وضع السولو متاح فقط في لعبة راجع سعرك');return;}
@@ -2732,8 +2820,8 @@ function lbLoad(){
 function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
-function lbFreshRow(name){
- return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{}};
+function lbFreshRow(name,ownerCode){
+ return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{},ownerCode:ownerCode||''};
 }
 /* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟ + اسم الخصم) جوه الجدول المحلي.
    pts ممكن تكون سالبة (خسارة) — بنمنع رصيد اللاعب إنه ينزل تحت الصفر.
