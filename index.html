@@ -3101,7 +3101,7 @@ function netClose(){
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},1500);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
@@ -3116,7 +3116,7 @@ function makeNetConn(code,host,opts){
   if(!g){seen[k]={n:e.n||0,since:now,live:false};return null;}
   if((e.n||0)!==g.n){g.n=e.n||0;g.live=true;}
   if(g.live)return true;
-  if(now-g.since>9000)return false;
+  if(now-g.since>5000)return false;
   return null;
  }
  function fire(e,a){var l=H[e]||[];for(var i=0;i<l.length;i++){try{l[i](a);}catch(_){}}}
@@ -3195,19 +3195,20 @@ function makeNetConn(code,host,opts){
     hbN++;
     try{ch.track({r:role,c:myCid,t:myT,n:hbN});}catch(e){}
     checkPresence();
-   },3000);
+   },1500);
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},250);
-   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},700);
+   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},120);
+   setTimeout(function(){if(!opened)try{shim.send({type:'__hs',r:role});}catch(e){}},350);
    checkPresence();
-   setTimeout(checkPresence,80);
-   setTimeout(checkPresence,300);
+   setTimeout(checkPresence,40);
+   setTimeout(checkPresence,150);
+   setTimeout(checkPresence,350);
    setTimeout(checkPresence,700);
-   setTimeout(checkPresence,1400);
-   setTimeout(checkPresence,2500);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},14000);}
+   setTimeout(checkPresence,1200);
+   setTimeout(checkPresence,1800);
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},3500);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    if(status==='CLOSED'&&!recovering)return;
@@ -3232,7 +3233,7 @@ function makeNetConn(code,host,opts){
   if(dead||busy||recovering)return;
   if(subRetry>=8){if(opts.onFail)opts.onFail(reason||'error');return;}
   recovering=true;subRetry++;shim._sub=false;
-  var wait=Math.min(4000,400+subRetry*500);
+  var wait=Math.min(2000,250+subRetry*300);
   setTimeout(function(){
    if(dead||busy){recovering=false;return;}
    try{c.removeChannel(ch);}catch(e){}
@@ -3242,7 +3243,7 @@ function makeNetConn(code,host,opts){
   },wait);
  }
  bindCh();
- subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},9000);
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},5000);
  ch.subscribe(onStatus);
  /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
  function wake(){
@@ -3338,7 +3339,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/2)');setTimeout(function(){connectToHost(code,true);},1000);return;}
+   if(joinAttemptTries<1){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},300);return;}
    setStatus('الغرفة غير موجودة أو أُغلقت — تأكد من الرمز مع صاحب الغرفة');show('room');
   },
   onFail:function(){
@@ -3492,7 +3493,7 @@ function scheduleRejoin(){
  if(rejoinTries===2)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(800*rejoinTries,4000));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(500*rejoinTries,2000));
 }
 function wireConn(){
  conn.on('open',function(){
@@ -3519,19 +3520,19 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},1200);
  clearInterval(watchdog);
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000){try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>9000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2500){try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>6000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
   }
- },3000);
+ },1500);
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
