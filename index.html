@@ -223,6 +223,16 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .lb-close-fixed h2{margin:0}
 .lb-x{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;width:34px;height:34px;font-size:16px;font-weight:900;cursor:pointer;flex-shrink:0}
 .promo-banner{background:rgba(177,74,255,.12);border:1px solid var(--purple);border-radius:12px;padding:10px;margin-bottom:10px;text-align:center;font-weight:900;color:#d2a8ff;font-size:13px}
+.hype-wrap{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.hype-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(210,153,34,.45),rgba(0,0,0,0) 60%);animation:hypeFlash 1.6s ease-out forwards}
+@keyframes hypeFlash{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+.hype-card{position:relative;background:linear-gradient(160deg,#2a2410,#3d3313 45%,#1b1a12);border:2px solid var(--gold);border-radius:18px;padding:16px 22px;text-align:center;box-shadow:0 0 40px rgba(210,153,34,.6);animation:hypePop 1.8s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes hypePop{0%{transform:scale(.4) rotate(-8deg);opacity:0}18%{transform:scale(1.12) rotate(2deg);opacity:1}35%{transform:scale(1) rotate(0)}80%{transform:scale(1);opacity:1}100%{transform:scale(.92);opacity:0}}
+.hype-card .hy-t{font-weight:900;font-size:20px;color:var(--gold);text-shadow:0 0 12px rgba(210,153,34,.8)}
+.hype-card .hy-s{font-weight:800;font-size:14px;color:var(--txt);margin-top:6px}
+.hype-spark{position:absolute;top:-12px;font-size:18px;animation:hypeFall linear forwards}
+@keyframes hypeFall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:.1}}
+.prot-warn{background:rgba(248,81,73,.12);border:1px solid var(--red);color:var(--red);border-radius:12px;padding:8px 10px;font-size:12.5px;font-weight:800;text-align:center;margin:8px 0;line-height:1.7}
 .rematch-box{background:var(--card2);border:1px solid var(--gold);border-radius:14px;padding:12px;margin-top:10px;text-align:center}
 .rematch-box .rt-title{font-weight:900;color:var(--gold);font-size:14px;margin-bottom:8px}
 .onb-tip{background:rgba(88,166,255,.1);border:1px solid var(--blue);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--blue);font-weight:700;line-height:1.8;display:flex;gap:8px;align-items:flex-start}
@@ -622,7 +632,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
 </div>
 </div>
-<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p>تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
+<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
@@ -681,6 +691,39 @@ label{font-size:12.5px;letter-spacing:.2px}
 <script>
 window.addEventListener('error',function(e){try{toast('خطأ: '+e.message);}catch(_){}});
 function $(id){return document.getElementById(id);}
+function hypeFx(title,sub){
+ try{
+  var w=document.createElement('div');w.className='hype-wrap';
+  var f=document.createElement('div');f.className='hype-flash';w.appendChild(f);
+  var c=document.createElement('div');c.className='hype-card';
+  c.innerHTML='<div class="hy-t">'+title+'</div>'+(sub?'<div class="hy-s">'+sub+'</div>':'');
+  w.appendChild(c);
+  var ic=['✨','⭐','🔥','🏆','💫','🎉'];
+  for(var i=0;i<26;i++){
+   var sp=document.createElement('span');sp.className='hype-spark';
+   sp.textContent=ic[Math.floor(Math.random()*ic.length)];
+   sp.style.left=(Math.random()*100)+'%';
+   sp.style.animationDuration=(1.1+Math.random()*1.3)+'s';
+   sp.style.animationDelay=(Math.random()*0.5)+'s';
+   sp.style.fontSize=(13+Math.random()*16)+'px';
+   w.appendChild(sp);
+  }
+  document.body.appendChild(w);
+  try{sfxRaise();}catch(e){}
+  setTimeout(function(){if(w.parentNode)w.parentNode.removeChild(w);},2600);
+ }catch(e){}
+}
+function mySeatNow(){return online?mySeat:0;}
+function hypePlayer(seat,pl){
+ if(!pl)return;
+ if(mode!==2&&seat!==mySeatNow())return;
+ if(pl.r>=88)hypeFx('🏆 كارت أسطوري!',pl.flag+' '+pl.ar+' — تقييم '+pl.r);
+ else if(pl.r>=85)hypeFx('⭐ كارت جولد!',pl.flag+' '+pl.ar+' — تقييم '+pl.r);
+}
+function hypeCard(seat,lbl){
+ if(mode!==2&&seat!==mySeatNow())return;
+ hypeFx('🃏 كسبت كارت خاص!',lbl);
+}
 function toast(t){var el=$('toast');if(!el)return;el.textContent=t;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},2800);}
 
 /* ========= مؤثرات صوتية (WebAudio — بدون ملفات خارجية) ========= */
@@ -776,7 +819,16 @@ function sendRematchChallenge(loserName,winnerName,scoreText){
    ونوع اللعبة، جاهز يبدأ مباشرة من غير ما يعيد كتابة أي حاجة */
 function quickRematch(){
  clearInterval(timerInt);
- if(online){leaveHome();return;}
+ if(online){
+  if(conn&&conn.open){
+   started=false;ovH='';ovG='';endH='';cardFlow=null;
+   try{conn.send({type:'rematch'});}catch(e){}
+   if(isHost){show('settings');toast('🔁 نفس الخصم لسه متصل — ظبط الإعدادات واضغط ابدأ');}
+   else{show('wait');var w=$('waitTxt');if(w)w.innerHTML='🔁 جولة جديدة مع نفس الخصم<br>بانتظار المضيف يبدأ…';toast('🔁 بانتظار المضيف يبدأ جولة جديدة');}
+   return;
+  }
+  leaveHome();return;
+ }
  started=false;show('settings');
 }
 
@@ -2767,6 +2819,18 @@ function randomCards(){
  return c;
 }
 function defaultCards(){return gameType==='boxes'?{steal:0,protect:0}:randomCards();}
+/* لا يجوز إن الاتنين يبقى معاهم كارت سرقة/تبديل في نفس الجيم */
+function balanceCards(arr){
+ if(!arr||arr.length<2)return arr;
+ ensureCards(arr[0]);ensureCards(arr[1]);
+ if((arr[0].cards.steal||0)>0&&(arr[1].cards.steal||0)>0){
+  var s=Math.random()<0.5?0:1;
+  arr[s].cards.steal=0;
+  var alts=['protect','wild','norisk','gift'].filter(function(k){return !arr[s].cards[k];});
+  if(alts.length)arr[s].cards[shuffle(alts)[0]]=1;
+ }
+ return arr;
+}
 function mkP(n){return{name:n,budget:CFG.budget,squad:[],spent:0,cards:defaultCards()};}
 function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
@@ -3448,6 +3512,11 @@ function handleData(d){
  else if(d.type==='start'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,pool:pool,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
+ else if(d.type==='rematch'){
+  clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
+  if(isHost){show('settings');toast('🔁 '+(guestName||'الخصم')+' عايز يلعب تاني — ابدأ الجولة الجديدة');}
+  else{show('wait');var wt=$('waitTxt');if(wt)wt.innerHTML='🔁 جولة جديدة مع نفس الخصم<br>بانتظار المضيف يبدأ…';toast('🔁 المضيف بيجهّز جولة جديدة');}
+ }
  else if(d.type==='chat'){addChat(P[d.from]?P[d.from].name:'؟',d.t);}
  else if(d.type==='peerid'){oppPeerId=d.id;if(micOn&&localStream)startCallIfPossible();}
  else if(d.type==='mic'){
@@ -3537,7 +3606,7 @@ function startFromSettings(){
   if(deckOrNull)tpDeck=deckOrNull;
   if(online&&isHost){
    if(!conn||!conn.open){toast('لا يوجد خصم متصل بعد');btn.disabled=false;btn.textContent=prevTxt;return;}
-   P=[mkP(myName()),mkP(guestName||'الخصم')];
+   P=balanceCards([mkP(myName()),mkP(guestName||'الخصم')]);
    if(isAuctionLike()){var bs=balancedStars();stars=bs.stars;pool=bs.pool;}
    else if(isTP){stars=[];pool=[];}
    else{stars=[];pool=[];boxUsedSet={};}
@@ -3547,7 +3616,7 @@ function startFromSettings(){
    btn.disabled=false;btn.textContent=prevTxt;
    initGame();
   }else{
-   P=(mode===4)?[mkP(myName())]:[mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))];
+   P=(mode===4)?[mkP(myName())]:balanceCards([mkP(myName()),mkP(mode===1?($('name2').value.trim()||'الحاسوب'):($('name2').value.trim()||'اللاعب الثاني'))]);
    if(isAuctionLike()){var bs2=balancedStars();stars=bs2.stars;pool=bs2.pool;}
    else if(isTP){stars=[];pool=[];}
    else{stars=[];pool=[];boxUsedSet={};}
@@ -3740,7 +3809,7 @@ function humanBlindLock(seat){
  if(phase!=='blind')return;
  var el=$('blindIn');if(!el)return;
  var v=parseInt(el.value,10);
- if(isNaN(v)||v<0){toast('اكتب مبلغ صحيح بالمليون (0 أو أكتر)');return;}
+ if(el.value.trim()===''||isNaN(v)||v<0){toast('اكتب مبلغ صحيح بالمليون (0 أو أكتر)');try{el.focus();}catch(e){}return;}
  if(v>blindMax(seat)){toast('المبلغ أكبر من ميزانيتك ('+fmt(blindMax(seat))+')');return;}
  el.value='';
  try{sfxCard();}catch(e){}
@@ -3774,6 +3843,7 @@ function revealBlind(){
  var rp=pickRandom(g)||{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:75};
  P[passer].squad.push(rp);
  if(win===(online?mySeat:0)&&s.r>=85)mzEvent('star');
+ hypePlayer(win,s);
  log('🕶️ '+P[win].name+' كسب '+s.ar+' بعرض '+fmt(price)+' — '+P[passer].name+' عرض '+fmt(win===0?b1:b0)+' وحصل على '+rp.ar);
  var tie=(b0===b1);
  var content='<h2>🕶️ نتيجة الجولة '+(round+1)+'</h2>'+
@@ -3802,17 +3872,31 @@ function renderBlindPanel(){
   $('team'+i).classList.toggle('turn',!blindLocked[i]);
  }
  var actSeat=(mode===3?mySeat:(mode===1?0:(blindLocked[0]?1:0)));
- var html='<div class="blind-title">🕶️ اكتب سعرك السري لـ '+curStar.flag+' '+curStar.ar+' ('+curStar.r+')</div>';
- if(CFG.timer>0)html+='<div class="time'+(timeLeft<=5?' low':'')+'">⏱️ '+Math.max(0,timeLeft)+' ثانية</div>';
- if(!blindLocked[actSeat]&&(mode!==1||actSeat===0)){
-  html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم مخفي وهيتكشف بعد ما الاتنين يقفلوا</div>'+
-  '<div class="custom"><input id="blindIn" type="password" inputmode="numeric" autocomplete="off" placeholder="مبلغ بالمليون (سري)"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
-  '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
- }else{
-  html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
+ var canWrite=(!blindLocked[actSeat]&&(mode!==1||actSeat===0));
+ /* توقيع الحالة: منعيد بناء اللوحة بس لما الحالة تتغيّر — عشان خانة السعر ماتتمسحش وانت بتكتب */
+ var sig=[curStar.en,round,blindLocked[0]?1:0,blindLocked[1]?1:0,actSeat,canWrite?1:0,P[actSeat].budget].join('|');
+ if(bp._blindSig!==sig||!bp.firstChild){
+  var html='<div class="blind-title">🕶️ اكتب سعرك السري لـ '+curStar.flag+' '+curStar.ar+' ('+curStar.r+')</div>';
+  html+='<div id="blindTime" class="time'+(CFG.timer>0?'':' hidden')+'"></div>';
+  if(canWrite){
+   html+='<div class="blind-who">دور: <b>'+P[actSeat].name+'</b> — الرقم مخفي وهيتكشف بعد ما الاتنين يقفلوا</div>'+
+   '<div class="custom"><input id="blindIn" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="مبلغ بالمليون (سري)" onkeydown="if(event.key===\'Enter\'){humanBlindLock('+actSeat+');}"><button onclick="humanBlindLock('+actSeat+')">🔒 اقفل عرضك</button></div>'+
+   '<div class="blind-hint">ميزانيتك المتبقية: <b>'+fmt(P[actSeat].budget)+'</b> — أعلى عرض ياخد النجم ويدفع رقمه، والتاني ياخد لاعب عشوائي من نفس المركز.</div>';
+  }else{
+   html+='<div class="blind-who">✅ عرضك اتقفل — بانتظار الخصم…</div>';
+  }
+  html+='<div class="blind-status" id="blindStat"></div>';
+  bp.innerHTML=html;bp._blindSig=sig;
+  var inp=$('blindIn');
+  if(inp){try{inp.focus({preventScroll:true});}catch(e){}}
  }
- html+='<div class="blind-status">'+[0,1].map(function(i){return '<span class="chip">'+(blindLocked[i]?'🔒 قفل':'⏳ بيفكر')+' — '+P[i].name+'</span>';}).join(' ')+'</div>';
- bp.innerHTML=html;
+ var tEl=$('blindTime');
+ if(tEl){
+  if(CFG.timer>0){tEl.className='time'+(timeLeft<=5?' low':'');tEl.textContent='⏱️ '+Math.max(0,timeLeft)+' ثانية';}
+  else tEl.className='time hidden';
+ }
+ var stEl=$('blindStat');
+ if(stEl)stEl.innerHTML=[0,1].map(function(i){return '<span class="chip">'+(blindLocked[i]?'🔒 قفل':'⏳ بيفكر')+' — '+P[i].name+'</span>';}).join(' ');
  $('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
  if(view==='squads')renderSquads();
 }
@@ -3933,9 +4017,10 @@ function drawBoxPlayers(pos,n){
 }
 var boxCardPlan=[{steal:-1,protect:-1},{steal:-1,protect:-1}];
 function planBoxCardsOnce(){
+ var stealSeat=Math.random()<0.5?0:1;
  for(var s=0;s<2;s++){
   var idx=shuffle([0,1,2,3,4]);
-  boxCardPlan[s]={steal:idx[0],protect:idx[1]};
+  boxCardPlan[s]=(s===stealSeat)?{steal:idx[0],protect:idx[1]}:{steal:-1,protect:idx[0]};
  }
 }
 function attachBonusCard(seat,arr){
@@ -4037,6 +4122,13 @@ function finalizeBoxPos(){
  var bonusLine0='',bonusLine1='';
  if(s0.bonusCard){ensureCards(P[0]);P[0].cards[s0.bonusCard]=(P[0].cards[s0.bonusCard]||0)+1;var lbl0=s0.bonusCard==='steal'?'🔁 كارت تبديل':'🛡️ كارت حماية';log(P[0].name+' كسب '+lbl0+' من الصندوق!');bonusLine0='<div style="font-size:12px;color:var(--gold);font-weight:900;margin-top:4px">+ '+lbl0+' 🎉</div>';}
  if(s1.bonusCard){ensureCards(P[1]);P[1].cards[s1.bonusCard]=(P[1].cards[s1.bonusCard]||0)+1;var lbl1=s1.bonusCard==='steal'?'🔁 كارت تبديل':'🛡️ كارت حماية';log(P[1].name+' كسب '+lbl1+' من الصندوق!');bonusLine1='<div style="font-size:12px;color:var(--gold);font-weight:900;margin-top:4px">+ '+lbl1+' 🎉</div>';}
+ setTimeout(function(){
+  var me2=mySeatNow();
+  var mine=(me2===0?s0:s1),oth=(me2===0?s1:s0);
+  if(mode===2){hypePlayer(0,s0);setTimeout(function(){hypePlayer(1,s1);},600);}
+  else hypePlayer(me2,mine);
+  if(mine&&mine.bonusCard)setTimeout(function(){hypeCard(me2,mine.bonusCard==='steal'?'🔁 كارت التبديل':'🛡️ كارت الحماية');},700);
+ },250);
  var content='<h2>'+BOX_LBL[BOX_POS[boxRound]]+'</h2><div class="reveal">'+
  '<div>'+pcardHTML(s0,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--gold)">'+P[0].name+'</b></div>'+bonusLine0+'</div>'+
  '<div>'+pcardHTML(s1,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--blue)">'+P[1].name+'</b></div>'+bonusLine1+'</div></div>';
@@ -4316,16 +4408,7 @@ function aiPostCards(){
     if(poolAvgGroup(posGroup(wp))>wp.r+0.5)applyPostCard(1,'wild',wi);
    }
   }
-  /* 2) كارت التبديل: يدي أضعف لاعب وياخد أقوى لاعب من الخصم */
-  if(P[1].cards.steal>0&&priceOK(1,'steal')){
-   var ti=bestUnprotected(0),mj=weakestUnprotected(1);
-   if(ti>=0&&mj>=0){
-    var gain=P[0].squad[ti].r-P[1].squad[mj].r;
-    var worth=gameType==='boxes'?1:(behind>0?2:5);
-    if(gain>=worth)applyPostCard(1,'steal',ti,mj);
-   }
-  }
-  /* 3) الحماية: يحمي أقوى لاعب عنده (بعد التبديل) */
+  /* 2) الحماية الأول: يحمي أقوى لاعب عنده قبل أي تبديل */
   if(P[1].cards.protect>0&&P[1].squad.length&&priceOK(1,'protect')){
    var bi=0,br=0;P[1].squad.forEach(function(p,i){if(p.r>br){br=p.r;bi=i;}});
    applyPostCard(1,'protect',bi);
@@ -4337,8 +4420,33 @@ function aiPostCards(){
   }
   /* 5) لبّس صاحبك: يقلل متوسط الخصم لو فاضل فلوس */
   if(P[1].cards.gift>0&&priceOK(1,'gift')&&pool.length&&P[1].budget>=CARD_PRICES.gift+10)applyPostCard(1,'gift',0);
-  markReady(1);
+  /* 6) كارت التبديل: بعد ما الخصم يحمي لاعبه (بيستنى لحد ما يخلص) */
+  aiTrySteal(0);
  },1100);
+}
+/* لو الخصم معاه كارت حماية ولسه ماستخدمهوش — صاحب كارت السرقة/التبديل لازم يستنى */
+function oppProtectPending(actor){
+ var o=1-actor;
+ if(!P[o])return false;
+ ensureCards(P[o]);
+ if(cardsReady[o])return false;
+ if((P[o].cards.protect||0)<1)return false;
+ return P[o].squad.some(function(p){return !p.protected;});
+}
+var STEAL_WAIT_MSG='⏳ استنى شوية — الخصم معاه 🛡️ كارت حماية ولسه ما حماش لاعبه. أول ما يخلص هتقدر تستخدم كارت التبديل/السرقة.';
+function aiTrySteal(tries){
+ if(phase!=='postcards')return;
+ if(P[1].cards.steal>0&&priceOK(1,'steal')){
+  if(oppProtectPending(1)&&tries<40){setTimeout(function(){aiTrySteal(tries+1);},700);return;}
+  var behind2=teamPower(0)-teamPower(1);
+  var ti=bestUnprotected(0),mj=weakestUnprotected(1);
+  if(ti>=0&&mj>=0){
+   var gain=P[0].squad[ti].r-P[1].squad[mj].r;
+   var worth=gameType==='boxes'?1:(behind2>0?2:5);
+   if(gain>=worth)applyPostCard(1,'steal',ti,mj);
+  }
+ }
+ markReady(1);
 }
 function priceOK(actor,c){var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);return price<=P[actor].budget;}
 function markReady(seat){
@@ -4352,6 +4460,7 @@ function selectCard(c){
  if(!cardFlow)return;
  ensureCards(P[cardFlow.actor]);
  if(P[cardFlow.actor].cards[c]<1)return toast('الكارت ده اتستخدم خلاص');
+ if(c==='steal'&&oppProtectPending(cardFlow.actor))return toast(STEAL_WAIT_MSG);
  var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);
  if(price>P[cardFlow.actor].budget)return toast('ميزانيتك المتبقية لا تكفي لشراء هذا الكارت ('+fmt(price)+')');
  cardFlow.card=c;cardFlow.sel=-1;cardFlow.sel2=-1;render();
@@ -4386,6 +4495,11 @@ function applyCard(actor,c,i,j){
   P[actor].cards.protect=0;P[actor].budget-=price;P[actor].spent+=price;P[actor].squad[i].protected=true;
   log('🛡️ '+P[actor].name+' حمى '+P[actor].squad[i].ar+(price?' (مقابل '+fmt(price)+')':''));
  }else if(c==='steal'){
+  if(oppProtectPending(actor)){
+   if(online&&isHost&&actor===1){try{conn&&conn.open&&conn.send({type:'sys',t:STEAL_WAIT_MSG});}catch(e){}}
+   else toast(STEAL_WAIT_MSG);
+   return false;
+  }
   if(!P[other].squad[i]||P[other].squad[i].protected)return false;
   var mineP=P[actor].squad[j];
   if(!mineP||mineP.protected)return false;
@@ -4461,6 +4575,7 @@ function resolveRound(win,passer){
  var rp=pickRandom(g)||{ar:'لاعب مجهول',en:'',pos:'CM',flag:'❓',club:'—',r:75};
  P[passer].squad.push(rp);
  if(win===(online?mySeat:0)&&s.r>=85)mzEvent('star');
+ hypePlayer(win,s);
  log(P[win].name+' ضمّ '+s.ar+' مقابل '+fmt(price)+' — '+P[passer].name+' حصل على '+rp.ar+' ('+GLBL[g]+')');
  var content='<h2>نتيجة الجولة '+(round+1)+'</h2><div class="reveal">'+
  '<div>'+pcardHTML(s,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
@@ -4642,6 +4757,8 @@ function renderPostCardsOverlay(){
    }
    html+='<button class="big-btn red" style="margin-top:6px" onclick="cancelCard()">↩ رجوع</button>';
   }else{
+   if((P[seat].cards.steal||0)>0&&oppProtectPending(seat))html+='<div class="prot-warn">'+STEAL_WAIT_MSG+'</div>';
+   if((P[seat].cards.protect||0)>0)html+='<div class="prot-warn" style="border-color:var(--acc);color:var(--acc);background:rgba(63,185,80,.12)">🛡️ معاك كارت حماية — احمِ لاعبك الأول قبل ما الخصم يستخدم كارت التبديل.</div>';
    html+='<div class="cards-grid">';
    defs.forEach(function(d){
     var n=P[seat].cards[d[0]];var price=gameType==='boxes'?0:(CARD_PRICES[d[0]]||0);var afford=price<=P[seat].budget;
