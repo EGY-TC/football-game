@@ -129,10 +129,11 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .time.low{color:var(--red);animation:pu 1s infinite}
 @keyframes pu{50%{opacity:.4}}
 #turnLbl{text-align:center;font-size:14px;font-weight:900;background:var(--card2);border-radius:10px;padding:8px}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
 .controls button{padding:14px 2px;border:none;border-radius:12px;font-size:13.5px;font-weight:900;cursor:pointer;min-height:52px}
 #raiseBtn{background:var(--acc);color:#04180a}
 #raise5Btn{background:var(--gold);color:#231303}
+#raise10Btn{background:var(--purple);color:#1a0426}
 #passBtn{background:var(--red);color:#1c0407}
 .controls button:disabled{opacity:.35;cursor:not-allowed}
 .custom{display:flex;gap:8px}
@@ -417,6 +418,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 .controls button{border-radius:16px;min-height:58px;font-size:14.5px;box-shadow:0 12px 26px -18px #000}
 #raiseBtn{background:linear-gradient(180deg,#2ffca0,#12b46c)}
 #raise5Btn{background:linear-gradient(180deg,#ffd977,#e2a413)}
+#raise10Btn{background:linear-gradient(180deg,#d199ff,#8a2be2)}
 #passBtn{background:linear-gradient(180deg,#ff7b86,#e03b4c)}
 .custom button{border-radius:14px;background:linear-gradient(180deg,#6fb2ff,#2f7ce0);min-height:46px}
 .log{border-radius:16px}
@@ -603,6 +605,7 @@ label{font-size:12.5px;letter-spacing:.2px}
 <div class="controls">
 <button id="raiseBtn" onclick="humanRaise()">➕ مليون</button>
 <button id="raise5Btn" onclick="humanRaise5()">➕ خمسة</button>
+<button id="raise10Btn" onclick="humanRaise10()">➕ عشرة</button>
 <button id="passBtn" onclick="humanPass()">🏳️ تسليم للخصم</button>
 </div>
 <div class="custom">
@@ -1796,6 +1799,74 @@ var MORE_PLAYERS_V3=[
   PLAYERS.push({ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]});
  });
 })();
+/* دفعة لاعبين إضافية: أساطير مشهورين ولاعبين حاليين لسه ناقصين */
+var MORE_PLAYERS_V4=[
+["بوبي تشارلتون","Bobby Charlton","CAM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",90],
+["دنكان إدواردز","Duncan Edwards","CM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",86],
+["جارينشا","Garrincha","RW","🇧🇷","معتزل",93],
+["جالما سانتوس","Djalma Santos","RB","🇧🇷","معتزل",84],
+["ماركو ماتيرات زي","Marco Materazzi","CB","🇮🇹","معتزل",83],
+["كريستيان إريكسن","Christian Eriksen","CAM","🇩🇰","معتزل",85],
+["آرون رامزي","Aaron Ramsey","CM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",83],
+["بيتر كراوش","Peter Crouch","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",78],
+["إيميل هيسكي","Emile Heskey","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",78],
+["آندي كول","Andy Cole","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",83],
+["روبي فاولر","Robbie Fowler","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",85],
+["جيمي كاراجر","Jamie Carragher","CB","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",85],
+["جاري لينيكر","Gary Lineker","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",87],
+["جيوف هيرست","Geoff Hurst","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",86],
+["كيفن كيجان","Kevin Keegan","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",87],
+["بيتر شيلتون","Peter Shilton","GK","🏴󠁧󠁢󠁥󠁮󠁧󠁿","معتزل",87],
+["هيديتوشي ناكاتا","Hidetoshi Nakata","CAM","🇯🇵","معتزل",83],
+["بارك جي سونج","Park Ji-sung","RW","🇰🇷","معتزل",82],
+["شينجي كاجاوا","Shinji Kagawa","CAM","🇯🇵","معتزل",83],
+["كيسوكي هوندا","Keisuke Honda","CAM","🇯🇵","معتزل",81],
+["تيم كاهيل","Tim Cahill","CAM","🇦🇺","معتزل",81],
+["لاندون دونوفان","Landon Donovan","RW","🇺🇸","معتزل",83],
+["كلينت ديمبسي","Clint Dempsey","CAM","🇺🇸","معتزل",81],
+["حاتم بن عرفة","Hatem Ben Arfa","LW","🇫🇷","معتزل",83],
+["كريستيان بوليسيتش","Christian Pulisic","LW","🇺🇸","ميلان",84],
+["ويستون مكيني","Weston McKennie","CM","🇺🇸","يوفنتوس",79],
+["يونيكو ريس","Kobbie Mainoo","CM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","مانشستر يونايتد",81],
+["إيفان توني","Ivan Toney","ST","🏴󠁧󠁢󠁥󠁮󠁧󠁿","الأهلي السعودي",81],
+["مورجان جيبس وايت","Morgan Gibbs-White","CAM","🏴󠁧󠁢󠁥󠁮󠁧󠁿","نوتنجهام فورست",80],
+["أنتوني جوردون","Anthony Gordon","LW","🏴󠁧󠁢󠁥󠁮󠁧󠁿","نيوكاسل",82],
+["برايان مبيومو","Bryan Mbeumo","RW","🇨🇲","مانشستر يونايتد",83],
+["يوان فيسا","Yoane Wissa","ST","🇨🇩","نيوكاسل",80],
+["حكيم زياش","Hakim Ziyech","RW","🇲🇦","معتزل",82],
+["أشرف حكيمي","Achraf Hakimi","RB","🇲🇦","باريس سان جيرمان",88],
+["يوسف اتش النصيري","Youssef En-Nesyri","ST","🇲🇦","فنربخشة",81]
+];
+(function(){
+ var have={};PLAYERS.forEach(function(p){have[p.en]=1;});
+ MORE_PLAYERS_V4.forEach(function(x){
+  if(have[x[1]])return;have[x[1]]=1;
+  PLAYERS.push({ar:x[0],en:x[1],pos:x[2],flag:x[3],club:x[4],r:x[5]});
+ });
+})();
+/* ===== ضبط نهائي للطاقات: كريستيانو وميسي أعلى طاقة، أساطير كبار أعلى من العاديين ===== */
+var LEGEND_RATING_FIX={
+ "Lionel Messi":100,"Cristiano Ronaldo":100,
+ "Pelé":98,"Diego Maradona":98,
+ "Johan Cruyff":96,"Franz Beckenbauer":95,"Ronaldo Nazário":96,
+ "Zinédine Zidane":96,"Ronaldinho":95,"Romário":94,"Zico":93,
+ "Paolo Maldini":95,"Franco Baresi":95,"Marco van Basten":95,"Ruud Gullit":93,
+ "Alessandro Nesta":92,"Fabio Cannavaro":93,"Andrea Pirlo":92,"Roberto Baggio":93,
+ "Francesco Totti":93,"Alessandro Del Piero":92,"Andriy Shevchenko":92,
+ "Xavi Hernández":92,"Andrés Iniesta":93,"Thierry Henry":93,"Rivaldo":94,
+ "Roberto Carlos":92,"Marcelo":89,"Cafu":91,"Kaká":92,
+ "David Beckham":90,"Steven Gerrard":92,"Frank Lampard":90,"Ryan Giggs":90,
+ "Michel Platini":91,"George Best":90,"Eusébio":92,"Lothar Matthäus":91,
+ "Gerd Müller":95,"Bobby Moore":91,"Garrincha":94,"Bobby Charlton":91,
+ "Gary Lineker":89,"Kevin Keegan":88,"Xavi Hernández":92
+};
+Object.keys(LEGEND_RATING_FIX).forEach(function(en){
+ PLAYERS.forEach(function(p){if(p.en===en)p.r=LEGEND_RATING_FIX[en];});
+});
+/* اللاعبين العاديين (النشطين حاليًا) ميتخطوش 91 عشان يفضل فرق واضح عن الأساطير الكبار */
+PLAYERS.forEach(function(p){
+ if(p.club!=='معتزل'&&!LEGEND_RATING_FIX[p.en]&&p.r>91)p.r=91;
+});
 var ROUNDS=11;
 var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
@@ -2427,11 +2498,54 @@ function initialsImg(p){
  var col=p.r>=88?'#d29922':p.r>=85?'#3fb950':p.r>=80?'#58a6ff':'#8b949e';
  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#1c2128"/><circle cx="100" cy="100" r="85" fill="'+col+'" opacity="0.22"/><text x="100" y="128" font-size="72" font-family="Arial" font-weight="bold" text-anchor="middle" fill="'+col+'">'+init+'</text></svg>');
 }
+/* أسماء لاعبين قصيرة/عامة بتلخبط بحث ويكيبيديا (بترجع صفحة شخص تاني خالص) —
+   هنا بنحدد اسم صفحة ويكيبيديا الصحيح بالظبط لكل واحد فيهم */
+var WIKI_TITLE_OVERRIDE={
+ "Diego":"Diego (footballer, born 1985)",
+ "Fred":"Fred (footballer, born 1993)",
+ "Bebeto":"Bebeto",
+ "Kaká":"Kaká",
+ "Deco":"Deco",
+ "Elano":"Elano",
+ "Cafu":"Cafu",
+ "Dunga":"Dunga",
+ "Robinho":"Robinho",
+ "Adriano":"Adriano (footballer, born 1982)",
+ "Oscar":"Oscar (footballer, born 1991)",
+ "Zico":"Zico",
+ "Romário":"Romário",
+ "Ronaldo Nazário":"Ronaldo (Brazilian footballer)",
+ "Ronaldinho":"Ronaldinho",
+ "Rivaldo":"Rivaldo",
+ "Marcelo":"Marcelo (footballer, born 1988)",
+ "Diego Costa":"Diego Costa",
+ "Willian":"Willian (footballer, born 1988)",
+ "Hulk":"Hulk (footballer)",
+ "Pelé":"Pelé",
+ "Sócrates":"Sócrates (footballer)",
+ "Kevin":"Kevin (footballer)",
+ "Douglas Costa":"Douglas Costa",
+ "David Luiz":"David Luiz",
+ "Rodrygo":"Rodrygo",
+ "Endrick":"Endrick (footballer)",
+ "Neymar":"Neymar",
+ "Fabinho":"Fabinho",
+ "Casemiro":"Casemiro",
+ "Danilo Luiz":"Danilo (footballer, born 1991)",
+ "Coutinho":"Philippe Coutinho",
+ "Firmino":"Roberto Firmino",
+ "Roberto Firmino":"Roberto Firmino",
+ "Anderson":"Anderson (footballer, born 1988)",
+ "Léo":"Léo (footballer)",
+ "Ganso":"Paulo Henrique Ganso",
+ "Vinícius Júnior":"Vinícius Júnior"
+};
 function wikiImg(en,el){
  if(!en)return;
  if(IMG[en]!==undefined){if(IMG[en])el.src=IMG[en];return;}
- var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(en+' footballer')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
- var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(en);
+ var title=WIKI_TITLE_OVERRIDE[en]||en;
+ var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
+ var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(title);
  function fromPages(j){
   var pages=j&&j.query&&j.query.pages;if(!pages)return'';
   var keys=Object.keys(pages);if(!keys.length)return'';
@@ -2439,6 +2553,17 @@ function wikiImg(en,el){
   return (p&&p.thumbnail)?p.thumbnail.source:'';
  }
  try{
+  /* لو عندنا اسم صفحة مظبوط في الأوفررايد، ندور بيه مباشرة (أدق من البحث العام) */
+  if(WIKI_TITLE_OVERRIDE[en]){
+   fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
+    var u2=fromPages(j2);
+    if(u2){IMG[en]=u2;el.src=u2;return;}
+    return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
+     var u=fromPages(j);IMG[en]=u;if(u)el.src=u;
+    });
+   }).catch(function(){IMG[en]='';});
+   return;
+  }
   fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
    var u=fromPages(j);
    if(u){IMG[en]=u;el.src=u;return;}
@@ -2480,12 +2605,23 @@ function pickGameType(t){
   $('gameDesc').innerHTML='7 جولات — كل جولة هتشوف لاعب وانتقاله الحقيقي (من نادي لنادي)، وكل واحد يكتب توقعه لقيمة الصفقة بالمليون يورو سرًا.<br>محدش بيشوف رقم التاني إلا بعد ما الاتنين يقفلوا توقعاتهم.<br>أقرب توقع للسعر الحقيقي ياخد نقطة الجولة — وصاحب أكبر عدد نقاط بعد 7 جولات هو البطل!';
  }
 }
+function nameTaken(n){
+ try{
+  var mine=localStorage.getItem('mz_name1_owned')||'';
+  if(mine&&mine===n)return false; /* ده اسمك انت المسجل عندك، مسموح تكمل بيه */
+  var tbl=lbLoad();
+  return !!tbl[n];
+ }catch(e){return false;}
+}
 function pickMode(m){
  try{
   var n1=$('name1').value.trim();
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
+  if(nameTaken(n1)){setErr('⚠️ الاسم ده مستخدم قبل كده — اكتب اسم مختلف');$('name1').classList.add('err-input');$('name1').focus();return;}
   $('name1').classList.remove('err-input');
+  try{if(!localStorage.getItem('mz_name1_owned'))localStorage.setItem('mz_name1_owned',n1);}catch(e){}
   if(m===2&&!$('name2').value.trim()){setErr('⚠️ اكتب اسم اللاعب الثاني');$('name2').classList.add('err-input');$('name2').focus();return;}
+  if(m===2&&$('name2').value.trim()===n1){setErr('⚠️ لازم اسم اللاعب الثاني يكون مختلف عن اسمك');$('name2').classList.add('err-input');$('name2').focus();return;}
   if(m===4&&gameType!=='transferprice'){setErr('⚠️ وضع السولو متاح فقط في لعبة راجع سعرك');return;}
   $('name2').classList.remove('err-input');setErr('');saveNames();
   dismissOnbTip();
@@ -3203,6 +3339,7 @@ function handleData(d){
   if(phase==='bid'&&turn===1){
    if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget)doRaise(d.v);}else if(bid+1<=P[1].budget)doRaise();}
    else if(d.a==='raise5'){if(bid+5<=P[1].budget)doRaise(bid+5);}
+   else if(d.a==='raise10'){if(bid+10<=P[1].budget)doRaise(bid+10);}
    else if(d.a==='pass'){
     if(!firstBidDone){conn.send({type:'sys',t:'⚠️ يجب تقديم عرض أول قبل التمرير'});return;}
     doPass();
@@ -3331,6 +3468,7 @@ function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
 function canAct(){return phase==='bid'&&!busy&&curStar&&(mode===3?turn===mySeat:(mode===1?turn===0:true));}
 function humanRaise(){if(!canAct()||bid+1>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise'});doRaise();}
 function humanRaise5(){if(!canAct()||bid+5>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise5'});doRaise(bid+5);}
+function humanRaise10(){if(!canAct()||bid+10>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise10'});doRaise(bid+10);}
 function humanPass(){
  if(!canAct())return;
  if(!firstBidDone){toast('⚠️ لازم تقدم عرض أول قبل ما تسلّم!');return;}
@@ -4226,6 +4364,7 @@ function render(){
  $('raiseBtn').disabled=!(humanCan&&bid+1<=P[turn].budget);
  $('raiseBtn').textContent='➕ مليون ('+fmt(bid+1)+')';
  $('raise5Btn').disabled=!(humanCan&&bid+5<=P[turn].budget);
+ $('raise10Btn').disabled=!(humanCan&&bid+10<=P[turn].budget);
  $('passBtn').disabled=!(humanCan&&firstBidDone);
  $('customBid').disabled=!humanCan;$('customBtn').disabled=!humanCan;
  $('firstBidNote').classList.toggle('hidden',firstBidDone||phase!=='bid');
