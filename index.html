@@ -2447,7 +2447,7 @@ var PEER_SERVERS=[
 ];
 var peerSrvIdx=parseInt(localStorage.getItem('mz_srv')||'0',10)||0;
 if(peerSrvIdx>=PEER_SERVERS.length)peerSrvIdx=0;
-var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:6,bundlePolicy:'max-bundle',rtcpMuxPolicy:'require'},debug:0,pingInterval:2000,referrerPolicy:'no-referrer'};
+var PEERCFG={config:{iceServers:ICE,iceCandidatePoolSize:10,bundlePolicy:'max-bundle',rtcpMuxPolicy:'require'},debug:0,pingInterval:2000,referrerPolicy:'no-referrer'};
 /* على شبكات الجوال (خصوصًا خلف NAT مشترك بين المشتركين) أحيانًا الاتصال المباشر بين الجهازين
    يفشل تمامًا حتى لو نجح الاتصال بسيرفر التوصيل؛ الحل هو إجبار المرور عبر خادم TURN فقط (relay) */
 var forceRelay=false;
@@ -2487,12 +2487,12 @@ function makePeer(id,opts){
   if(tries>=MAX){dead=true;if(opts.onFail)opts.onFail(reason);return;}
   bumpPeerServer();
   if(opts.onRetry)opts.onRetry(tries,peerSrvIdx);
-  setTimeout(spawn,400+tries*300);
+  setTimeout(spawn,150+tries*200);
  }
  function spawn(){
   if(dead)return;
   try{pr=id?new Peer(id,PEERCFG):new Peer(PEERCFG);}catch(e){return fail('exception');}
-  openTimer=setTimeout(function(){fail('timeout');},7000);
+  openTimer=setTimeout(function(){fail('timeout');},4500);
   pr.on('open',function(){clearTimeout(openTimer);if(opts.onOpen)opts.onOpen(pr);});
   pr.on('connection',function(c){if(opts.onConn)opts.onConn(c);});
   pr.on('disconnected',function(){if(!dead){try{pr.reconnect();}catch(e){}}});
@@ -3153,7 +3153,7 @@ function netClose(){
 }
 function netHeartbeat(){
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
 }
 function makeNetConn(code,host,opts){
  opts=opts||{};
@@ -3607,14 +3607,14 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
  clearInterval(watchdog);
  var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>4000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>14000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2500&&Date.now()-lastSyncReq>1500){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>9000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
@@ -3666,7 +3666,7 @@ function handleData(d){
  else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
  else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
- else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
+ else if(d.type==='T'&&!isHost){if(typeof d.t==='number'&&d.t>=0){timeLeft=d.t;renderTimerBar();}}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
