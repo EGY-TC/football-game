@@ -628,6 +628,12 @@ body{text-rendering:optimizeSpeed}
   </div>
   <div class="tour-cta-go">ادخل ›</div>
 </div>
+<div class="card hidden" id="tourResumeBar" style="border:2px solid var(--gold);background:rgba(255,200,60,.08)">
+  <div style="font-weight:900;color:var(--gold);margin-bottom:6px">🏆 عندك بطولة شغالة</div>
+  <div id="tourResumeInfo" style="font-size:12px;color:var(--dim);line-height:1.8;margin-bottom:8px"></div>
+  <button class="big-btn goldb" onclick="tourResume()">↩ رجوع للبطولة</button>
+  <button class="big-btn" style="margin-top:6px" onclick="tourEndSaved()">🚪 إنهاء البطولة نهائيًا</button>
+</div>
 <div class="card mz-card" id="metaCard"></div>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
@@ -648,9 +654,11 @@ body{text-rendering:optimizeSpeed}
 </div>
 <div id="homeErr" class="status"></div>
 </div>
-<div id="settings" class="hidden">
+</div>
+<div id="settings" class="screen hidden">
+<div class="hdr"><button class="back" onclick="settingsBack()">↩ رجوع</button><h1>⚙️ إعدادات اللعبة</h1></div>
 <div class="card">
-<div class="set-h">⚙️ إعدادات اللعبة</div>
+<div class="set-h">⚙️ ظبط الإعدادات قبل البداية</div>
 <div class="pc-ready" id="setGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
 <div id="tpDiffBox" class="hidden">
 <div class="opt-lbl" style="margin-top:0">🎯 مستوى الصعوبة</div>
@@ -669,7 +677,6 @@ body{text-rendering:optimizeSpeed}
 <input type="range" id="rBud" min="50" max="1000" step="50" value="500" oninput="updateBud(this.value)">
 </div>
 <button class="big-btn green" id="startBtn" style="margin-top:14px" onclick="startFromSettings()">بدء المزاد</button>
-</div>
 </div>
 </div>
 <div id="room" class="screen hidden">
@@ -742,7 +749,7 @@ body{text-rendering:optimizeSpeed}
 </div>
 
 <div id="tourRoom" class="screen hidden">
-<div class="hdr"><button class="back" onclick="tourLeave()">↩ خروج</button><h1 id="tourRoomTitle">🏆 البطولة</h1></div>
+<div class="hdr"><button class="back" onclick="tourGoBackground()">↩ رجوع (تفضل شغالة)</button><h1 id="tourRoomTitle">🏆 البطولة</h1><button class="back" onclick="tourLeave()">🚪 خروج نهائي</button></div>
 <div class="card" id="tourInfoCard"></div>
 <div id="tourBody"></div>
 </div>
@@ -2840,18 +2847,15 @@ function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function fmt(n){if(n>=1000){var v=n/1000;return (v%1===0?v:v.toFixed(1))+' مليار';}return n+' مليون';}
 function show(id){
- var st=$('settings');
- var screens=['home','room','lobby','wait','game','tourHome','tourRoom'];
- if(id==='settings'){
-  screens.forEach(function(s){if(s!=='home')$(s).classList.add('hidden');});
-  $('home').classList.remove('hidden');
-  if(st)st.classList.remove('hidden');
-  try{setTimeout(function(){st.scrollIntoView({behavior:'smooth',block:'center'});},60);}catch(e){}
-  return;
- }
- if(st)st.classList.add('hidden');
- screens.forEach(function(s){$(s).classList.add('hidden');});
- $(id).classList.remove('hidden');
+ var screens=['home','settings','room','lobby','wait','game','tourHome','tourRoom'];
+ screens.forEach(function(s){var el=$(s);if(el)el.classList.add('hidden');});
+ var t=$(id);if(t)t.classList.remove('hidden');
+ try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+ try{tourUpdateResumeBar();}catch(e){}
+}
+function settingsBack(){
+ if(typeof TOURMATCH!=='undefined'&&TOURMATCH)return;
+ if(online){show('room');}else{show('home');}
 }
 function updateTime(v){CFG.timer=+v;$('timeVal').textContent=(+v===0?'بدون تايمر':v+' ث');}
 function updateBud(v){CFG.budget=+v;$('budVal').textContent=fmt(+v);}
@@ -5433,6 +5437,7 @@ document.addEventListener('DOMContentLoaded',function(){
   lbEnsureChannel();
 
   mzInit();
+  try{tourUpdateResumeBar();setTimeout(tourAutoReconnect,1500);}catch(e){}
  }catch(e){}
 });
 function dismissOnbTip(){
@@ -5939,6 +5944,7 @@ function tourOnGameEnd(champ){
 /* ---------- الرسم ---------- */
 function tourRender(){
  if(!TOUR)return;
+ try{tourSaveLocal();}catch(e){}
  $('tourRoomTitle').textContent='🏆 بطولة '+TOUR.code;
  var info='<div style="text-align:center"><div style="font-size:12px;color:var(--dim)">كود البطولة</div>'+
   '<div style="font-size:30px;font-weight:900;letter-spacing:8px;color:var(--gold)">'+TOUR.code+'</div>'+
@@ -6012,11 +6018,79 @@ function tourShare(){
  else toast('الكود: '+TOUR.code);
 }
 function tourLeave(){
- if(!confirm('هل تريد الخروج من البطولة؟'))return;
+ if(!confirm('خروج نهائي من البطولة؟ (لو عايزها تفضل شغالة اضغط «رجوع (تفضل شغالة)»)'))return;
  if(TOUR&&!TOUR.host)tourSend({type:'bye'});
  tourChannelClose();TOUR=null;TOURMATCH=null;
+ tourClearLocal();
  $('tourBackBtn').classList.add('hidden');
  show('tourHome');
+}
+
+/* ---------- البطولة تفضل شغالة في الخلفية ---------- */
+var TOUR_LS='mz_tour_live_v1';
+function tourSaveLocal(){
+ if(!TOUR||!TOUR.code)return;
+ try{localStorage.setItem(TOUR_LS,JSON.stringify({code:TOUR.code,host:!!TOUR.host,hostName:TOUR.hostName||'',hostCid:TOUR.hostCid||'',
+  pass:TOUR.pass||'',locked:!!TOUR.locked,set:TOUR.set,players:TOUR.players||[],round:TOUR.round||0,
+  matches:TOUR.matches||[],champion:TOUR.champion||null,t:Date.now()}));}catch(e){}
+ try{tourUpdateResumeBar();}catch(e){}
+}
+function tourLoadLocal(){
+ try{var o=JSON.parse(localStorage.getItem(TOUR_LS)||'null');
+  if(!o||!o.code)return null;
+  if(Date.now()-(o.t||0)>24*60*60*1000){tourClearLocal();return null;}
+  return o;}catch(e){return null;}
+}
+function tourClearLocal(){try{localStorage.removeItem(TOUR_LS);}catch(e){}try{tourUpdateResumeBar();}catch(e){}}
+function tourUpdateResumeBar(){
+ var bar=$('tourResumeBar');if(!bar)return;
+ var o=TOUR||tourLoadLocal();
+ if(!o||!o.code){bar.classList.add('hidden');return;}
+ bar.classList.remove('hidden');
+ var st=o.champion?('انتهت — البطل: '+(o.champion.name||'')):(o.matches&&o.matches.length?('شغالة — الدور '+((o.round||0)+1)):'في انتظار اكتمال اللاعبين');
+ $('tourResumeInfo').innerHTML='كود: <b style="color:var(--gold)">'+o.code+'</b> • '+((o.players||[]).length)+'/'+((o.set&&o.set.n)||'?')+' لاعبين • '+st;
+}
+function tourGoBackground(){
+ if(TOUR)tourSaveLocal();
+ toast('🏆 البطولة سايبها شغالة — ترجعلها من الصفحة الرئيسية في أي وقت');
+ show('home');
+}
+function tourEndSaved(){
+ if(!confirm('إنهاء البطولة المحفوظة نهائيًا؟'))return;
+ if(TOUR){try{if(!TOUR.host)tourSend({type:'bye'});}catch(e){}tourChannelClose();TOUR=null;}
+ TOURMATCH=null;tourClearLocal();toast('🚪 اتشالت البطولة');
+}
+function tourResume(){
+ var o=tourLoadLocal();
+ if(TOUR&&TOUR.code){show('tourRoom');tourRender();return;}
+ if(!o)return toast('مفيش بطولة محفوظة');
+ if(!sbReady())return toast('جارٍ تحميل السيرفر… جرّب تاني');
+ tourSyncName();
+ TOUR={code:o.code,host:!!o.host,hostName:o.hostName||tourNameVal(),hostCid:o.host?myCid:(o.hostCid||''),pass:o.pass||'',locked:!!o.locked,
+  set:o.set||{n:4,gt:'auction',timer:20,budget:500},players:o.players||[],round:o.round||0,matches:o.matches||[],champion:o.champion||null,pending:!o.host};
+ tourChannelOpen(TOUR.code);
+ show('tourRoom');tourRender();
+ toast('🏆 رجعت لبطولة '+TOUR.code);
+}
+/* إعادة فتح البطولة تلقائيًا في الخلفية بعد فتح الموقع */
+function tourAutoReconnect(){
+ var o=tourLoadLocal();if(!o||TOUR)return;
+ tourUpdateResumeBar();
+ var tries=0,iv=setInterval(function(){
+  tries++;
+  if(TOUR){clearInterval(iv);return;}
+  if(tries>20){clearInterval(iv);return;}
+  if(typeof sbReady==='function'&&sbReady()){
+   clearInterval(iv);
+   try{
+    tourSyncName();
+    TOUR={code:o.code,host:!!o.host,hostName:o.hostName||tourNameVal(),hostCid:o.host?myCid:(o.hostCid||''),pass:o.pass||'',locked:!!o.locked,
+     set:o.set||{n:4,gt:'auction',timer:20,budget:500},players:o.players||[],round:o.round||0,matches:o.matches||[],champion:o.champion||null,pending:!o.host};
+    tourChannelOpen(TOUR.code);
+    tourUpdateResumeBar();
+   }catch(e){}
+  }
+ },1200);
 }
 
 /* ---------- ربط مع نظام اللعبة الأصلي ---------- */
