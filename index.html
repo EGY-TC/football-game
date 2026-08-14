@@ -675,7 +675,7 @@ body{text-rendering:optimizeSpeed}
 <button class="big-btn goldb" style="margin-top:10px" onclick="refreshLobbyList()">🔄 تحديث القائمة</button>
 </div>
 </div>
-<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
+<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p></div></div>
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
@@ -2865,17 +2865,8 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function netTeardown(dest){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;roomCode='';guestName='';try{$('codeBox').classList.add('hidden');}catch(e){}try{$('reconn').classList.add('hidden');}catch(e){}try{$('overlay').classList.add('hidden');}catch(e){}show(dest||'home');}
-function leaveHome(){netTeardown('home');}
-/* الخروج من الغرفة: نبلّغ الطرف التاني وكلنا نرجع لواجهة الأونلاين */
-function sendBye(){try{if(conn&&conn.open)conn.send({type:'bye',name:myName(),host:isHost});}catch(e){}}
-function exitToOnline(msg){netTeardown('room');if(msg){setStatus(msg);toast(msg);}}
-function leaveRoom(){
- if(!confirm('هل تريد الخروج من الغرفة؟'))return;
- sendBye();
- setTimeout(function(){exitToOnline('🚪 خرجت من الغرفة');},180);
-}
-function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);if(online){sendBye();setTimeout(function(){exitToOnline('🚪 خرجت من اللعبة');},180);}else leaveHome();}
+function leaveHome(){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;show('home');}
+function exitGame(){if(!confirm('هل تريد مغادرة اللعبة؟'))return;clearInterval(timerInt);leaveHome();}
 function setView(v){
  view=v;
  $('tabBid').classList.toggle('sel',v==='bid'||v==='boxes'||v==='tp');
@@ -3297,15 +3288,7 @@ function makeNetConn(code,host,opts){
    var p=m&&m.payload;if(!p||dead||busy)return;
    if(p.c===myCid)return;
    if(p.f===role)return;
-   /* الغرفة لاعبين بس: لو المضيف مربوط بضيف، أي ضيف تالت يتم رفضه فورًا */
-   if(p.d&&p.d.type==='__full'&&!host){
-    if(!busy&&(!p.to||p.to===myCid)){busy=true;try{ch.untrack();}catch(e){}if(opts.onBusy)opts.onBusy();}
-    return;
-   }
-   if(bound&&p.c&&p.c!==bound){
-    if(host){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,to:p.c,d:{type:'__full'}}});}catch(e){}}
-    return;
-   }
+   if(bound&&p.c&&p.c!==bound)return;
    markOpen(p.c);lastRx=Date.now();
    if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
    fire('data',p.d);
@@ -3663,11 +3646,6 @@ function handleData(d){
  if(!d||!d.type)return;
  if(d.type==='ping')return;
  if(d.type==='sys'){toast(d.t);return;}
- if(d.type==='bye'){
-  var who=d.name||(isHost?(guestName||'اللاعب'):'المضيف');
-  exitToOnline(isHost?('🚪 '+who+' خرج من الغرفة'):('🚪 '+who+' (المضيف) خرج من الغرفة'));
-  return;
- }
  if(d.type==='hello'&&isHost){
   if(roomPass&&d.pass!==roomPass){
    hostRejecting=true;
