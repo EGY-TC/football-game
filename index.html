@@ -54,6 +54,18 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .big-btn:active{transform:scale(.97)}
 .green{background:var(--acc);color:#04180a}.blue{background:var(--blue);color:#04101c}.red{background:var(--red);color:#1c0407}.purple{background:var(--purple);color:#1a0426}.goldb{background:var(--gold);color:#231303}
 .or{text-align:center;color:var(--dim);margin:12px 0;font-weight:700}
+.tour-cta{display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(255,196,0,.16),rgba(255,196,0,.04));transition:.15s}
+.tour-cta:active{transform:scale(.985)}
+.tour-cta-ic{font-size:30px;line-height:1}
+.tour-cta-tx{flex:1;min-width:0}
+.tour-cta-t{font-weight:900;font-size:16px;color:var(--gold)}
+.tour-cta-s{font-size:11.5px;color:var(--dim);font-weight:700;margin-top:3px}
+.tour-cta-go{font-weight:900;font-size:13px;color:var(--gold);white-space:nowrap}
+.tour-navbtn{border-color:var(--gold)!important;color:var(--gold)!important;font-weight:900}
+.tour-hero{border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(255,196,0,.14),transparent)}
+.tour-hero-t{font-weight:900;font-size:18px;color:var(--gold);margin-bottom:6px;text-align:center}
+.tour-you{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:800;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.tour-edit{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:5px 10px;font-weight:800;font-size:12px;cursor:pointer}
 #codeShow{font-size:32px;letter-spacing:8px;text-align:center;color:var(--gold);font-weight:900;background:var(--card2);border:2px dashed var(--gold);border-radius:12px;padding:8px;margin:8px 0}
 .status{margin-top:10px;text-align:center;color:var(--dim);min-height:22px;font-size:13px}
 .status.err{color:var(--red);font-weight:800}
@@ -606,8 +618,16 @@ body{text-rendering:optimizeSpeed}
   </a>
 </div>
 <div id="home" class="screen">
-<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
+<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button class="back tour-navbtn" onclick="openTournaments()">🥇 البطولات</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
+<div class="card tour-cta" onclick="openTournaments()">
+  <div class="tour-cta-ic">🥇</div>
+  <div class="tour-cta-tx">
+    <div class="tour-cta-t">البطولات — كأس العالم</div>
+    <div class="tour-cta-s">حتى 32 لاعب • قرعة عشوائية • أدوار إقصائية حتى النهائي</div>
+  </div>
+  <div class="tour-cta-go">ادخل ›</div>
+</div>
 <div class="card mz-card" id="metaCard"></div>
 <div class="card">
 <div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
@@ -675,6 +695,57 @@ body{text-rendering:optimizeSpeed}
 <button class="big-btn goldb" style="margin-top:10px" onclick="refreshLobbyList()">🔄 تحديث القائمة</button>
 </div>
 </div>
+<div id="tourHome" class="screen hidden">
+<div class="hdr"><button class="back" onclick="tourExitHome()">↩ رجوع</button><h1>🏆 البطولات</h1></div>
+<div class="card tour-hero">
+<div class="tour-hero-t">🥇 بطولة كأس العالم</div>
+<div class="desc" style="margin-bottom:6px">ادخل بطولة بكودها، أو اعمل بطولتك وشارك الكود مع أصحابك. القرعة عشوائية 100% (Fisher–Yates بأرقام تشفيرية) والنظام إقصائي زي كأس العالم: دور أول ➜ ... ➜ النهائي. تقدر تظبط الميزانية ووقت التفكير قبل الإنشاء.</div>
+<div class="tour-you">بتلعب باسم: <b id="tourNameShow">—</b> <button class="tour-edit" onclick="tourEditName()">✏️ غيّر الاسم</button></div>
+<input id="tourName" type="hidden">
+</div>
+
+<div class="card">
+<div class="set-h">🔎 ابحث عن بطولة بالكود</div>
+<input id="tourJoinCode" placeholder="كود البطولة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
+<input id="tourJoinPass" placeholder="🔒 كلمة السر (لو البطولة مقفولة)" maxlength="20" style="text-align:center;margin-top:8px">
+<button class="big-btn blue" style="margin-top:8px" onclick="tourSearch()">🔎 ابحث وادخل</button>
+<div id="tourSearchStatus" class="status"></div>
+<button class="big-btn purple" style="margin-top:8px" onclick="tourOpenBrowser()">📋 البطولات المفتوحة</button>
+<div id="tourBrowseList" style="margin-top:8px"></div>
+</div>
+<div class="card">
+<div class="set-h">➕ إنشاء بطولة</div>
+<div class="opt-lbl" style="margin-top:0">👥 عدد اللاعبين</div>
+<div class="gt-grid3" id="tourCntGrid">
+<button class="gt-btn sel" id="tcn4" onclick="tourPickCount(4)"><span class="gt-ic">4️⃣</span><span class="gt-nm">4 لاعبين</span><span class="gt-sub">نصف نهائي + نهائي</span></button>
+<button class="gt-btn" id="tcn8" onclick="tourPickCount(8)"><span class="gt-ic">8️⃣</span><span class="gt-nm">8 لاعبين</span><span class="gt-sub">ربع + نصف + نهائي</span></button>
+<button class="gt-btn" id="tcn16" onclick="tourPickCount(16)"><span class="gt-ic">🔢</span><span class="gt-nm">16 لاعب</span><span class="gt-sub">دور الـ16 ➜ النهائي</span></button>
+<button class="gt-btn" id="tcn32" onclick="tourPickCount(32)"><span class="gt-ic">🌍</span><span class="gt-nm">32 لاعب</span><span class="gt-sub">كأس العالم — 5 أدوار</span></button>
+<button class="gt-btn" id="tcn2" onclick="tourPickCount(2)"><span class="gt-ic">⚔️</span><span class="gt-nm">لاعبان</span><span class="gt-sub">مباراة نهائية واحدة</span></button>
+</div>
+<div class="opt-lbl">🎮 لعبة البطولة</div>
+<div class="gt-grid3" id="tourGtGrid">
+<button class="gt-btn sel" id="tgt-auction" onclick="tourPickGt('auction')"><span class="gt-ic">⚽</span><span class="gt-nm">مزاد النجوم</span></button>
+<button class="gt-btn" id="tgt-boxes" onclick="tourPickGt('boxes')"><span class="gt-ic">🎁</span><span class="gt-nm">صناديق الحظ</span></button>
+<button class="gt-btn" id="tgt-transferprice" onclick="tourPickGt('transferprice')"><span class="gt-ic">💰</span><span class="gt-nm">راجع سعرك</span></button>
+<button class="gt-btn" id="tgt-blind" onclick="tourPickGt('blind')"><span class="gt-ic">🕶️</span><span class="gt-nm">المزاد الأعمى</span></button>
+</div>
+<div class="opt-lbl">⏱️ وقت التفكير في مباريات البطولة <span id="tourTimeVal">20 ث</span></div>
+<input type="range" id="tourTime" min="0" max="60" step="5" value="20" oninput="tourUpdTime(this.value)">
+<div style="font-size:11px;color:var(--dim);margin-top:-2px">اسحب لأقصى اليسار (0) لتعطيل التايمر في كل مباريات البطولة</div>
+<div class="opt-lbl">💰 ميزانية الفريق في البطولة <span id="tourBudVal">500 مليون</span></div>
+<input type="range" id="tourBud" min="50" max="1000" step="50" value="500" oninput="tourUpdBud(this.value)">
+<input id="tourPass" placeholder="🔒 كلمة سر للبطولة (اختياري)" maxlength="20" style="text-align:center;margin-top:10px">
+<button class="big-btn green" style="margin-top:10px" onclick="tourCreate()">🏆 إنشاء البطولة</button>
+<div id="tourCreateStatus" class="status"></div>
+</div>
+</div>
+
+<div id="tourRoom" class="screen hidden">
+<div class="hdr"><button class="back" onclick="tourLeave()">↩ خروج</button><h1 id="tourRoomTitle">🏆 البطولة</h1></div>
+<div class="card" id="tourInfoCard"></div>
+<div id="tourBody"></div>
+</div>
 <div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
@@ -717,7 +788,7 @@ body{text-rendering:optimizeSpeed}
 <div id="lbOv" class="overlay hidden" onclick="if(event.target===this)closeLeaderboard()"><div class="obox lb-obox">
 <div class="lb-close-fixed"><h2>🏆 قائمة المتصدرين</h2><button class="lb-x" onclick="closeLeaderboard()">✖</button></div>
 <div class="lb-obox-body">
-<div class="desc" style="margin-bottom:8px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): تفوز تاخد نقط والخصم يتخصم منه نفس القيمة — كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر (لحد 20 نقطة). فوز متتالي بيدّيك بونص 🔥. التصنيف بيتخزن على جهازك ويتشارك تلقائيًا مع كل اللاعبين اللي بيلعبوا أونلاين.</div>
+<div class="desc" style="margin-bottom:8px">مباريات ضد لاعب حقيقي بس (مش الحاسوب): النقط zero-sum — الفايز بياخد نقط (كل ما فارق الأهداف يكون أقل كل ما القيمة أكبر لحد 20 نقطة + بونص الفوز المتتالي 🔥) والخاسر يخسر نفس العدد بالظبط. التعادل الاتنين بياخدوا نقط على حسب الأهداف (0-0 = 2 نقطة، 1-1 = 3، 2-2 = 4، وأقصى حد 5). في آخر كل ماتش هتشوف انت خدت كام أو خسرت كام، والتصنيف بيوضح عدد الفوز والتعادل والخسارة. اللي بيخرج من الماتش قبل ما يخلص مفيش نقط بتتحسب له ولا عليه.</div>
 <div id="lbPromo"></div>
 <div class="lb-tabs">
 <button id="lbt0" class="sel" onclick="setLbTab('all')">🏆 التصنيف العام</button>
@@ -2570,7 +2641,29 @@ function stopVoice(){
  updateMicBtn();
  var ob=$('oppMicLbl');if(ob)ob.classList.add('hidden');
 }
-var IMG={};
+var IMG=(function(){try{return JSON.parse(localStorage.getItem('mz_img_cache_v1')||'{}')||{};}catch(e){return {};}})();
+var IMG_FAILS={};
+var imgSaveT=null;
+function imgCacheSave(){
+ clearTimeout(imgSaveT);
+ imgSaveT=setTimeout(function(){
+  try{
+   var keys=Object.keys(IMG);
+   if(keys.length>600){var o={};keys.slice(-600).forEach(function(k){o[k]=IMG[k];});IMG=o;}
+   localStorage.setItem('mz_img_cache_v1',JSON.stringify(IMG));
+  }catch(e){}
+ },800);
+}
+/* مشاركة الصور مع الخصم: لو صورة وصلت عندي ومش وصلة عنده (نت ضعيف أو حجب)،
+   ببعتها له كرابط جاهز فيشوف نفس الصورة بالظبط */
+function imgShare(en,u){
+ try{if(online&&conn&&conn.open&&en&&u)conn.send({type:'img',en:en,u:u});}catch(e){}
+}
+function imgApplyShared(en,u){
+ if(!en||!u||IMG[en])return;
+ IMG[en]=u;imgCacheSave();
+ try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en)im.src=u;});}catch(e){}
+}
 var GLBL={GK:'حراسة',DEF:'دفاع',MID:'وسط',ATT:'هجوم'};
 var captainIdx=[-1,-1];
 var cardFlow=null;
@@ -2707,7 +2800,11 @@ var WIKI_TITLE_OVERRIDE={
 };
 function wikiImg(en,el){
  if(!en)return;
- if(IMG[en]!==undefined){if(IMG[en])el.src=IMG[en];return;}
+ if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
+ /* لو المحاولة فشلت قبل كده مش بنقفل الصورة للأبد — بنجرب تاني (لحد 3 مرات) */
+ if((IMG_FAILS[en]||0)>=3)return;
+ if(el._wikiBusy)return;el._wikiBusy=true;
+ setTimeout(function(){try{el._wikiBusy=false;}catch(e){}},1500);
  var title=WIKI_TITLE_OVERRIDE[en]||en;
  var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
  var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(title);
@@ -2722,14 +2819,19 @@ function wikiImg(en,el){
      لأن البحث العام بيرجع "أقرب نتيجة" حتى لو مش نفس اللاعب خالص (أسامي زي "Fred" أو "Kevin"
      كانت بترجع صور ناس تانية تمامًا). الأوفررايد لو موجود بيدّينا اسم الصفحة الصح، ولو مش
      موجود بنجرب بالاسم زي ما هو الأول لأن أغلب صفحات اللاعبين عنوانها اسمهم بالظبط. */
+  function ok(u){
+   if(!u){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
+   IMG[en]=u;imgCacheSave();
+   try{el.src=u;}catch(e){}
+   try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en)im.src=u;});}catch(e){}
+   imgShare(en,u);
+  }
   fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
    var u2=fromPages(j2);
-   if(u2){IMG[en]=u2;el.src=u2;return;}
-   return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){
-    var u=fromPages(j);IMG[en]=u;if(u)el.src=u;
-   });
+   if(u2){ok(u2);return;}
+   return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));});
   }).catch(function(){
-   try{fetch(searchUrl).then(function(r){return r.json();}).then(function(j){var u=fromPages(j);IMG[en]=u;if(u)el.src=u;}).catch(function(){IMG[en]='';});}catch(e){IMG[en]='';}
+   try{fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));}).catch(function(){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;});}catch(e){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;}
   });
  }catch(e){}
 }
@@ -2739,7 +2841,7 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 function fmt(n){if(n>=1000){var v=n/1000;return (v%1===0?v:v.toFixed(1))+' مليار';}return n+' مليون';}
 function show(id){
  var st=$('settings');
- var screens=['home','room','lobby','wait','game'];
+ var screens=['home','room','lobby','wait','game','tourHome','tourRoom'];
  if(id==='settings'){
   screens.forEach(function(s){if(s!=='home')$(s).classList.add('hidden');});
   $('home').classList.remove('hidden');
@@ -2808,7 +2910,13 @@ function verifyNameFree(n,cb){
  var sent=false;
  try{if(lbCh&&lbChReady){lbCh.send({type:'broadcast',event:'claim',payload:{name:n,dev:MZ_DEV_ID}});sent=true;}}catch(e){}
  if(!sent){cb(true);return;}
- setTimeout(function(){cb(!lbTakenNames[n]);},900);
+ /* تحقق سريع: بنستنى 280ms بس، ولو وصلنا رد "محجوز" قبل كده بنقطع الانتظار فورًا */
+ var done=false,t0=Date.now();
+ var iv=setInterval(function(){
+  if(done)return;
+  if(lbTakenNames[n]){done=true;clearInterval(iv);cb(false);return;}
+  if(Date.now()-t0>=280){done=true;clearInterval(iv);cb(true);}
+ },40);
 }
 function registerNewName(n){
  try{
@@ -2821,10 +2929,17 @@ function registerNewName(n){
  }catch(e){}
 }
 
+/* التحقق من تكرار الاسم بقى للأونلاين بس (m===3).
+   ضد الحاسوب / لاعبان على جهاز واحد / سولو: بندخل على طول من غير أي انتظار */
 function pickMode(m){
  try{
   var n1=$('name1').value.trim();
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
+  if(m!==3){
+   setErr('');$('name1').classList.remove('err-input');
+   try{pickModeGo(m,n1);}catch(e){toast('خطأ: '+e.message);}
+   return;
+  }
   if(!checkNameOwnership(n1).ok){
    setErr('⚠️ الاسم ده محجوز لحد تاني — اختر اسم مختلف');
    $('name1').classList.add('err-input');$('name1').focus();return;
@@ -2890,7 +3005,7 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function netTeardown(dest){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;guestCid='';roomCode='';guestName='';try{$('codeBox').classList.add('hidden');}catch(e){}try{$('reconn').classList.add('hidden');}catch(e){}try{$('overlay').classList.add('hidden');}catch(e){}show(dest||'home');}
+function netTeardown(dest){stopHostResync();stopGuestWatch();clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;guestCid='';roomCode='';guestName='';try{$('codeBox').classList.add('hidden');}catch(e){}try{$('reconn').classList.add('hidden');}catch(e){}try{$('overlay').classList.add('hidden');}catch(e){}show(dest||'home');}
 function leaveHome(){netTeardown('home');}
 /* الخروج من الغرفة: نبلّغ الطرف التاني وكلنا نرجع لواجهة الأونلاين */
 function sendBye(){try{if(conn&&conn.open)conn.send({type:'bye',name:myName(),host:isHost});}catch(e){}}
@@ -2957,16 +3072,19 @@ try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener(
 var LB_KEY='mz_leaderboard_v4';
 try{['mz_leaderboard_v1','mz_leaderboard_v2','mz_leaderboard_v3','mz_owner_codes','mz_names_v1'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
 /* ===== دورة التصنيف: التصنيف كله بيبدأ من الصفر كل 7 أيام ===== */
-var LB_CYCLE_KEY='mz_lb_cycle_v1';
+var LB_CYCLE_KEY='mz_lb_cycle_v2';
 var LB_CYCLE_MS=7*24*60*60*1000;
-var LB_CYCLE_ANCHOR=Date.UTC(2026,0,5,0,0,0); /* الاثنين */
-function lbCycleIndex(){return Math.floor((Date.now()-LB_CYCLE_ANCHOR)/LB_CYCLE_MS);}
+/* نقطة البداية الجديدة: الدورة الحالية بدأت هنا وبتتجدد كل 7 أيام أوتوماتيك
+   (نفس الرقم عند كل اللاعبين عشان النقط تتشارك بينهم صح) */
+var LB_CYCLE_ANCHOR=Date.UTC(2026,7,14,12,0,0);
+function lbCycleIndex(){var i=Math.floor((Date.now()-LB_CYCLE_ANCHOR)/LB_CYCLE_MS);return i<0?0:i;}
 function lbCycleKey(){return 'C'+lbCycleIndex();}
 function lbCycleEnd(){return LB_CYCLE_ANCHOR+(lbCycleIndex()+1)*LB_CYCLE_MS;}
 function lbCycleLeftText(){
  var ms=lbCycleEnd()-Date.now();if(ms<0)ms=0;
- var d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000);
- return d+' يوم و'+h+' ساعة و'+m+' دقيقة';
+ var d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000);
+ function p(n){return (n<10?'0':'')+n;}
+ return d+' يوم '+p(h)+':'+p(m)+':'+p(s);
 }
 var lbJustReset=false;
 /* لو الأسبوع اتغيّر: نمسح كل النقط والأسماء ونبدأ من جديد */
@@ -2981,10 +3099,32 @@ function lbCheckCycle(){
   }
  }catch(e){}
 }
+/* عدّاد تنازلي حقيقي: بيتحدّث كل ثانية، ولما يوصل صفر التصنيف بيتجدد فورًا */
+var lbCdInt=null;
+function lbStartCountdown(){
+ lbStopCountdown();
+ lbCdInt=setInterval(function(){
+  var el=$('lbCd');
+  if(!el){lbStopCountdown();return;}
+  if(lbCycleEnd()-Date.now()<=0){
+   lbCheckCycle();
+   try{loadLeaderboard();}catch(e){}
+   return;
+  }
+  el.textContent=lbCycleLeftText();
+ },1000);
+}
+function lbStopCountdown(){if(lbCdInt){clearInterval(lbCdInt);lbCdInt=null;}}
+
 
 var LB_CH_NAME='mzaida-leaderboard-global';
 var lbCh=null,lbChReady=false,lbTab='all';
 var LB_STREAK_BONUS=2,LB_STREAK_CAP=10;
+/* نقط إتمام الماتش (بتتوزع على الاتنين لما الماتش يخلص) + نقط التعادل */
+var LB_FINISH_PTS=0,LB_DRAW_PTS=5;
+/* نقط التعادل: 2 نقطة أساس + هدف لكل هدف اتسجل لكل واحد، وأقصى حد 5 نقط
+   (0-0 = 2 | 1-1 = 3 | 2-2 = 4 | 3-3 أو أكتر = 5) */
+function drawPoints(goals){var v=2+(goals||0);return v>5?5:v;}
 var TIERS=[
  {id:'bronze',min:0,label:'برونزي',ic:'🥉',cls:'tier-bronze'},
  {id:'silver',min:100,label:'فضي',ic:'🥈',cls:'tier-silver'},
@@ -3001,8 +3141,8 @@ function tierOf(pts){
 function currentSeasonKey(){return lbCycleKey();}
 /* بيرجع مقدار النقط (بالقيمة المطلقة) اللي هتنتقل بين الفريقين حسب فارق
    الأهداف — فارق هدف واحد = 20 نقطة، وكل ما الفارق يكبر كل ما القيمة تقل
-   لحد أدنى 10. التعادل = صفر (مفيش نقط تتحرك). الفايز بياخدها موجبة،
-   الخاسر بتتخصم منه نفس القيمة (نظام zero-sum). */
+   لحد أدنى 10. التعادل = صفر هنا (بيتعامل معاه بنقط التعادل في
+   recordMatchResult). مفيش أي خصم من نقط الخاسر. */
 function matchPoints(myGoals,oppGoals){
  if(myGoals===oppGoals)return 0;
  var diff=Math.abs(myGoals-oppGoals);
@@ -3018,7 +3158,7 @@ function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
 function lbFreshRow(name,owner){
- return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),cycle:lbCycleKey(),seasonPoints:0,h2h:{},owner:owner||''};
+ return {name:name,points:0,matches:0,wins:0,losses:0,draws:0,streak:0,bestStreak:0,season:currentSeasonKey(),cycle:lbCycleKey(),seasonPoints:0,h2h:{},owner:owner||''};
 
 }
 /* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟ + اسم الخصم) جوه الجدول المحلي.
@@ -3032,17 +3172,17 @@ function lbMergeOne(tbl,name,pts,won,drew,oppName){
  var bonus=0;
  if(won){
   row.streak=(row.streak||0)+1;
-  bonus=Math.min(LB_STREAK_CAP,(row.streak-1)*LB_STREAK_BONUS);
   if(row.streak>(row.bestStreak||0))row.bestStreak=row.streak;
  }else if(!drew){
   row.streak=0;
  }
- var totalPts=pts+(pts>0?bonus:0);
+ var totalPts=pts;
  row.points=Math.max(0,(row.points||0)+totalPts);
  row.seasonPoints=Math.max(0,(row.seasonPoints||0)+totalPts);
  row.matches=(row.matches||0)+1;
  row.wins=(row.wins||0)+(won?1:0);
  row.losses=(row.losses||0)+(!won&&!drew?1:0);
+ row.draws=(row.draws||0)+(drew?1:0);
  if(oppName){
   var h=row.h2h[oppName]||{w:0,l:0,d:0};
   if(drew)h.d++;else if(won)h.w++;else h.l++;
@@ -3105,18 +3245,26 @@ function lbEnsureChannel(){
  }catch(e){}
 }
 /* بيسجل نتيجة ماتش كامل بين لاعبين حقيقيين (بيستبعد وضع ضد الحاسوب).
-   نظام zero-sum: الفايز بياخد النقط (+بونص ستريك)، الخاسر بتتخصم منه
-   نفس القيمة الأساسية (من غير ما رصيده ينزل تحت الصفر). التعادل بيصفر
-   ستريك الطرفين من غير أي نقط. */
+   النظام الجديد: مفيش أي خصم من النقط خالص — كل ماتش بيخلص بياخد فيه
+   الاتنين نقط (نقطة إتمام الماتش)، والفايز بياخد نقط الفوز كاملة + بونص
+   الستريك، والتعادل الاتنين بياخدوا نص النقط. الخاسر مش بيتخصم منه حاجة. */
 function recordMatchResult(name0,g0,name1,g1){
+ lbLastDelta=null;
  if(mode===1)return; /* ضد الحاسوب — مش بيتحسب في التصنيف */
  if(!name0||!name1)return;
- var pts=matchPoints(g0,g1); /* 0 لو تعادل، وإلا القيمة المطلقة اللي هتتحرك */
- var p0,p1,won0,won1,drew=(g0===g1);
- if(g0>g1){p0=pts;p1=-pts;won0=true;won1=false;}
- else if(g1>g0){p0=-pts;p1=pts;won0=false;won1=true;}
- else{p0=0;p1=0;won0=false;won1=false;}
+ var pts=matchPoints(g0,g1); /* 0 لو تعادل، وإلا قيمة الفوز حسب فارق الأهداف */
  var tbl=lbLoad();
+ var drew=(g0===g1),p0,p1,won0=false,won1=false;
+ if(drew){
+  p0=p1=drawPoints(g0);
+ }else{
+  var wName=g0>g1?name0:name1;
+  var wStreak=((tbl[wName]||{}).streak)||0;
+  var bonus=Math.min(LB_STREAK_CAP,wStreak*LB_STREAK_BONUS);
+  var gain=pts+bonus; /* اللي الفايز بياخده */
+  if(g0>g1){p0=gain;p1=-gain;won0=true;}
+  else{p1=gain;p0=-gain;won1=true;}
+ }
  var beforeTier0=tierOf((tbl[name0]||{}).points||0);
  var beforeTier1=tierOf((tbl[name1]||{}).points||0);
  var r0=lbMergeOne(tbl,name0,p0,won0,drew,name1);
@@ -3124,6 +3272,7 @@ function recordMatchResult(name0,g0,name1,g1){
  lbSave(tbl);
  lbEnsureChannel();
  setTimeout(function(){lbBroadcastRow(name0);lbBroadcastRow(name1);},400);
+ lbLastDelta={name0:name0,p0:p0,name1:name1,p1:p1,drew:drew};
  /* لو انت (اللاعب الأول محليًا) ترقيت لمستوى جديد، بنعرضلك رسالة احتفال */
  var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
  var afterMine=myN===name0?tierOf(r0.row.points):(myN===name1?tierOf(r1.row.points):null);
@@ -3131,6 +3280,24 @@ function recordMatchResult(name0,g0,name1,g1){
  if(afterMine&&beforeMine&&afterMine.id!==beforeMine.id&&TIERS.indexOf(afterMine)>TIERS.indexOf(beforeMine)){
   pendingPromo=afterMine;
  }
+}
+var lbLastDelta=null;
+/* بيبني بلوك النقط اللي بيتعرض في شاشة النتيجة النهائية */
+function pointsSummaryHTML(){
+ var d=lbLastDelta;if(!d)return '';
+ var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
+ function line(nm,pv){
+  var mine=(myN&&nm===myN);
+  var who=mine?'أنت':nm;
+  var txt,col;
+  if(d.drew){txt=(mine?'خدت':'خد')+' '+pv+' نقطة (تعادل 🤝)';col='var(--gold)';}
+  else if(pv>0){txt=(mine?'خدت':'خد')+' +'+pv+' نقطة 🎉';col='var(--acc)';}
+  else {txt=(mine?'خسرت':'خسر')+' '+Math.abs(pv)+' نقطة 💔';col='var(--red)';}
+  return '<div style="font-weight:900;font-size:14px;color:'+col+';margin:2px 0">'+who+': '+txt+'</div>';
+ }
+ return '<div class="card" style="margin-top:10px;text-align:center">'+
+  '<div style="font-weight:900;color:var(--blue);margin-bottom:6px">📊 نقط التصنيف من الماتش ده</div>'+
+  line(d.name0,d.p0)+line(d.name1,d.p1)+'</div>';
 }
 var pendingPromo=null;
 function fetchLeaderboard(){
@@ -3145,8 +3312,8 @@ function fetchSeasonLeaderboard(){
  rows.sort(function(a,b){return (b.seasonPoints||0)-(a.seasonPoints||0);});
  return rows.slice(0,100);
 }
-function openLeaderboard(){lbEnsureChannel();$('lbOv').classList.remove('hidden');setLbTab('all');}
-function closeLeaderboard(){$('lbOv').classList.add('hidden');}
+function openLeaderboard(){lbEnsureChannel();$('lbOv').classList.remove('hidden');setLbTab('all');lbStartCountdown();}
+function closeLeaderboard(){$('lbOv').classList.add('hidden');lbStopCountdown();}
 function setLbTab(t){
  lbTab=t;
  $('lbt0').classList.toggle('sel',t==='all');
@@ -3163,12 +3330,12 @@ function lbRowHTML(r,i,useSeasonPts){
  var pts=useSeasonPts?(r.seasonPoints||0):(r.points||0);
  var streakTag=(r.streak||0)>=2?'<span class="lb-streak">🔥×'+r.streak+'</span>':'';
  return '<div class="lb-row"><div class="lb-rank">'+medal+'</div>'+tierBadgeHTML(r.points||0)+
-  '<div><div class="lb-name">'+streakTag+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.losses||0)+' خسارة • أطول ستريك '+(r.bestStreak||0)+'🔥</div></div>'+
+  '<div><div class="lb-name">'+streakTag+r.name+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.draws||0)+' تعادل • '+(r.losses||0)+' خسارة • أطول ستريك '+(r.bestStreak||0)+'🔥</div></div>'+
   '<div class="lb-pts">'+pts+' نقطة</div></div>';
 }
 function renderPromoBanner(){
  lbCheckCycle();
- var info='<div class="desc" style="margin:6px 0">🔄 التصنيف بيبدأ من الصفر كل 7 أيام — التجديد الجاي بعد <b>'+lbCycleLeftText()+'</b>. بعد كل تجديد لازم كل واحد يختار اسم جديد محدش خده.</div>';
+ var info='<div class="desc" style="margin:6px 0">🔄 التصنيف بيبدأ من الصفر كل 7 أيام — التجديد الجاي بعد <b id="lbCd">'+lbCycleLeftText()+'</b>. بعد كل تجديد لازم كل واحد يختار اسم جديد محدش خده.</div>';
  if(lbJustReset){info='<div class="promo-banner">🆕 بدأ أسبوع جديد — التصنيف اتصفّر والأسماء رجعت متاحة!</div>'+info;lbJustReset=false;}
  if(pendingPromo){
   $('lbPromo').innerHTML=info+'<div class="promo-banner">🎉 مبروك! اترقّيت لمستوى <b>'+pendingPromo.ic+' '+pendingPromo.label+'</b></div>';
@@ -3198,7 +3365,7 @@ function loadLeaderboard(){
    var rank=rows.indexOf(mine)+1;
    var pts=useSeasonPts?(mine.seasonPoints||0):(mine.points||0);
    $('lbMe').classList.remove('hidden');
-   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div>'+tierBadgeHTML(mine.points||0)+'<div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز • '+(mine.losses||0)+' خسارة</div></div><div class="lb-pts">'+pts+' نقطة</div>';
+   $('lbMe').innerHTML='<div class="lb-rank">#'+rank+'</div>'+tierBadgeHTML(mine.points||0)+'<div><div class="lb-name">'+mine.name+' (أنت)</div><div class="lb-sub">'+(mine.matches||0)+' مباراة • '+(mine.wins||0)+' فوز • '+(mine.draws||0)+' تعادل • '+(mine.losses||0)+' خسارة</div></div><div class="lb-pts">'+pts+' نقطة</div>';
   }
  }
 }
@@ -3686,12 +3853,13 @@ function wireConn(){
  });
  clearInterval(hbInt);
  hbInt=setInterval(function(){if(conn&&conn.open&&!document.hidden)try{conn.send({type:'ping'});}catch(e){}},4000);
+ startHostResync();
  clearInterval(watchdog);
  var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>5000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2200&&Date.now()-lastSyncReq>1200){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
   if(lastRx&&Date.now()-lastRx>10000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
@@ -3746,15 +3914,15 @@ function handleData(d){
    return;
   }
   if(started){guestName=d.name;guestCid=d.cid||guestCid;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
-  else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
+  else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;if(typeof TOURMATCH!=='undefined'&&TOURMATCH){setTimeout(function(){try{startFromSettings();}catch(e){}},700);}}
  }
  else if(d.type==='reject'&&!isHost){
   rejectedAuth=true;netClose();
   setStatus(d.reason==='pass'?'🔒 كلمة السر غلط — تأكد منها مع صاحب الغرفة':(d.reason==='started'?'🚫 المباراة بدأت بالفعل — اختر غرفة مفتوحة أخرى':'تعذر الانضمام'));
   show('room');
  }
- else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
- else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();}
+ else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);startGuestWatch();}
+ else if(d.type==='start'&&!isHost){pendingRematch=false;CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;curStar=null;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();setView(gameType==='boxes'?'boxes':(gameType==='transferprice'?'tp':'bid'));$('chatBox').classList.remove('hidden');$('connLbl').textContent='🟢 متصل • 2/2';render();startGuestWatch();}
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
@@ -3764,6 +3932,7 @@ function handleData(d){
   if(isHost){show('settings');toast('🔁 '+(guestName||'الخصم')+' عايز يلعب تاني — ابدأ الجولة الجديدة');}
   else{show('wait');var wt=$('waitTxt');if(wt)wt.innerHTML='🔁 جولة جديدة مع نفس الخصم<br>بانتظار المضيف يبدأ…';toast('🔁 المضيف بيجهّز جولة جديدة');}
  }
+ else if(d.type==='img'){imgApplyShared(d.en,d.u);}
  else if(d.type==='chat'){addChat(P[d.from]?P[d.from].name:'؟',d.t);}
  else if(d.type==='peerid'){oppPeerId=d.id;if(micOn&&localStream)startCallIfPossible();}
  else if(d.type==='mic'){
@@ -3803,15 +3972,67 @@ function handleData(d){
 }
 var seenActionIds={};
 function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked,tpRound:tpRound,tpCur:tpCur,tpGuess:tpGuess,tpLocked:tpLocked,tpScore:tpScore,tpHistory:tpHistory,tpPhase:tpPhase,blindBid:blindBid,blindLocked:blindLocked};}
-var lastFullBroadcast=0;
+var lastFullBroadcast=0,pendingBcast=null,lastBcastSeq=-1;
+/* مهم جدًا: قبل كده لو حصل بثّين ورا بعض في أقل من 120ms كان التاني بيتلغي خالص،
+   فلو الحالة الجديدة (زي بداية الجولة الجاية) اتلغت الضيف كان بيفضل معلّق على
+   "بانتظار المضيف" والمضيف أصلاً كمّل. دلوقتي مفيش أي حالة بتتلغى — أحدث حالة
+   بتتأجل شويّة وتتبعت أوتوماتيك. */
+function broadcastNow(){
+ if(!(online&&isHost&&conn&&conn.open))return;
+ lastFullBroadcast=Date.now();
+ var s=snap();
+ lastBcastSeq=s.seq;
+ if(s.phase==='blind')s.blindBid=[null,(blindBid&&blindBid[1]!==undefined)?blindBid[1]:null];
+ try{conn.send({type:'S',s:s});}catch(e){}
+}
 function broadcast(){
  if(!(online&&isHost&&conn&&conn.open))return;
- var now=Date.now();if(now-lastFullBroadcast<120)return;lastFullBroadcast=now;
- var s=snap();
- /* في المزاد الأعمى: الضيف يشوف رقمه هو بس — عرض المضيف يفضل مخفي لحد الكشف */
- if(s.phase==='blind')s.blindBid=[null,(blindBid&&blindBid[1]!==undefined)?blindBid[1]:null];
- conn.send({type:'S',s:s});
+ var now=Date.now(),wait=120-(now-lastFullBroadcast);
+ if(wait>0){
+  if(!pendingBcast)pendingBcast=setTimeout(function(){pendingBcast=null;broadcastNow();},wait);
+  return;
+ }
+ if(pendingBcast){clearTimeout(pendingBcast);pendingBcast=null;}
+ broadcastNow();
 }
+/* نبضة مزامنة: المضيف بيعيد بعت الحالة الكاملة كل ثانية ونص لو مفيش حاجة اتبعتت،
+   عشان لو رسالة ضاعت في نت ضعيف الضيف يلحق يتزامن لوحده من غير ما يعلّق */
+var resyncInt=null;
+function startHostResync(){
+ stopHostResync();
+ resyncInt=setInterval(function(){
+  if(!(online&&isHost&&started&&conn&&conn.open))return;
+  if(Date.now()-lastFullBroadcast<1400)return;
+  broadcastNow();
+ },700);
+}
+function stopHostResync(){if(resyncInt){clearInterval(resyncInt);resyncInt=null;}}
+/* ===== حرس الضيف ضد التعليق =====
+   المشكلة اللي كانت بتحصل: بعد ما الكروت بتتكشف في آخر الجولة (كروت اللاعبين
+   العادية) الضيف بيفضل واقف على "بانتظار المضيف…" والمضيف أصلاً كمّل — لأن
+   رسالة الحالة الجديدة ضاعت في النت. الحل: الضيف بيراقب آخر حالة وصلته، ولو
+   عدّى 2.5 ثانية من غير أي حالة بيطلب مزامنة من المضيف تلقائيًا كل ثانية. */
+var lastSnapAt=0,guestWatchInt=null,guestSyncAsks=0;
+var GUEST_SYNC_BTN='<button class="big-btn" style="margin-top:8px" onclick="guestForceSync()">🔄 مش بيكمل؟ اضغط للمزامنة</button>';
+function guestRequestSync(){
+ if(!(online&&!isHost&&conn&&conn.open))return;
+ try{conn.send({type:'sync'});}catch(e){}
+}
+function startGuestWatch(){
+ stopGuestWatch();
+ lastSnapAt=Date.now();guestSyncAsks=0;
+ guestWatchInt=setInterval(function(){
+  if(!(online&&!isHost&&started&&conn&&conn.open))return;
+  var gap=Date.now()-lastSnapAt;
+  if(gap<2500){guestSyncAsks=0;return;}
+  guestSyncAsks++;
+  guestRequestSync();
+  if(guestSyncAsks===3)toast('⏳ بنعيد المزامنة مع المضيف…');
+ },1000);
+}
+function stopGuestWatch(){if(guestWatchInt){clearInterval(guestWatchInt);guestWatchInt=null;}}
+/* زرار يدوي في شاشة انتظار المضيف — لو حصل أي تعليق اللاعب يقدر يزامن بنفسه */
+function guestForceSync(){toast('🔄 جاري المزامنة مع المضيف…');guestRequestSync();}
 /* تحديث خفيف لشريط/عداد الوقت فقط (من غير إعادة بناء الصفحة كلها) — بيتنفذ كل ثانية
    بدل ما كانت اللعبة بتعيد رسم كل حاجة (الفرق والكروت واللوج) 4 مرات في الثانية،
    وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
@@ -3838,7 +4059,8 @@ function broadcastTick(){
 }
 function applySnap(s){
  if(!s)return;
- if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;clearPendingAct();}
+ lastSnapAt=Date.now();
+ if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;}
  phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.P;curStar=s.star;logArr=s.log||[];ovH=s.ovH||'';ovG=s.ovG||'';endH=s.endH||'';firstBidDone=!!s.firstBidDone;captainIdx=s.captainIdx||[-1,-1];cardsReady=s.cardsReady||[false,false];boxRound=s.boxRound||0;boxSets=s.boxSets||[[],[]];boxOpened=s.boxOpened||[[],[]];boxPicked=s.boxPicked||[null,null];
  tpRound=s.tpRound||0;tpCur=s.tpCur||null;tpGuess=s.tpGuess||[null,null];tpLocked=s.tpLocked||[false,false];tpScore=s.tpScore||[0,0];tpHistory=s.tpHistory||[];tpPhase=s.tpPhase||'guess';blindLocked=s.blindLocked||[false,false];if(s.blindBid)blindBid=[s.blindBid[0],s.blindBid[1]];
  render();
@@ -3960,17 +4182,19 @@ function sendActReliable(payload){
  payload.id=myCid+'-'+(nextActId++);
  pendingAct=payload;pendingActTries=0;
  clearTimeout(pendingActTimer);
- var seqAtSend=lastAppliedSeq;
+ /* بنعيد الإرسال لحد ما يوصل تأكيد (ack) من المضيف — المضيف بيتجاهل التكرار،
+    فمفيش خطر إن الإجراء يتنفذ مرتين، وده بيمنع التعليق في النت الضعيف */
  function attempt(){
   if(!pendingAct)return;
   pendingActTries++;
-  try{conn.send(payload);}catch(e){}
-  if(pendingActTries===2)toast('⏳ الاتصال بطيء، جاري إعادة المحاولة…');
-  if(pendingActTries>=4){pendingAct=null;toast('⚠️ تعذر إرسال الإجراء — تحقق من الاتصال');return;}
+  try{if(conn&&conn.open)conn.send(payload);}catch(e){}
+  if(pendingActTries===3)toast('⏳ الاتصال بطيء، جاري إعادة المحاولة…');
+  if(pendingActTries>=8){pendingAct=null;toast('⚠️ تعذر إرسال الإجراء — تحقق من الاتصال');return;}
   pendingActTimer=setTimeout(function(){
-   if(pendingAct&&lastAppliedSeq===seqAtSend)attempt();
-   else pendingAct=null;
-  },1200);
+   if(!pendingAct)return;
+   attempt();
+   try{if(conn&&conn.open)conn.send({type:'sync'});}catch(e){}
+  },800);
  }
  attempt();
 }
@@ -4017,6 +4241,8 @@ function ratingCap(r){
 /* تقييم اللاعب بالنسبة للذكاء الاصطناعي: أقصى سعر منطقي يدفعه */
 function aiValue(s){
  var me=P[1],opp=P[0];
+ /* ⚖️ عدالة الـAI: في المزاد الأعمى الميزانيات سرية، فممنوع الكمبيوتر يبص على فلوس الخصم */
+ var fairBlind=(gameType==='blind');
  var starsLeft=Math.max(1,stars.length-round);
  var slotsLeft=Math.max(1,Math.min(starsLeft,ROUNDS-me.squad.length));
  var perSlot=me.budget/slotsLeft;
@@ -4033,8 +4259,8 @@ function aiValue(s){
  /* لو متأخر في القوة، يخاطر أكتر. لو متقدم، يوفر */
  var diff=teamPower(1)-teamPower(0);
  val*= diff<-6?1.15:(diff>6?0.92:1);
- /* الخصم فلوسه قليلة → مش محتاج يغالي */
- if(opp.budget<me.budget*0.5)val*=0.85;
+ /* الخصم فلوسه قليلة → مش محتاج يغالي (معلومة معلنة فقط — متخفية في المزاد الأعمى) */
+ if(!fairBlind&&opp.budget<me.budget*0.5)val*=0.85;
  /* مقارنة اللاعب بباقي النجوم المتبقية: ندرة الجودة */
  var remain=stars.slice(round+1),ravg=0;
  if(remain.length){var rt=0;remain.forEach(function(x){rt+=x.r;});ravg=rt/remain.length;
@@ -4073,7 +4299,7 @@ function aiMove(){
   /* الحد الأقصى للزيادة الواحدة = 5 */
   jump=Math.min(5,jump);
   /* لو ميزانية الخصم أقل من العرض الجديد، خلاص كسبناه برخص */
-  if(P[0].budget<=bid+1)jump=1;
+  if(gameType!=='blind'&&P[0].budget<=bid+1)jump=1;
   var target=Math.min(P[1].budget,Math.min(v,bid+jump));
   doRaise(Math.max(next,target));
  }else doPass();
@@ -4137,7 +4363,7 @@ function humanBlindLock(seat){
  blindDraft='';
  if(el)el.value='';
  try{sfxCard();}catch(e){}
- if(online&&!isHost){blindLocked[mySeat]=true;blindBid[mySeat]=v;conn&&conn.open&&conn.send({type:'act',a:'blind',v:v});render();return;}
+ if(online&&!isHost){blindLocked[mySeat]=true;blindBid[mySeat]=v;sendActReliable({type:'act',a:'blind',v:v});render();return;}
  submitBlind(seat,v);
 }
 function submitBlind(seat,v){
@@ -4177,7 +4403,7 @@ function revealBlind(){
  '<div>'+pcardHTML(s,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
  '<div>'+pcardHTML(rp,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">حصل عليه <b style="color:var(--blue)">'+P[passer].name+'</b> — نفس المركز ('+GLBL[g]+')</div></div></div>';
  ovH=content+'<button class="big-btn green" onclick="closeOverlay()">الجولة التالية</button>';
- ovG=content+'<div class="status">بانتظار المضيف…</div>';
+ ovG=content+'<div class="status">بانتظار المضيف…</div>'+GUEST_SYNC_BTN;
  try{sfxRaise();}catch(e){}
  render();broadcast();bindWiki($('obox'));
 }
@@ -4373,7 +4599,7 @@ function startBoxRound(){
 function boxCanAct(seat){return phase==='box'&&(mode===3?seat===mySeat:(mode===1?seat===0:true));}
 function boxClickOpen(seat,idx){
  if(!boxCanAct(seat))return;
- if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'openbox',idx:idx});
+ if(online&&!isHost)return sendActReliable({type:'act',a:'openbox',idx:idx});
  doOpenBox(seat,idx);
 }
 function doOpenBox(seat,idx){
@@ -4390,7 +4616,7 @@ function boxClickPick(seat,idx){
  if(!boxCanAct(seat))return;
  /* السماح فقط بقبول الصندوق الأول (الوحيد المفتوح) — الصندوق الثاني يُؤخذ تلقائيًا عند فتحه */
  if(boxOpened[seat].length!==1||boxOpened[seat][0]!==idx)return;
- if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'pickbox',idx:idx});
+ if(online&&!isHost)return sendActReliable({type:'act',a:'pickbox',idx:idx});
  doPickBox(seat,idx);
 }
 function doPickBox(seat,idx){
@@ -4458,7 +4684,7 @@ function finalizeBoxPos(){
  '<div>'+pcardHTML(s0,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--gold)">'+P[0].name+'</b></div>'+bonusLine0+'</div>'+
  '<div>'+pcardHTML(s1,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">اختيار <b style="color:var(--blue)">'+P[1].name+'</b></div>'+bonusLine1+'</div></div>';
  ovH=content+'<button class="big-btn green" onclick="closeBoxReveal()">المركز التالي</button>';
- ovG=content+'<div class="status">بانتظار المضيف…</div>';
+ ovG=content+'<div class="status">بانتظار المضيف…</div>'+GUEST_SYNC_BTN;
  phase='boxreveal';
  render();broadcast();bindWiki($('obox'));
 }
@@ -4533,7 +4759,7 @@ function revealTPRound(){
  render();broadcast();
 }
 function tpNextRoundClick(){
- if(online&&!isHost){conn&&conn.open&&conn.send({type:'act',a:'tpnext'});return;}
+ if(online&&!isHost){sendActReliable({type:'act',a:'tpnext'});return;}
  tpNextRound();
 }
 function tpNextRound(){
@@ -4636,7 +4862,7 @@ function tpConfirm(seat){
  if(!el)return;
  var v=parseFloat(el.value);
  if(isNaN(v)||v<0){toast('اكتب رقمًا صحيحًا بالمليون يورو');return;}
- if(online&&!isHost){if(seat===mySeat){conn&&conn.open&&conn.send({type:'act',a:'tpguess',v:v});tpLocked[seat]=true;tpGuess[seat]=v;render();}return;}
+ if(online&&!isHost){if(seat===mySeat){sendActReliable({type:'act',a:'tpguess',v:v});tpLocked[seat]=true;tpGuess[seat]=v;render();}return;}
  tpSubmitGuess(seat,v);
 }
 function endTPGame(){
@@ -4655,6 +4881,7 @@ function endTPGame(){
  var histHtml=tpHistory.map(function(h,i){
   return '<div class="tp-result-row'+(h.winner===0?' win':'')+'"><div><div class="who">'+(i+1)+'. '+h.flag+' '+h.ar+'</div><div class="gv">'+h.from+' ➜ '+h.to+' ('+h.year+') — الحقيقي: '+fmtM(h.real)+'</div></div><div class="df">'+(h.winner===-1?'تعادل':(h.winner===0?P[0].name:P[1].name)+' فاز')+'</div></div>';
  }).join('');
+ recordMatchResult(P[0].name,tpScore[0],P[1].name,tpScore[1]);
  endH='<h2>النتيجة النهائية — راجع سعرك</h2>'+
  (champ===-1?'<div class="winner-banner">🤝 تعادل '+tpScore[0]+' - '+tpScore[1]+'</div>':'<div class="winner-banner">🏆 البطل: '+P[champ].name+' ('+tpScore[0]+' - '+tpScore[1]+')</div>')+
  '<table class="stat-t"><tr><td></td><td><b>'+P[0].name+'</b></td><td><b>'+P[1].name+'</b></td></tr>'+
@@ -4664,7 +4891,7 @@ function endTPGame(){
  (best?('<div class="tp-stat-box">🎯 <b>أقرب توقع في اللعبة:</b> '+best.flag+' '+best.ar+' — فرق '+bestDiff.toFixed(1)+' مليون فقط عن السعر الحقيقي ('+fmtM(best.real)+')</div>'):'')+
  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
  (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+tpScore[0]+' - '+tpScore[1]+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
- '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
+ pointsSummaryHTML()+'<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
  mzGameEnd(champ,'tp');
  shareText='💰 راجع سعرك — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل '+tpScore[0]+' - '+tpScore[1]:'🏆 البطل: '+P[champ].name+' ('+tpScore[0]+' - '+tpScore[1]+')')+'\n'+
@@ -4775,7 +5002,7 @@ function aiTrySteal(tries){
 }
 function priceOK(actor,c){var price=gameType==='boxes'?0:(CARD_PRICES[c]||0);return price<=P[actor].budget;}
 function markReady(seat){
- if(online&&!isHost){if(seat===1)conn.send({type:'act',a:'ready'});return;}
+ if(online&&!isHost){if(seat===1)sendActReliable({type:'act',a:'ready'});return;}
  cardsReady[seat]=true;log(P[seat].name+' انتهى من الكروت');checkCardsReady();
 }
 function checkCardsReady(){if(cardsReady[0]&&cardsReady[1]){setTimeout(startCaptainPhase,500);}else{render();broadcast();}}
@@ -4805,7 +5032,7 @@ function confirmCard(){
  var c=cardFlow.card,i=cardFlow.sel,j=cardFlow.sel2,actor=cardFlow.actor;
  if(c==='steal'&&(i<0||j<0))return toast('اختار لاعب من عندك ولاعب من الخصم');
  sfxCard();
- if(online&&!isHost){conn&&conn.open&&conn.send({type:'act',a:'card',c:c,i:i,j:j});cardFlow=null;render();return;}
+ if(online&&!isHost){sendActReliable({type:'act',a:'card',c:c,i:i,j:j});cardFlow=null;render();return;}
  applyPostCard(actor,c,i,j);cardFlow=null;render();
 }
 function applyPostCard(actor,c,i,j){return applyCard(actor,c,i,j);}
@@ -4866,7 +5093,7 @@ function humanPickCaptain(idx){
  var me=online?mySeat:0;
  if(mode===2){if(captainIdx[0]===-1)me=0;else if(captainIdx[1]===-1)me=1;else return;}
  if(captainIdx[me]!==-1)return;
- if(online&&!isHost){if(me===1)conn.send({type:'act',a:'captain',idx:idx});return;}
+ if(online&&!isHost){if(me===1)sendActReliable({type:'act',a:'captain',idx:idx});return;}
  captainIdx[me]=idx;log(P[me].name+' اختار '+P[me].squad[idx].ar+' كابتنًا');checkCaptains();
 }
 function checkCaptains(){if(captainIdx[0]===-1||captainIdx[1]===-1){render();broadcast();return;}setTimeout(endGame,800);}
@@ -4906,15 +5133,29 @@ function resolveRound(win,passer){
  '<div>'+pcardHTML(s,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">ضمّه <b style="color:var(--gold)">'+P[win].name+'</b> مقابل '+fmt(price)+'</div></div>'+
  '<div>'+pcardHTML(rp,false,false)+'<div style="font-size:12px;color:var(--dim);margin-top:6px">حصل عليه <b style="color:var(--blue)">'+P[passer].name+'</b> — نفس المركز ('+GLBL[g]+')</div></div></div>';
  ovH=content+'<button class="big-btn green" onclick="closeOverlay()">الجولة التالية</button>';
- ovG=content+'<div class="status">بانتظار المضيف…</div>';
+ ovG=content+'<div class="status">بانتظار المضيف…</div>'+GUEST_SYNC_BTN;
  render();broadcast();bindWiki($('obox'));
 }
 function closeOverlay(){if(online&&!isHost)return;round++;if(gameType==='blind')startBlindRound();else nextRound();}
-function poisson(l){var L=Math.exp(-l),k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
+/* ===== مولّد عشوائي عادل ومشترك بين اللاعبين (نفس النتيجة للطرفين) ===== */
+var _MZR=null;
+function mzHash(str){var h=2166136261,i;str=String(str);for(i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function mzSeedRnd(seed){var t=seed>>>0;return function(){t=(t+0x6D2B79F5)>>>0;var r=t;r=Math.imul(r^(r>>>15),r|1);r^=r+Math.imul(r^(r>>>7),r|61);return ((r^(r>>>14))>>>0)/4294967296;};}
+function mzSquadSig(sq){return (sq||[]).map(function(p){return (p.en||p.ar)+':'+p.r;}).sort().join('|');}
+function mzFairSeed(){
+ try{
+  var k=[mzSquadSig(P[0].squad),mzSquadSig(P[1].squad)].sort().join('#');
+  k+='#'+(typeof savedCode!=='undefined'&&savedCode?savedCode:(typeof roomCode!=='undefined'?roomCode:''));
+  k+='#'+(P[0].spent||0)+'-'+(P[1].spent||0);
+  return mzHash(k);
+ }catch(e){return mzHash(''+Date.now());}
+}
+function rnd(){return _MZR?_MZR():Math.random();}
+function poisson(l){var L=Math.exp(-l),k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
 function scorerPick(sq){
  var w={ST:6,RW:5,LW:5,CAM:4,CM:2,CDM:2,RB:1,LB:1,CB:1,GK:0.3};
  var bag=[];sq.forEach(function(p){var n=Math.round((w[p.pos]||1)*10);for(var i=0;i<n;i++)bag.push(p);});
- return bag.length?bag[Math.floor(Math.random()*bag.length)]:null;
+ return bag.length?bag[Math.floor(rnd()*bag.length)]:null;
 }
 function lineAvg(sq,which){
  var g={GK:['GK'],DEF:['CB','LB','RB'],MID:['CDM','CM','CAM'],ATT:['ST','CF','LW','RW','LM','RM']};
@@ -4923,26 +5164,27 @@ function lineAvg(sq,which){
  var t=0;list.forEach(function(p){t+=p.r;});return t/list.length;
 }
 function simulateMatch(){
+ _MZR=mzSeedRnd(mzFairSeed());
  var a=P[0].squad,b=P[1].squad;
  var capA=captainIdx[0]>=0?a[captainIdx[0]]:null,capB=captainIdx[1]>=0?b[captainIdx[1]]:null;
  var atk=function(x,cap){return lineAvg(x,'ATT')*0.6+lineAvg(x,'MID')*0.4+(cap?1.5:0);};
  var def=function(x,cap){return lineAvg(x,'DEF')*0.6+lineAvg(x,'GK')*0.28+lineAvg(x,'MID')*0.12+(cap?1:0);};
  var mid=function(x,cap){return lineAvg(x,'MID')*0.8+lineAvg(x,'ATT')*0.2+(cap?1:0);};
  var atkA=atk(a,capA),atkB=atk(b,capB),defA=def(a,capA),defB=def(b,capB),midA=mid(a,capA),midB=mid(b,capB);
- var xgA=Math.max(0.2,1.25+(atkA-defB)*0.13+(Math.random()*0.4-0.2));
- var xgB=Math.max(0.2,1.25+(atkB-defA)*0.13+(Math.random()*0.4-0.2));
+ var xgA=Math.max(0.2,1.25+(atkA-defB)*0.13+(rnd()*0.4-0.2));
+ var xgB=Math.max(0.2,1.25+(atkB-defA)*0.13+(rnd()*0.4-0.2));
  var g0=poisson(xgA),g1=poisson(xgB);
  var poss=Math.round(50+(midA-midB)*1.7);poss=Math.max(28,Math.min(72,poss));
- var shotsA=Math.max(g0,Math.round(xgA*3.6+Math.random()*3)),shotsB=Math.max(g1,Math.round(xgB*3.6+Math.random()*3));
- var sotA=Math.max(g0,Math.round(shotsA*(0.42+Math.random()*0.2))),sotB=Math.max(g1,Math.round(shotsB*(0.42+Math.random()*0.2)));
- var corA=Math.round(3+Math.random()*6+(poss-50)*0.06),corB=Math.round(3+Math.random()*6-(poss-50)*0.06);
+ var shotsA=Math.max(g0,Math.round(xgA*3.6+rnd()*3)),shotsB=Math.max(g1,Math.round(xgB*3.6+rnd()*3));
+ var sotA=Math.max(g0,Math.round(shotsA*(0.42+rnd()*0.2))),sotB=Math.max(g1,Math.round(shotsB*(0.42+rnd()*0.2)));
+ var corA=Math.round(3+rnd()*6+(poss-50)*0.06),corB=Math.round(3+rnd()*6-(poss-50)*0.06);
  corA=Math.max(0,corA);corB=Math.max(0,corB);
  var ev=[],usedMin={};
- var mkMin=function(){var m;do{m=1+Math.floor(Math.random()*90);}while(usedMin[m]);usedMin[m]=1;return m;};
+ var mkMin=function(){var m;do{m=1+Math.floor(rnd()*90);}while(usedMin[m]);usedMin[m]=1;return m;};
  var assistPick=function(sq,scorer){
   var c=sq.filter(function(p){return p!==scorer&&['CAM','CM','LW','RW','ST','LB','RB','CDM'].indexOf(p.pos)>=0;});
   if(!c.length)return null;
-  return Math.random()<0.72?c[Math.floor(Math.random()*c.length)]:null;
+  return rnd()<0.72?c[Math.floor(rnd()*c.length)]:null;
  };
  for(var i=0;i<g0;i++){var sA=scorerPick(a);if(sA)ev.push({min:mkMin(),t:0,p:sA.ar,r:sA.r,as:(assistPick(a,sA)||{}).ar});}
  for(var j=0;j<g1;j++){var sB=scorerPick(b);if(sB)ev.push({min:mkMin(),t:1,p:sB.ar,r:sB.r,as:(assistPick(b,sB)||{}).ar});}
@@ -4950,7 +5192,7 @@ function simulateMatch(){
  var ht0=ev.filter(function(e){return e.t===0&&e.min<=45;}).length,ht1=ev.filter(function(e){return e.t===1&&e.min<=45;}).length;
  /* ===== سجل أحداث الماتش الكامل (يظهر للطرفين) ===== */
  var xev=[];
- var anyP=function(sq,posList){var c=sq.filter(function(p){return !posList||posList.indexOf(p.pos)>=0;});if(!c.length)c=sq;return c.length?c[Math.floor(Math.random()*c.length)]:null;};
+ var anyP=function(sq,posList){var c=sq.filter(function(p){return !posList||posList.indexOf(p.pos)>=0;});if(!c.length)c=sq;return c.length?c[Math.floor(rnd()*c.length)]:null;};
  var addX=function(t,ic,txt){xev.push({min:mkMin(),t:t,ic:ic,txt:txt,kind:'x'});};
  var GK_=['GK'],DEFP=['CB','LB','RB','CDM'],ATTP=['ST','CF','LW','RW','CAM'];
  [[0,a,shotsA,sotA,g0,b],[1,b,shotsB,sotB,g1,a]].forEach(function(s){
@@ -4958,13 +5200,13 @@ function simulateMatch(){
   var saves=Math.max(0,sot-gl);
   for(var q=0;q<Math.min(saves,3);q++){var sv=anyP(opp,GK_),sh2=anyP(sq,ATTP);if(sv&&sh2)addX(t,'🧤','تصدي رائع من '+sv.ar+' أمام '+sh2.ar);}
   var misses=Math.max(0,Math.min(2,sh-sot));
-  for(var m=0;m<misses;m++){var ms=anyP(sq,ATTP);if(ms&&Math.random()<0.6)addX(t,'😱','فرصة ضائعة — '+ms.ar+' يسدد بجوار القائم');}
-  if(Math.random()<0.22){var wd=anyP(sq,ATTP);if(wd)addX(t,'🎯','كرة على القائم من '+wd.ar);}
-  if(Math.random()<0.55){var yc=anyP(sq,DEFP);if(yc)addX(t,'🟨','إنذار لـ '+yc.ar+' بسبب تدخل عنيف');}
-  if(Math.random()<0.09){var rc=anyP(sq,DEFP);if(rc)addX(t,'🟥','طرد '+rc.ar+' — الفريق ناقص عددياً');}
-  if(Math.random()<0.12){var pn=anyP(sq,ATTP),gk2=anyP(opp,GK_);if(pn&&gk2)addX(t,'❌','ركلة جزاء ضائعة! '+gk2.ar+' يتصدى لتسديدة '+pn.ar);}
-  if(Math.random()<0.18){var inj=anyP(sq);if(inj)addX(t,'🚑','إصابة '+inj.ar+' وخروجه للعلاج');}
-  if(Math.random()<0.35){var sub=anyP(sq);if(sub)addX(t,'🔄','تبديل: نزول '+sub.ar+' لتغيير الإيقاع');}
+  for(var m=0;m<misses;m++){var ms=anyP(sq,ATTP);if(ms&&rnd()<0.6)addX(t,'😱','فرصة ضائعة — '+ms.ar+' يسدد بجوار القائم');}
+  if(rnd()<0.22){var wd=anyP(sq,ATTP);if(wd)addX(t,'🎯','كرة على القائم من '+wd.ar);}
+  if(rnd()<0.55){var yc=anyP(sq,DEFP);if(yc)addX(t,'🟨','إنذار لـ '+yc.ar+' بسبب تدخل عنيف');}
+  if(rnd()<0.09){var rc=anyP(sq,DEFP);if(rc)addX(t,'🟥','طرد '+rc.ar+' — الفريق ناقص عددياً');}
+  if(rnd()<0.12){var pn=anyP(sq,ATTP),gk2=anyP(opp,GK_);if(pn&&gk2)addX(t,'❌','ركلة جزاء ضائعة! '+gk2.ar+' يتصدى لتسديدة '+pn.ar);}
+  if(rnd()<0.18){var inj=anyP(sq);if(inj)addX(t,'🚑','إصابة '+inj.ar+' وخروجه للعلاج');}
+  if(rnd()<0.35){var sub=anyP(sq);if(sub)addX(t,'🔄','تبديل: نزول '+sub.ar+' لتغيير الإيقاع');}
  });
  var tl=ev.map(function(e){return{min:e.min,t:e.t,ic:'⚽',kind:'g',txt:e.p+(e.as?' <span style="opacity:.75">(صناعة: '+e.as+')</span>':'')};}).concat(xev);
  tl.sort(function(x,y){return x.min-y.min;});
@@ -4976,7 +5218,7 @@ function simulateMatch(){
  var motm=null,score=-1,motmN=0,motmA=0;
  for(var k in tally){var sc=tally[k].n*3+tally[k].a*1.6+tally[k].r*0.03;if(sc>score){score=sc;motm=k;motmN=tally[k].n;motmA=tally[k].a;}}
  if(!motm){var winSq=(g0===g1?(atkA+defA>=atkB+defB?a:b):(g0>g1?a:b));var bp=winSq.length?winSq.reduce(function(x,y){return x.r>=y.r?x:y;}):null;motm=bp?bp.ar:null;}
- var rating=Math.min(10,(6.6+motmN*1.1+motmA*0.5+Math.random()*0.4)).toFixed(1);
+ var rating=Math.min(10,(6.6+motmN*1.1+motmA*0.5+rnd()*0.4)).toFixed(1);
  var note=[];if(motmN)note.push(motmN===1?'هدف':motmN===2?'هدفين':motmN+' أهداف');if(motmA)note.push(motmA===1?'صناعة هدف':'صناعة '+motmA+' أهداف');
  var bar=function(lbl,va,vb,fmtv){
   var ta=va+vb||1;var pa=Math.round(va/ta*100);
@@ -5019,6 +5261,7 @@ function endGame(){
  sfxFanfare();
  var s0=stats(0),s1=stats(1);
  var sim=simulateMatch();
+ recordMatchResult(P[0].name,sim.g0,P[1].name,sim.g1);
  var champ=sim.g0!==sim.g1?(sim.g0>sim.g1?0:1):(s0.tot!==s1.tot?(s0.tot>s1.tot?0:1):(P[0].budget===P[1].budget?-1:(P[0].budget>P[1].budget?0:1)));
  var sq=function(i){return orderedSquad(P[i].squad).map(function(o){var idx=o.i;var isCap=captainIdx[i]===idx;var p=o.p;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join(' ');};
  endH='<h2>النتيجة النهائية</h2>'+
@@ -5034,6 +5277,7 @@ function endGame(){
  '<tr><td>المتبقي</td><td>'+fmt(P[0].budget)+'</td><td>'+fmt(P[1].budget)+'</td></tr>'):'')+'</table>'+
  [0,1].map(function(i){return '<div class="squad-end"><b style="color:var(--acc)">'+P[i].name+':</b><br>'+sq(i)+'</div>';}).join('')+
  (champ>=0?('<div class="rematch-box"><div class="rt-title">🔥 عايز ثأر؟</div><button class="big-btn red" onclick="sendRematchChallenge(\''+P[1-champ].name.replace(/'/g,"\\'")+'\',\''+P[champ].name.replace(/'/g,"\\'")+'\',\''+sim.g0+' - '+sim.g1+'\')">📣 تحدَّ '+P[champ].name+' وارجع تلعب</button></div>'):'')+
+ pointsSummaryHTML()+
  '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
  shareText='⚽ '+(gameType==='boxes'?'صناديق الحظ':(gameType==='blind'?'المزاد الأعمى 🕶️':'مزاد النجوم'))+' — النتيجة النهائية\n'+
  (champ===-1?'🤝 تعادل بين '+P[0].name+' و'+P[1].name:'🏆 البطل: '+P[champ].name)+'\n'+
@@ -5041,7 +5285,6 @@ function endGame(){
  '💪 '+P[1].name+': قوة '+s1.tot+' (متوسط '+s1.avg+')\n'+
  '⚽ نتيجة المباراة النهائية: '+sim.g0+' - '+sim.g1+'\n'+
  '🎮 العب مزاد النجوم بنفسك!';
- recordMatchResult(P[0].name,sim.g0,P[1].name,sim.g1);
  mzGameEnd(champ,gameType==='blind'?'blind':(gameType==='boxes'?'boxes':'auction'));
  if(pendingPromo){toast('🎉 اترقّيت لمستوى '+pendingPromo.ic+' '+pendingPromo.label+'!');}
  render();broadcast();
@@ -5236,5 +5479,561 @@ function dismissOnbTip(){
     if (e.ctrlKey && e.keyCode === 83) return false;
   };
 </script>
+<style>
+.t-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.t-pl{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;align-items:center;gap:8px}
+.t-av{width:34px;height:34px;border-radius:50%;flex:0 0 34px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#0b1220;background:var(--acc)}
+.t-av.b{background:var(--blue)}.t-av.g{background:var(--gold)}.t-av.p{background:var(--purple);color:#fff}
+.t-pn{font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-match{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px}
+.t-match.mine{border-color:var(--acc);box-shadow:0 0 0 2px rgba(63,185,80,.15)}
+.t-vs{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.t-side{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.t-side .t-av{width:54px;height:54px;flex:0 0 54px;font-size:18px}
+.t-side .t-nm{font-weight:900;font-size:13px;text-align:center;overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}
+.t-side .t-st{font-size:11px;color:var(--dim)}
+.t-side .t-st.ok{color:var(--acc);font-weight:800}
+.t-vsl{font-weight:900;color:var(--gold);font-size:16px;flex:0 0 auto}
+.t-round-h{text-align:center;font-weight:900;color:var(--gold);margin:10px 0 6px;font-size:15px}
+.t-win{background:rgba(63,185,80,.12);border:1px solid var(--acc);color:var(--acc);border-radius:10px;padding:6px;text-align:center;font-weight:800;font-size:12.5px;margin-top:8px}
+.t-note{background:rgba(210,153,34,.12);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:8px;text-align:center;font-weight:800;font-size:12.5px;margin-top:8px}
+.t-champ{background:linear-gradient(135deg,rgba(210,153,34,.25),rgba(63,185,80,.15));border:1px solid var(--gold);border-radius:16px;padding:16px;text-align:center;font-weight:900;font-size:18px;color:var(--gold);margin-bottom:10px}
+.t-row{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:6px;font-size:13px;font-weight:800}
+.t-row button{background:var(--acc);border:0;color:#08210f;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
+#tourDrawOv{position:fixed;inset:0;z-index:99999;background:rgba(6,10,18,.94);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.tdw-box{width:100%;max-width:420px;text-align:center}
+.tdw-h{font-size:18px;font-weight:900;color:var(--gold);margin-bottom:12px}
+.tdw-pot{display:flex;justify-content:center;margin-bottom:14px}
+.tdw-ball{min-width:130px;padding:16px 12px;border-radius:50%/40%;background:linear-gradient(145deg,#f3d27a,#c69b34);color:#20180a;font-weight:900;font-size:15px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:tdwSpin 1.1s ease-in-out infinite}
+@keyframes tdwSpin{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+.tdw-list{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.tdw-row{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;animation:tdwIn .45s ease}
+@keyframes tdwIn{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+.tdw-vs{color:var(--gold);font-weight:900;font-size:12px}
+.tdw-bye{color:var(--dim);font-size:12px}
+.tdw-skip{margin-top:14px}
+#tourBackBtn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--gold);color:#20180a;border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+</style>
+<button id="tourBackBtn" class="hidden" onclick="tourReturnFromMatch()">🏆 رجوع لشاشة البطولة</button>
+<script>
+/* ================= نظام البطولات (Tournaments) =================
+   بطولة أونلاين حقيقية: كود بطولة + كلمة سر + قرعة عشوائية + مباريات
+   إقصائية بين اللاعبين على السيرفر (Supabase Realtime).
+   المضيف هو صاحب الحالة (state) وبيبثها لكل المشتركين. */
+var TOUR=null,TOURCH=null,TOURCH_SUB=false,TOURMATCH=null,tourStateInt=null,tourSearchT=null;
+var tourSet={n:4,gt:'auction',timer:20,budget:500},tourPassInput='';
+var TLOBBY='mztour-lobby-v1',tourLobbyCh=null,tourLobbyMine=null,tourLobbyInt=null;
+
+function tourNameVal(){return (($('tourName')&&$('tourName').value)||'').trim();}
+function tourSyncName(){/* الاسم بيتاخد من الشاشة الرئيسية فقط */try{var v=(($('name1')&&$('name1').value)||'').trim();if($('tourName'))$('tourName').value=v;if($('tourNameShow'))$('tourNameShow').textContent=v||'— (اكتب اسمك في الصفحة الرئيسية)';}catch(e){}}
+function tourEditName(){show('home');try{$('name1').focus();$('name1').scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}toast('✏️ غيّر اسمك من هنا، وبعدين ارجع للبطولات');}
+function openTournaments(){
+ tourSyncName();
+ tourAskNotify();
+ show('tourHome');
+}
+function tourExitHome(){show('home');}
+function tourPickCount(n){tourSet.n=n;[2,4,8,16,32].forEach(function(k){var b=$('tcn'+k);if(b)b.classList.toggle('sel',k===n);});}
+function tourPickGt(g){tourSet.gt=g;['auction','boxes','transferprice','blind'].forEach(function(k){var b=$('tgt-'+k);if(b)b.classList.toggle('sel',k===g);});}
+function tourUpdTime(v){tourSet.timer=+v;$('tourTimeVal').textContent=(+v===0?'بدون تايمر':v+' ث');}
+function tourUpdBud(v){tourSet.budget=+v;try{$('tourBudVal').textContent=fmt(+v);}catch(e){$('tourBudVal').textContent=v+' مليون';}}
+function tourGtLabel(g){return g==='boxes'?'🎁 صناديق الحظ':(g==='transferprice'?'💰 راجع سعرك':(g==='blind'?'🕶️ المزاد الأعمى':'⚽ مزاد النجوم'));}
+function tourInitials(n){n=(n||'?').trim();var p=n.split(/\s+/);return ((p[0]||'?')[0]+((p[1]||'')[0]||'')).toUpperCase();}
+function tourAvCls(cid){var s=0,i;cid=cid||'';for(i=0;i<cid.length;i++)s+=cid.charCodeAt(i);return ['','b','g','p'][s%4];}
+
+/* ---------- إشعارات ---------- */
+function tourAskNotify(){try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission().catch(function(){});}catch(e){}}
+function tourNotify(title,body){
+ try{if(typeof sfxFanfare==='function')sfxFanfare();}catch(e){}
+ try{toast(body||title);}catch(e){}
+ try{
+  if(window.Notification&&Notification.permission==='granted'&&document.hidden){
+   var n=new Notification(title,{body:body||'',icon:'https://cdn-icons-png.flaticon.com/512/861/861512.png'});
+   n.onclick=function(){try{window.focus();n.close();}catch(e){}};
+  }
+ }catch(e){}
+}
+
+/* ---------- قائمة البطولات المفتوحة ---------- */
+function tourLobbyStart(){
+ if(!TOUR||!TOUR.host||TOUR.pass)return;
+ tourLobbyEnsure(function(ch){
+  tourLobbyMine={code:TOUR.code,host:TOUR.hostName,n:TOUR.set.n,gt:TOUR.set.gt,cnt:TOUR.players.length,started:TOUR.matches.length>0,c:myCid,t:Date.now()};
+  try{ch.track(tourLobbyMine);}catch(e){}
+  clearInterval(tourLobbyInt);
+  tourLobbyInt=setInterval(function(){
+   if(!TOUR||!TOUR.host){clearInterval(tourLobbyInt);return;}
+   tourLobbyMine.cnt=TOUR.players.length;tourLobbyMine.started=TOUR.matches.length>0;tourLobbyMine.t=Date.now();
+   try{ch.track(tourLobbyMine);}catch(e){}
+  },4000);
+ });
+}
+function tourLobbyStop(){clearInterval(tourLobbyInt);tourLobbyInt=null;try{if(tourLobbyCh)tourLobbyCh.untrack();}catch(e){}}
+function tourLobbyEnsure(cb){
+ if(!sbClient())return;
+ if(tourLobbyCh){if(cb)cb(tourLobbyCh);return;}
+ tourLobbyCh=sbClient().channel(TLOBBY,{config:{presence:{key:myCid}}});
+ tourLobbyCh.on('presence',{event:'sync'},function(){tourRenderBrowse();});
+ tourLobbyCh.subscribe(function(s){if(s==='SUBSCRIBED'&&cb)cb(tourLobbyCh);});
+}
+function tourOpenBrowser(){
+ if(!sbReady())return toast('جارٍ تحميل السيرفر… جرّب تاني');
+ $('tourBrowseList').innerHTML='<div class="status">⏳ جارٍ تحميل البطولات…</div>';
+ tourLobbyEnsure(function(){setTimeout(tourRenderBrowse,700);});
+}
+function tourRenderBrowse(){
+ var box=$('tourBrowseList');if(!box)return;
+ var st={};try{st=tourLobbyCh?(tourLobbyCh.presenceState()||{}):{};}catch(e){}
+ var rows=[];Object.keys(st).forEach(function(k){(st[k]||[]).forEach(function(e){if(e&&e.code&&!e.started&&e.cnt<e.n)rows.push(e);});});
+ if(!rows.length){box.innerHTML='<div class="status">مفيش بطولات مفتوحة دلوقتي — اعمل واحدة! 🏆</div>';return;}
+ box.innerHTML=rows.slice(0,20).map(function(r){
+  return '<div class="t-row"><span>🏆 '+(r.host||'بطولة')+' • '+tourGtLabel(r.gt)+' • '+r.cnt+'/'+r.n+'</span><button onclick="tourQuickJoin(\''+r.code+'\')">دخول</button></div>';
+ }).join('');
+}
+function tourQuickJoin(code){$('tourJoinCode').value=code;$('tourJoinPass').value='';tourSearch();}
+
+/* ---------- إنشاء / بحث ---------- */
+function tourCreate(){
+ if(!sbReady())return toast('جارٍ تحميل السيرفر… جرّب تاني');
+ tourSyncName();var n=tourNameVal();
+ if(!n){$('tourCreateStatus').textContent='⚠️ اكتب اسمك في الصفحة الرئيسية الأول';tourEditName();return;}
+
+ var code=makeCodeRaw();
+ TOUR={code:code,host:true,hostName:n,hostCid:myCid,pass:(($('tourPass')&&$('tourPass').value)||'').trim(),
+  set:{n:tourSet.n,gt:tourSet.gt,timer:tourSet.timer,budget:tourSet.budget},
+  players:[{cid:myCid,name:n}],round:0,matches:[],champion:null};
+ tourChannelOpen(code);
+ show('tourRoom');tourRender();
+ toast('✅ اتعملت البطولة — شارك الكود: '+code);
+}
+function tourSearch(){
+ if(!sbReady())return toast('جارٍ تحميل السيرفر… جرّب تاني');
+ tourSyncName();var n=tourNameVal();
+ if(!n){$('tourSearchStatus').textContent='⚠️ اكتب اسمك في الصفحة الرئيسية الأول';tourEditName();return;}
+
+ var code=(($('tourJoinCode')&&$('tourJoinCode').value)||'').trim().toUpperCase();
+ if(code.length<4){$('tourSearchStatus').textContent='⚠️ اكتب كود البطولة (4 حروف)';return;}
+ $('tourSearchStatus').textContent='🔎 جارٍ البحث عن البطولة '+code+'…';
+ TOUR={code:code,host:false,hostName:'',hostCid:'',pass:(($('tourJoinPass')&&$('tourJoinPass').value)||'').trim(),
+  set:{n:0,gt:'auction',timer:20,budget:500},players:[],round:0,matches:[],champion:null,pending:true};
+ tourChannelOpen(code);
+ clearTimeout(tourSearchT);
+ tourSearchT=setTimeout(function(){
+  if(TOUR&&TOUR.pending){
+   $('tourSearchStatus').textContent='❌ مفيش بطولة بالكود ده (أو صاحبها مش أونلاين)';
+   tourChannelClose();TOUR=null;
+  }
+ },5000);
+}
+
+/* ---------- قناة البطولة ---------- */
+function tourSend(d){try{if(TOURCH)TOURCH.send({type:'broadcast',event:'tm',payload:{c:myCid,d:d}});}catch(e){}}
+function tourChannelClose(){
+ clearInterval(tourStateInt);tourStateInt=null;
+ tourLobbyStop();
+ try{if(TOURCH){TOURCH.untrack();sbClient().removeChannel(TOURCH);}}catch(e){}
+ TOURCH=null;TOURCH_SUB=false;
+}
+function tourChannelOpen(code){
+ tourChannelClose();
+ var c=(typeof sbClient==="function"?sbClient():sbc);if(!c)return;
+ TOURCH=c.channel('mztour-'+code,{config:{broadcast:{self:false},presence:{key:myCid}}});
+ TOURCH.on('broadcast',{event:'tm'},function(m){
+  var p=m&&m.payload;if(!p||!p.d||p.c===myCid)return;
+  try{tourHandle(p.d,p.c);}catch(e){}
+ });
+ TOURCH.on('presence',{event:'sync'},function(){if(TOUR&&TOUR.host)tourPrune();});
+ TOURCH.subscribe(function(s){
+  if(s==='SUBSCRIBED'){
+   TOURCH_SUB=true;
+   try{TOURCH.track({c:myCid,n:tourNameVal()||myName(),h:!!(TOUR&&TOUR.host),t:Date.now()});}catch(e){}
+   if(TOUR&&TOUR.host){tourBroadcastState();tourLobbyStart();
+    clearInterval(tourStateInt);tourStateInt=setInterval(function(){if(TOUR&&TOUR.host)tourBroadcastState();},2500);
+   }else{
+    tourSend({type:'join',name:tourNameVal(),pass:TOUR?TOUR.pass:''});
+    setTimeout(function(){if(TOUR&&TOUR.pending)tourSend({type:'join',name:tourNameVal(),pass:TOUR.pass});},900);
+   }
+  }
+ });
+}
+function tourPresentCids(){
+ var out={};try{var st=TOURCH.presenceState()||{};Object.keys(st).forEach(function(k){(st[k]||[]).forEach(function(e){if(e&&e.c)out[e.c]=e.n||'';});});}catch(e){}
+ return out;
+}
+/* قبل القرعة: نشيل اللي خرجوا من البطولة */
+function tourPrune(){
+ if(!TOUR||!TOUR.host||TOUR.matches.length)return;
+ var pres=tourPresentCids();pres[myCid]=1;
+ var before=TOUR.players.length;
+ TOUR.players=TOUR.players.filter(function(p){return pres[p.cid]!==undefined;});
+ if(TOUR.players.length!==before){tourBroadcastState();tourRender();}
+}
+function tourStatePayload(){
+ return {type:'state',st:{code:TOUR.code,hostName:TOUR.hostName,hostCid:TOUR.hostCid,locked:!!TOUR.pass,
+  set:TOUR.set,players:TOUR.players,round:TOUR.round,matches:TOUR.matches,champion:TOUR.champion}};
+}
+function tourBroadcastState(){if(TOUR&&TOUR.host)tourSend(tourStatePayload());}
+
+function tourHandle(d,from){
+ if(!TOUR)return;
+ if(TOUR.host){
+  if(d.type==='join'){
+   if(TOUR.pass&&(d.pass||'')!==TOUR.pass){tourSend({type:'reject',to:from,why:'🔒 كلمة السر غلط'});return;}
+   var ex=null;TOUR.players.forEach(function(p){if(p.cid===from)ex=p;});
+   if(!ex){
+    if(TOUR.matches.length){tourSend({type:'reject',to:from,why:'⚠️ البطولة بدأت بالفعل'});return;}
+    if(TOUR.players.length>=TOUR.set.n){tourSend({type:'reject',to:from,why:'⚠️ البطولة مكتملة العدد'});return;}
+    var nm=(d.name||'لاعب').slice(0,18);
+    var dup=1,base=nm;while(TOUR.players.some(function(p){return p.name===nm;})){nm=base+' '+(++dup);}
+    TOUR.players.push({cid:from,name:nm});
+    tourNotify('🏆 لاعب جديد',nm+' انضم للبطولة ('+TOUR.players.length+'/'+TOUR.set.n+')');
+   }
+   tourBroadcastState();tourRender();return;
+  }
+  if(d.type==='ready'){tourSetReady(d.mid,from);return;}
+  if(d.type==='result'){tourApplyResult(d.mid,d.winner);return;}
+  if(d.type==='bye'){
+   if(!TOUR.matches.length){TOUR.players=TOUR.players.filter(function(p){return p.cid!==from;});tourBroadcastState();tourRender();}
+   return;
+  }
+ }
+ if(d.type==='state'&&!TOUR.host){
+  var s=d.st;if(!s||s.code!==TOUR.code)return;
+  var wasPending=TOUR.pending;
+  var mineBefore=tourMyMatchIn(TOUR.matches);
+  TOUR.pending=false;clearTimeout(tourSearchT);
+  TOUR.hostName=s.hostName;TOUR.hostCid=s.hostCid;TOUR.set=s.set;TOUR.players=s.players||[];
+  TOUR.round=s.round;TOUR.matches=s.matches||[];TOUR.champion=s.champion||null;
+  var iAmIn=TOUR.players.some(function(p){return p.cid===myCid;});
+  if(!iAmIn&&!TOUR.matches.length){tourSend({type:'join',name:tourNameVal(),pass:TOUR.pass});}
+  if(wasPending){$('tourSearchStatus').textContent='';show('tourRoom');toast('✅ دخلت بطولة '+TOUR.code);}
+  var mineNow=tourMyMatchIn(TOUR.matches);
+  if(!mineBefore&&mineNow&&mineNow.b&&mineNow.a){
+   var opp=(mineNow.a.cid===myCid?mineNow.b:mineNow.a);
+   tourNotify('🎲 اتعملت القرعة!','خصمك في البطولة: '+opp.name);
+   if(!TOURMATCH&&$('tourRoom')&&!$('tourRoom').classList.contains('hidden')){
+    try{tourDrawShow(tourRoundMatches(mineNow.round),function(){tourRender();});}catch(e){}
+   }
+  }else if(mineNow&&mineBefore&&mineNow.id===mineBefore.id){
+   var oppc=(mineNow.a&&mineNow.a.cid===myCid)?(mineNow.b&&mineNow.b.cid):(mineNow.a&&mineNow.a.cid);
+   if(oppc&&mineNow.ready&&mineNow.ready[oppc]&&!(mineBefore.ready&&mineBefore.ready[oppc])&&!(mineNow.ready&&mineNow.ready[myCid])){
+    var on=(mineNow.a.cid===myCid?mineNow.b.name:mineNow.a.name);
+    tourNotify('🔔 خصمك جاهز',on+' مستعد وبيستناك — اضغط بدء المباراة');
+   }
+  }
+  if($('tourRoom')&&!$('tourRoom').classList.contains('hidden'))tourRender();
+  if(!TOUR.host&&TOUR.champion)tourRender();
+  return;
+ }
+ if(d.type==='reject'&&d.to===myCid){
+  $('tourSearchStatus').textContent=d.why||'⚠️ تعذر الدخول';
+  toast(d.why||'⚠️ تعذر الدخول للبطولة');
+  tourChannelClose();TOUR=null;show('tourHome');return;
+ }
+ if(d.type==='go'){
+  var m=null;(TOUR.matches||[]).forEach(function(x){if(x.id===d.mid)m=x;});
+  if(m&&((m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid)))tourLaunchMatch(m);
+  return;
+ }
+}
+
+/* ---------- القرعة والأدوار ---------- */
+function tourRand(n){
+ try{if(window.crypto&&crypto.getRandomValues){var a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n;}}catch(e){}
+ return Math.floor(Math.random()*n);
+}
+/* قرعة عادلة 100% — Fisher–Yates بأرقام عشوائية تشفيرية */
+function tourFairShuffle(list){
+ var a=list.slice(),i,j,t;
+ for(i=a.length-1;i>0;i--){j=tourRand(i+1);t=a[i];a[i]=a[j];a[j]=t;}
+ return a;
+}
+function tourDraw(){
+ if(!TOUR||!TOUR.host)return;
+ if(TOUR.players.length<2)return toast('⚠️ محتاج لاعبين على الأقل');
+ TOUR.round=1;
+ TOUR.matches=tourPair(tourFairShuffle(TOUR.players),1);
+ tourBroadcastState();
+ tourLobbyStop();
+ tourNotify('🎲 اتعملت القرعة','شوف خصمك وابدأ المباراة');
+ tourDrawShow(tourRoundMatches(1),function(){tourRender();});
+}
+/* 🎬 عرض القرعة: كرات في القبعة ➜ كشف كل مواجهة واحدة واحدة */
+function tourDrawShow(ms,cb){
+ ms=(ms||[]).filter(function(m){return m&&m.a;});
+ if(!ms.length){if(cb)cb();return;}
+ var ov=document.getElementById('tourDrawOv');
+ if(!ov){
+  ov=document.createElement('div');ov.id='tourDrawOv';document.body.appendChild(ov);
+ }
+ var names=[];ms.forEach(function(m){if(m.a)names.push(m.a.name);if(m.b)names.push(m.b.name);});
+ ov.className='';ov.innerHTML='<div class="tdw-box"><div class="tdw-h">🎲 قرعة '+tourRoundName(ms[0].round,ms.length)+'</div>'+
+  '<div class="tdw-pot"><div class="tdw-ball" id="tdwBall">?</div></div>'+
+  '<div class="tdw-list" id="tdwList"></div>'+
+  '<button class="big-btn goldb tdw-skip" onclick="tourDrawClose()">تخطي ➜</button></div>';
+ var ball=document.getElementById('tdwBall'),list=document.getElementById('tdwList');
+ var spin=setInterval(function(){if(ball)ball.textContent=names[tourRand(names.length)]||'?';},90);
+ var i=0;
+ function step(){
+  if(!document.getElementById('tourDrawOv')){clearInterval(spin);return;}
+  if(i>=ms.length){
+   clearInterval(spin);if(ball)ball.textContent='🏆';
+   setTimeout(function(){tourDrawClose();},1200);return;
+  }
+  var m=ms[i++];
+  var a=m.a?m.a.name:'—',b=m.b?'<span class="tdw-bye">تأهل مباشر</span>':'';
+  var row=document.createElement('div');row.className='tdw-row';
+  row.innerHTML='<b>'+a+'</b><span class="tdw-vs">VS</span>'+(m.b?('<b>'+m.b.name+'</b>'):b);
+  list.appendChild(row);
+  try{sfxCard&&sfxCard();}catch(e){}
+  setTimeout(step,750);
+ }
+ tourDrawShow._cb=cb;
+ setTimeout(step,900);
+}
+function tourDrawClose(){
+ var ov=document.getElementById('tourDrawOv');
+ if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);
+ var cb=tourDrawShow._cb;tourDrawShow._cb=null;
+ if(cb)try{cb();}catch(e){}
+}
+function tourPair(list,round){
+ /* شجرة إقصائية بنظام كأس العالم: لو العدد مش 2/4/8/16/32 بنوزّع "تأهل مباشر" (Bye)
+    بالتساوي على الشجرة بدل ما يتجمّع كله في الآخر — قرعة عادلة 100%. */
+ var n=list.length,ms=[],i;
+ if(n<2){if(n===1)ms.push({id:'r'+round+'m0',round:round,a:list[0],b:null,ready:{},started:false,done:true,winner:list[0].cid});return ms;}
+ var size=1;while(size<n)size*=2;
+ var slots=size/2, byes=size-n, seq=list.slice(), pairs=[];
+ /* كل مباراة فيها لاعب أساسي، والـ byes بتتوزّع على مباريات متباعدة */
+ var byeAt={},step=byes>0?slots/byes:0,k;
+ for(k=0;k<byes;k++)byeAt[Math.floor(k*step)]=true;
+ var idx=0;
+ for(i=0;i<slots;i++){
+  var a=seq[idx++]||null;
+  var b=byeAt[i]?null:(seq[idx++]||null);
+  pairs.push([a,b]);
+ }
+ pairs.forEach(function(pr,j){
+  var a=pr[0],b=pr[1];
+  if(!a&&b){a=b;b=null;}
+  if(!a)return;
+  ms.push({id:'r'+round+'m'+j,round:round,a:a,b:b,ready:{},started:false,done:!b,winner:b?null:a.cid});
+ });
+ return ms;
+}
+function tourRoundMatches(r){return (TOUR.matches||[]).filter(function(m){return m.round===r;});}
+function tourSetReady(mid,cid){
+ if(!TOUR||!TOUR.host)return;
+ var m=null;TOUR.matches.forEach(function(x){if(x.id===mid)m=x;});
+ if(!m||m.done||m.started)return;
+ m.ready=m.ready||{};m.ready[cid]=true;
+ if(m.a&&m.b&&m.ready[m.a.cid]&&m.ready[m.b.cid]){
+  m.started=true;
+  tourBroadcastState();
+  tourSend({type:'go',mid:m.id});
+  if(m.a.cid===myCid||m.b.cid===myCid)tourLaunchMatch(m);
+ }else{
+  tourBroadcastState();
+ }
+ tourRender();
+}
+function tourApplyResult(mid,winner){
+ if(!TOUR||!TOUR.host)return;
+ var m=null;TOUR.matches.forEach(function(x){if(x.id===mid)m=x;});
+ if(!m||m.done)return;
+ if(!winner){ /* تعادل: نرجّعهم يلعبوا تاني */
+  m.started=false;m.ready={};
+  tourBroadcastState();tourRender();toast('🤝 تعادل — أعيدوا المباراة');return;
+ }
+ m.done=true;m.winner=winner;
+ tourBroadcastState();
+ var rm=tourRoundMatches(m.round);
+ if(rm.every(function(x){return x.done;})){
+  var winners=rm.map(function(x){
+   var w=null;[x.a,x.b].forEach(function(p){if(p&&p.cid===x.winner)w=p;});
+   return w;
+  }).filter(Boolean);
+  if(winners.length<=1){
+   TOUR.champion=winners[0]||null;
+   tourNotify('🏆 انتهت البطولة','البطل: '+(TOUR.champion?TOUR.champion.name:'—'));
+  }else{
+   TOUR.round=m.round+1;
+   TOUR.matches=TOUR.matches.concat(tourPair(tourFairShuffle(winners),TOUR.round));
+   tourNotify('➡️ الدور الجديد','اتعملت قرعة '+tourRoundName(TOUR.round,Math.ceil(winners.length/2)));
+   if(!TOURMATCH){try{tourDrawShow(tourRoundMatches(TOUR.round),function(){tourRender();});}catch(e){}}
+  }
+  tourBroadcastState();
+ }
+ tourRender();
+}
+function tourMyMatchIn(ms){
+ var out=null;(ms||[]).forEach(function(m){if(!m.done&&((m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid)))out=m;});
+ return out;
+}
+function tourReady(mid){
+ if(!TOUR)return;
+ if(TOUR.host)tourSetReady(mid,myCid);
+ else{
+  var m=null;TOUR.matches.forEach(function(x){if(x.id===mid)m=x;});
+  if(m){m.ready=m.ready||{};m.ready[myCid]=true;tourRender();}
+  tourSend({type:'ready',mid:mid});
+  toast('✅ أنت مستعد — بانتظار خصمك');
+ }
+}
+
+/* ---------- تشغيل مباراة البطولة ---------- */
+function tourLaunchMatch(m){
+ if(TOURMATCH)return;
+ TOURMATCH={mid:m.id,a:m.a,b:m.b};
+ var iAmA=!!(m.a&&m.a.cid===myCid);
+ var opp=iAmA?(m.b||{name:'الخصم'}):(m.a||{name:'الخصم'});
+ try{$('name1').value=tourNameVal()||myName();}catch(e){}
+ try{pickGameType(TOUR.set.gt);}catch(e){}
+ try{$('rTime').value=TOUR.set.timer;updateTime(TOUR.set.timer);}catch(e){}
+ CFG.timer=TOUR.set.timer;
+ var tbud=+(TOUR.set.budget||500);
+ try{$('rBud').value=tbud;updateBud(tbud);}catch(e){}
+ CFG.budget=tbud;
+ mode=3;online=true;isPublicRoom=false;roomPass='';roomFull=false;guestCid='';guestName='';started=false;
+ var room=('T'+TOUR.code+m.id).toUpperCase();
+ try{netClose();}catch(e){}
+ try{stopPeerMgr();}catch(e){}
+ show('wait');
+ $('waitTxt').innerHTML='🏆 مباراة البطولة<br><b>'+ (iAmA?myNameSafe():opp.name) +'</b> ضد <b>'+(iAmA?opp.name:myNameSafe())+'</b><br>جارٍ الاتصال…';
+ if(iAmA){
+  isHost=true;mySeat=0;roomCode=room;savedCode=room;
+  conn=netCh=makeNetConn(room,true,{
+   onReady:function(){$('waitTxt').innerHTML='🏆 مباراة البطولة<br>بانتظار دخول <b>'+opp.name+'</b>…';},
+   onPeer:function(){roomFull=true;},
+   onFail:function(){toast('⚠️ تعذر الوصول للسيرفر');}
+  });
+  if(conn)wireConn();
+ }else{
+  isHost=false;mySeat=1;savedCode=room;
+  setTimeout(function(){try{connectToHost(room,true);}catch(e){}},450);
+ }
+ tourNotify('⚽ المباراة بدأت','ضد '+opp.name);
+}
+function myNameSafe(){try{return myName();}catch(e){return 'أنت';}}
+function tourReturnFromMatch(){
+ try{netClose();}catch(e){}
+ try{stopPeerMgr();}catch(e){}
+ try{clearInterval(hbInt);clearInterval(watchdog);clearInterval(timerInt);}catch(e){}
+ conn=null;started=false;online=false;isHost=false;roomCode='';guestName='';
+ TOURMATCH=null;
+ $('tourBackBtn').classList.add('hidden');
+ if(TOUR){show('tourRoom');tourRender();}else show('home');
+}
+function tourOnGameEnd(champ){
+ if(!TOURMATCH||!TOUR)return;
+ var m=null;TOUR.matches.forEach(function(x){if(x.id===TOURMATCH.mid)m=x;});
+ if(!m)return;
+ var winner=null;
+ if(champ===0)winner=m.a?m.a.cid:null;
+ else if(champ===1)winner=m.b?m.b.cid:null;
+ if(TOUR.host)tourApplyResult(m.id,winner);
+ else tourSend({type:'result',mid:m.id,winner:winner});
+ $('tourBackBtn').classList.remove('hidden');
+}
+
+/* ---------- الرسم ---------- */
+function tourRender(){
+ if(!TOUR)return;
+ $('tourRoomTitle').textContent='🏆 بطولة '+TOUR.code;
+ var info='<div style="text-align:center"><div style="font-size:12px;color:var(--dim)">كود البطولة</div>'+
+  '<div style="font-size:30px;font-weight:900;letter-spacing:8px;color:var(--gold)">'+TOUR.code+'</div>'+
+  '<div style="font-size:12px;color:var(--dim);margin-top:6px">'+tourGtLabel(TOUR.set.gt)+' • '+(TOUR.set.n||'?')+' لاعبين • '+(TOUR.set.timer?TOUR.set.timer+' ث':'بدون تايمر')+' • 💰 '+fmt(TOUR.set.budget||500)+(TOUR.pass||TOUR.locked?' • 🔒 محمية':'')+'</div>'+
+  '<button class="big-btn goldb" style="margin-top:8px" onclick="tourShare()">📤 شارك كود البطولة</button></div>';
+ $('tourInfoCard').innerHTML=info;
+ var h='';
+ if(TOUR.champion){
+  h+='<div class="t-champ">🏆 بطل البطولة: '+TOUR.champion.name+'</div>';
+ }
+ if(!TOUR.matches.length){
+  h+='<div class="card"><div class="set-h">👥 اللاعبون المنضمّون ('+TOUR.players.length+'/'+(TOUR.set.n||'?')+')</div><div class="t-players">'+
+   TOUR.players.map(function(p){return '<div class="t-pl"><div class="t-av '+tourAvCls(p.cid)+'">'+tourInitials(p.name)+'</div><div class="t-pn">'+p.name+(p.cid===TOUR.hostCid?' 👑':'')+(p.cid===myCid?' (أنت)':'')+'</div></div>';}).join('')+
+   '</div>';
+  if(TOUR.host){
+   var full=TOUR.players.length>=TOUR.set.n;
+   h+='<button class="big-btn '+(TOUR.players.length>=2?'green':'')+'" style="margin-top:10px" '+(TOUR.players.length>=2?'':'disabled')+' onclick="tourDraw()">🎲 إجراء القرعة'+(full?'':' (قبل اكتمال العدد)')+'</button>';
+  }else{
+   h+='<div class="status">⏳ بانتظار المضيف يعمل القرعة…</div>';
+  }
+  h+='</div>';
+ }else{
+  var rounds={};TOUR.matches.forEach(function(m){(rounds[m.round]=rounds[m.round]||[]).push(m);});
+  Object.keys(rounds).sort(function(a,b){return a-b;}).forEach(function(r){
+   var list=rounds[r];
+   h+='<div class="t-round-h">'+tourRoundName(+r,list.length)+'</div>';
+   list.forEach(function(m){h+=tourMatchHTML(m);});
+  });
+ }
+ $('tourBody').innerHTML=h;
+}
+function tourRoundName(r,cnt){
+ if(cnt===1)return '🏆🥇 المباراة النهائية — كأس العالم';
+ if(cnt===2)return '🔥 نصف النهائي';
+ if(cnt===4)return '⚔️ ربع النهائي';
+ if(cnt===8)return '🎯 دور الـ16';
+ if(cnt===16)return '🌍 دور الـ32';
+ return '⚽ الدور '+r;
+}
+function tourMatchHTML(m){
+ var mine=(m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid);
+ function side(p){
+  if(!p)return '<div class="t-side"><div class="t-av">—</div><div class="t-nm">بدون خصم</div><div class="t-st">تأهل مباشر</div></div>';
+  var rd=m.ready&&m.ready[p.cid];
+  var st=m.done?(m.winner===p.cid?'🏆 فائز':'خرج'):(rd?'✅ مستعد':'⌛ لسه');
+  return '<div class="t-side"><div class="t-av '+tourAvCls(p.cid)+'">'+tourInitials(p.name)+'</div>'+
+   '<div class="t-nm">'+p.name+(p.cid===myCid?' (أنت)':'')+'</div>'+
+   '<div class="t-st'+(rd&&!m.done?' ok':'')+'">'+st+'</div></div>';
+ }
+ var h='<div class="t-match'+(mine?' mine':'')+'"><div class="t-vs">'+side(m.a)+'<div class="t-vsl">VS</div>'+side(m.b)+'</div>';
+ if(m.done){
+  var wn='—';[m.a,m.b].forEach(function(p){if(p&&p.cid===m.winner)wn=p.name;});
+  h+='<div class="t-win">✅ انتهت — الفائز: '+wn+'</div>';
+ }else if(m.b&&mine){
+  var me=(m.a.cid===myCid?m.a:m.b),opp=(m.a.cid===myCid?m.b:m.a);
+  var iR=!!(m.ready&&m.ready[me.cid]),oR=!!(m.ready&&m.ready[opp.cid]);
+  if(m.started){h+='<div class="t-note">⚽ المباراة شغّالة…</div>';}
+  else if(iR&&!oR){h+='<div class="t-note">✅ أنت مستعد — بانتظار '+opp.name+'</div>';}
+  else if(oR&&!iR){h+='<div class="t-note">🔔 '+opp.name+' مستعد بانتظارك</div><button class="big-btn green" style="margin-top:8px" onclick="tourReady(\''+m.id+'\')">▶ بدء المباراة</button>';}
+  else{h+='<button class="big-btn green" style="margin-top:8px" onclick="tourReady(\''+m.id+'\')">▶ بدء المباراة</button>';}
+ }else if(m.b){
+  h+='<div class="t-note" style="border-color:var(--line);color:var(--dim);background:transparent">'+(m.started?'⚽ المباراة شغّالة':'⌛ بانتظار اللاعبين يبدأوا')+'</div>';
+ }
+ return h+'</div>';
+}
+function tourShare(){
+ if(!TOUR)return;
+ var msg='🏆 يلا ادخل بطولة "مزاد النجوم"!\nكود البطولة: '+TOUR.code+(TOUR.pass?'\nكلمة السر: '+TOUR.pass:'')+'\nافتح اللعبة ➜ 🏆 البطولات ➜ اكتب الكود 👆';
+ if(navigator.share){navigator.share({title:'بطولة مزاد النجوم',text:msg}).catch(function(){});return;}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(msg).then(function(){toast('📋 اتنسخ الكود');}).catch(function(){toast('الكود: '+TOUR.code);});}
+ else toast('الكود: '+TOUR.code);
+}
+function tourLeave(){
+ if(!confirm('هل تريد الخروج من البطولة؟'))return;
+ if(TOUR&&!TOUR.host)tourSend({type:'bye'});
+ tourChannelClose();TOUR=null;TOURMATCH=null;
+ $('tourBackBtn').classList.add('hidden');
+ show('tourHome');
+}
+
+/* ---------- ربط مع نظام اللعبة الأصلي ---------- */
+(function(){
+ var _exit=window.exitToOnline;
+ window.exitToOnline=function(msg){
+  if(TOURMATCH){tourReturnFromMatch();if(msg)toast(msg);return;}
+  return _exit.apply(null,arguments);
+ };
+ var _end=window.mzGameEnd;
+ window.mzGameEnd=function(champ,kind){
+  var r;try{r=_end.apply(null,arguments);}catch(e){}
+  try{tourOnGameEnd(champ);}catch(e){}
+  return r;
+ };
+})();
+</script>
+
 </body>
 </html>
