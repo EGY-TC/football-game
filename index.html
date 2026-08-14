@@ -3267,14 +3267,11 @@ function makeNetConn(code,host,opts){
    if(opts.onReady)opts.onReady(shim);
    /* سلام فوري: أي طرف بيسمعه يفتح الاتصال على طول من غير انتظار مزامنة الحضور */
    try{shim.send({type:'__hs',r:role});}catch(e){}
-   [60,140,260,420,650,900,1200].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
+   [80,320,900].forEach(function(ms){setTimeout(function(){if(!opened&&!dead&&!busy)try{shim.send({type:'__hs',r:role});}catch(e){}},ms);});
    checkPresence();
-   setTimeout(checkPresence,40);
-   setTimeout(checkPresence,150);
-   setTimeout(checkPresence,350);
-   setTimeout(checkPresence,550);
-   setTimeout(checkPresence,850);
-   setTimeout(checkPresence,1200);
+   setTimeout(checkPresence,100);
+   setTimeout(checkPresence,500);
+   setTimeout(checkPresence,1100);
    if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
@@ -3304,7 +3301,7 @@ function makeNetConn(code,host,opts){
   if(dead||busy||recovering)return;
   if(subRetry>=10){if(opts.onFail)opts.onFail(reason||'error');return;}
   recovering=true;subRetry++;shim._sub=false;
-  var wait=Math.min(900,80+subRetry*120);
+  var wait=Math.min(900,80+subRetry*120)+Math.floor(Math.random()*140);
   setTimeout(function(){
    if(dead||busy){recovering=false;return;}
    try{c.removeChannel(ch);}catch(e){}
@@ -3608,14 +3605,14 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2000);
+ hbInt=setInterval(function(){if(conn&&conn.open&&!document.hidden)try{conn.send({type:'ping'});}catch(e){}},4000);
  clearInterval(watchdog);
  var lastSyncReq=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>3000&&Date.now()-lastSyncReq>2000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>6000){
+  if(!isHost&&started&&lastRx&&Date.now()-lastRx>5000&&Date.now()-lastSyncReq>3000){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
+  if(lastRx&&Date.now()-lastRx>10000){
    lastRx=Date.now();
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
@@ -3683,7 +3680,14 @@ function handleData(d){
   else{sfxMicOff();toast('🔇 '+oppName+' قفل المايك');}
   var ob=$('oppMicLbl');if(ob)ob.classList.toggle('hidden',!d.on);
  }
+ else if(d.type==='ack'&&!isHost){clearPendingAct(d.id);}
  else if(d.type==='act'&&isHost){
+   if(d.id){
+    if(Object.keys(seenActionIds).length>200)seenActionIds={};
+    if(seenActionIds[d.id]){try{conn.send({type:'ack',id:d.id});}catch(e){}return;}
+    seenActionIds[d.id]=Date.now();
+    try{conn.send({type:'ack',id:d.id});}catch(e){}
+   }
   if(d.a==='card'){applyCard(1,d.c,d.i,d.j);return;}
   if(d.a==='ready'){cardsReady[1]=true;log(P[1].name+' انتهى من الكروت');checkCardsReady();return;}
   if(d.a==='openbox'){doOpenBox(1,d.idx);return;}
@@ -3705,6 +3709,7 @@ function handleData(d){
   }
  }
 }
+var seenActionIds={};
 function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked,tpRound:tpRound,tpCur:tpCur,tpGuess:tpGuess,tpLocked:tpLocked,tpScore:tpScore,tpHistory:tpHistory,tpPhase:tpPhase,blindBid:blindBid,blindLocked:blindLocked};}
 function broadcast(){
  if(!(online&&isHost&&conn&&conn.open))return;
@@ -3855,8 +3860,10 @@ function startTimer(){
 }
 /* نظام إعادة إرسال تلقائي: لو بعتنا أكشن (زايد/سلّم) والهوست ما ردش بتحديث خلال وقت قصير، نعيد الإرسال تلقائياً بدل ما نفضل واقفين */
 var pendingAct=null,pendingActTimer=null,pendingActTries=0;
+var nextActId=1;
 function sendActReliable(payload){
  if(!(conn&&conn.open)){toast('⚠️ الاتصال مقطوع، جاري إعادة المحاولة…');return;}
+ payload.id=myCid+'-'+(nextActId++);
  pendingAct=payload;pendingActTries=0;
  clearTimeout(pendingActTimer);
  var seqAtSend=lastAppliedSeq;
@@ -3873,7 +3880,7 @@ function sendActReliable(payload){
  }
  attempt();
 }
-function clearPendingAct(){pendingAct=null;clearTimeout(pendingActTimer);}
+function clearPendingAct(id){if(id&&pendingAct&&pendingAct.id!==id)return;pendingAct=null;clearTimeout(pendingActTimer);}
 function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
 function canAct(){return phase==='bid'&&!busy&&curStar&&(mode===3?turn===mySeat:(mode===1?turn===0:true));}
 function humanRaise(){if(!canAct()||bid+1>P[turn].budget)return;if(online&&!isHost)return sendActReliable({type:'act',a:'raise'});doRaise();}
@@ -4123,7 +4130,7 @@ function renderBlindPanel(){
  }
  var stEl=$('blindStat');
  if(stEl)stEl.innerHTML=[0,1].map(function(i){return '<span class="chip">'+(blindLocked[i]?'🔒 قفل':'⏳ بيفكر')+' — '+P[i].name+'</span>';}).join(' ');
- $('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
+ setHTMLIfChanged($('log'),logArr.map(function(l){return '<div>'+l+'</div>';}).join(''));
  if(view==='squads')renderSquads();
 }
 
@@ -5025,6 +5032,7 @@ function renderBoxPhase(){
  $('obox').innerHTML=html;
  bindWiki($('obox'));
 }
+function setHTMLIfChanged(el,html){if(el&&el._lastHTML!==html){el.innerHTML=html;el._lastHTML=html;}}
 function render(){
  if(phase==='box'){$('overlay').classList.remove('hidden');renderBoxPhase();return;}
  if(phase==='postcards'){$('overlay').classList.remove('hidden');renderPostCardsOverlay();return;}
@@ -5057,7 +5065,7 @@ function render(){
   $('tname'+i).textContent=(i===turn?'🎙️ ':'')+P[i].name;
   var tot=P[i].squad.reduce(function(t,p){return t+p.r;},0);
   $('tstats'+i).innerHTML='المتبقي: <b>'+fmt(P[i].budget)+'</b> — القوة: <b>'+tot+'</b> — اللاعبون: <b>'+P[i].squad.length+'/11</b>';
-  $('squad'+i).innerHTML=orderedSquad(P[i].squad).map(function(o){var p=o.p,idx=o.i;var isCap=captainIdx[i]===idx;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>';
+  setHTMLIfChanged($('squad'+i),orderedSquad(P[i].squad).map(function(o){var p=o.p,idx=o.i;var isCap=captainIdx[i]===idx;return '<span class="chip'+(isCap?' cap':'')+(p.protected?' prot':'')+'">'+p.flag+' '+p.ar+' <b>'+p.r+'</b></span>';}).join('')||'<span class="chip">لا لاعبون بعد</span>');
   $('team'+i).classList.toggle('turn',i===turn);
  }
  var tb=$('tbarBox'),tf=$('tfill'),tl=$('timeLbl');
@@ -5072,7 +5080,7 @@ function render(){
  $('customBid').disabled=!humanCan;$('customBtn').disabled=!humanCan;
  $('firstBidNote').classList.toggle('hidden',firstBidDone||phase!=='bid');
  $('turnLbl').textContent='الدور: '+P[turn].name+(busy?' (يفكر…)':(online&&turn!==mySeat?'…':''));
- $('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
+ setHTMLIfChanged($('log'),logArr.map(function(l){return '<div>'+l+'</div>';}).join(''));
  if(view==='squads')renderSquads();
 }
 document.addEventListener('DOMContentLoaded',function(){
