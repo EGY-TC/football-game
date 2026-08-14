@@ -2028,7 +2028,7 @@ PLAYERS.forEach(function(p){
 var ROUNDS=11;
 var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
-var roomFull=false;
+var roomFull=false,guestCid='';
 var roomPass='',isPublicRoom=false,rejectedAuth=false,hostRejecting=false,joinAttemptTries=0;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timeEndAt=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
@@ -2865,7 +2865,7 @@ function ensureCards(p){if(!p.cards)p.cards=defaultCards();}
 function setStatus(t){$('roomStatus').textContent=t;}
 function makeCode(){return makeCodeRaw();}
 function peerReady(){return typeof Peer!=='undefined';}
-function netTeardown(dest){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;roomCode='';guestName='';try{$('codeBox').classList.add('hidden');}catch(e){}try{$('reconn').classList.add('hidden');}catch(e){}try{$('overlay').classList.add('hidden');}catch(e){}show(dest||'home');}
+function netTeardown(dest){clearTimeout(autoRejoin);rejoinTries=0;joinAttemptTries=0;rejectedAuth=false;hostRejecting=false;pendingRematch=false;clearInterval(watchdog);clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;netClose();stopPeerMgr();stopVoice();if(isHost&&isPublicRoom)lobbyStopAnnounce();stopLobbyCoordinator();try{if(peer)peer.destroy();}catch(e){}peer=null;conn=null;clearInterval(hbInt);clearInterval(timerInt);started=false;isPublicRoom=false;roomPass='';roomFull=false;guestCid='';roomCode='';guestName='';try{$('codeBox').classList.add('hidden');}catch(e){}try{$('reconn').classList.add('hidden');}catch(e){}try{$('overlay').classList.add('hidden');}catch(e){}show(dest||'home');}
 function leaveHome(){netTeardown('home');}
 /* الخروج من الغرفة: نبلّغ الطرف التاني وكلنا نرجع لواجهة الأونلاين */
 function sendBye(){try{if(conn&&conn.open)conn.send({type:'bye',name:myName(),host:isHost});}catch(e){}}
@@ -2901,7 +2901,7 @@ function sbReady(){return !!sbLib();}
 function sbClient(){
  if(sbc)return sbc;
  var L=sbLib();if(!L)return null;
- sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:60}}});
+ sbc=L.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:20}}});
  return sbc;
 }
 /* تسخين السوكِت من أول ما الصفحة تفتح: كده لما تدوس اتصال بيبقى الاتصال جاهز فورًا */
@@ -3171,7 +3171,7 @@ function makeNetConn(code,host,opts){
  if(!c){if(opts.onFail)opts.onFail('lib');return null;}
  var role=host?'h':'g',other=host?'g':'h';
  var H={},opened=false,waitTimer=null,subTimer=null,dead=false,bound=null,myT=Date.now(),busy=false;
- var hbN=0,hbInt=null,seen={};
+ var hbN=0,hbInt=null,seen={},lastTrackAt=0;
  /* مقعد محجوز من جهاز تاني = لازم نتأكد إنه لسه حيّ فعلًا (مش أثر قديم في السيرفر) */
  function aliveState(e){
   var k=e.c,now=Date.now(),g=seen[k];
@@ -3281,7 +3281,7 @@ function makeNetConn(code,host,opts){
    setTimeout(checkPresence,100);
    setTimeout(checkPresence,500);
    setTimeout(checkPresence,1100);
-   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},1400);}
+   if(!host){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!opened&&!busy&&!shim.open&&opts.onNoHost)opts.onNoHost();},2800);}
   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    clearTimeout(subTimer);
    /* قبل كده كنا بنتجاهل أول CLOSED لو مفيش resubscribe شغال بالفعل،
@@ -3328,7 +3328,7 @@ function makeNetConn(code,host,opts){
   },wait);
  }
  bindCh();
- subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},1800);
+ subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},3500);
  ch.subscribe(onStatus);
  /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
  function wake(){
@@ -3365,7 +3365,7 @@ function shareRoomCode(){
 function createRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
  roomPass=(($('createPass')&&$('createPass').value)||'').trim();isPublicRoom=true;
- setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomFull=false;roomCode=makeCode();savedCode=roomCode;
+ setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomFull=false;guestCid='';roomCode=makeCode();savedCode=roomCode;
  netClose();stopPeerMgr();
  conn=netCh=makeNetConn(roomCode,true,{
   onReady:function(){
@@ -3419,7 +3419,7 @@ function connectToHost(code,silent){
   setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
   toast('❌ الغرفة مش متاحة');
   show('room');
- },4000);}
+ },7000);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3434,7 +3434,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة تاني… ('+joinAttemptTries+'/1)');setTimeout(function(){connectToHost(code,true);},120);return;}
+   if(joinAttemptTries<1){joinAttemptTries++;setStatus('جارٍ المحاولة مرة تانية…');setTimeout(function(){connectToHost(code,true);},500);return;}
    try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    clearTimeout(joinHardTimer);
    setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
@@ -3598,7 +3598,7 @@ function scheduleRejoin(){
 function wireConn(){
  conn.on('open',function(){
   rejoinTries=0;lastRx=Date.now();clearTimeout(openWatch);try{clearTimeout(joinHardTimer);}catch(e){}
-  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
+  if(!isHost){conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid});if(!started)show('wait');else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}}
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
@@ -3669,18 +3669,25 @@ function handleData(d){
   return;
  }
  if(d.type==='hello'&&isHost){
+   /* لا تسمح للاعب جديد بالدخول على مباراة شغالة؛ الرجوع مسموح فقط لنفس الجهاز */
+   if(started&&guestCid&&d.cid!==guestCid){
+    hostRejecting=true;
+    try{conn.send({type:'reject',reason:'started'});}catch(e){}
+    setTimeout(function(){try{if(conn)conn.close();}catch(e){}},250);
+    return;
+   }
   if(roomPass&&d.pass!==roomPass){
    hostRejecting=true;
    try{conn.send({type:'reject',reason:'pass'});}catch(e){}
    setTimeout(function(){try{if(conn)conn.close();}catch(e){}},300);
    return;
   }
-  if(started){guestName=d.name;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
-  else{guestName=d.name;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
+  if(started){guestName=d.name;guestCid=d.cid||guestCid;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
+  else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;}
  }
  else if(d.type==='reject'&&!isHost){
   rejectedAuth=true;netClose();
-  setStatus(d.reason==='pass'?'🔒 كلمة السر غلط — تأكد منها مع صاحب الغرفة':'تعذر الانضمام');
+  setStatus(d.reason==='pass'?'🔒 كلمة السر غلط — تأكد منها مع صاحب الغرفة':(d.reason==='started'?'🚫 المباراة بدأت بالفعل — اختر غرفة مفتوحة أخرى':'تعذر الانضمام'));
   show('room');
  }
  else if(d.type==='resume'&&!isHost){CFG=d.cfg;gameType=d.gameType||'auction';P=d.p;stars=d.stars;if(d.pool)pool=d.pool;tpDiff=d.tpDiff||tpDiff;tpDeck=d.tpDeck||tpDeck;started=true;lastAppliedSeq=-1;show('game');updateGameTitleUI();$('chatBox').classList.remove('hidden');$('reconn').classList.add('hidden');$('connLbl').textContent='🟢 متصل • 2/2';applySnap(d.s);}
@@ -3733,8 +3740,10 @@ function handleData(d){
 }
 var seenActionIds={};
 function snap(){msgSeq++;return{seq:msgSeq,phase:phase,round:round,bid:bid,turn:turn,timeLeft:timeLeft,timerMax:CFG.timer,P:P,star:curStar,log:logArr,ovH:ovH,ovG:ovG,endH:endH,firstBidDone:firstBidDone,captainIdx:captainIdx,cardsReady:cardsReady,boxRound:boxRound,boxSets:boxSets,boxOpened:boxOpened,boxPicked:boxPicked,tpRound:tpRound,tpCur:tpCur,tpGuess:tpGuess,tpLocked:tpLocked,tpScore:tpScore,tpHistory:tpHistory,tpPhase:tpPhase,blindBid:blindBid,blindLocked:blindLocked};}
+var lastFullBroadcast=0;
 function broadcast(){
  if(!(online&&isHost&&conn&&conn.open))return;
+ var now=Date.now();if(now-lastFullBroadcast<120)return;lastFullBroadcast=now;
  var s=snap();
  /* في المزاد الأعمى: الضيف يشوف رقمه هو بس — عرض المضيف يفضل مخفي لحد الكشف */
  if(s.phase==='blind')s.blindBid=[null,(blindBid&&blindBid[1]!==undefined)?blindBid[1]:null];
