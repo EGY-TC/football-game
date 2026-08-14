@@ -3739,7 +3739,7 @@ function broadcastTick(){
 }
 function applySnap(s){
  if(!s)return;
- if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;}
+ if(typeof s.seq==='number'){if(s.seq<=lastAppliedSeq)return;lastAppliedSeq=s.seq;clearPendingAct();}
  phase=s.phase;round=s.round;bid=s.bid;turn=s.turn;timeLeft=s.timeLeft;P=s.P;curStar=s.star;logArr=s.log||[];ovH=s.ovH||'';ovG=s.ovG||'';endH=s.endH||'';firstBidDone=!!s.firstBidDone;captainIdx=s.captainIdx||[-1,-1];cardsReady=s.cardsReady||[false,false];boxRound=s.boxRound||0;boxSets=s.boxSets||[[],[]];boxOpened=s.boxOpened||[[],[]];boxPicked=s.boxPicked||[null,null];
  tpRound=s.tpRound||0;tpCur=s.tpCur||null;tpGuess=s.tpGuess||[null,null];tpLocked=s.tpLocked||[false,false];tpScore=s.tpScore||[0,0];tpHistory=s.tpHistory||[];tpPhase=s.tpPhase||'guess';blindLocked=s.blindLocked||[false,false];if(s.blindBid)blindBid=[s.blindBid[0],s.blindBid[1]];
  render();
@@ -3853,15 +3853,36 @@ function startTimer(){
   },500);
  }
 }
+/* نظام إعادة إرسال تلقائي: لو بعتنا أكشن (زايد/سلّم) والهوست ما ردش بتحديث خلال وقت قصير، نعيد الإرسال تلقائياً بدل ما نفضل واقفين */
+var pendingAct=null,pendingActTimer=null,pendingActTries=0;
+function sendActReliable(payload){
+ if(!(conn&&conn.open)){toast('⚠️ الاتصال مقطوع، جاري إعادة المحاولة…');return;}
+ pendingAct=payload;pendingActTries=0;
+ clearTimeout(pendingActTimer);
+ var seqAtSend=lastAppliedSeq;
+ function attempt(){
+  if(!pendingAct)return;
+  pendingActTries++;
+  try{conn.send(payload);}catch(e){}
+  if(pendingActTries===2)toast('⏳ الاتصال بطيء، جاري إعادة المحاولة…');
+  if(pendingActTries>=4){pendingAct=null;toast('⚠️ تعذر إرسال الإجراء — تحقق من الاتصال');return;}
+  pendingActTimer=setTimeout(function(){
+   if(pendingAct&&lastAppliedSeq===seqAtSend)attempt();
+   else pendingAct=null;
+  },1200);
+ }
+ attempt();
+}
+function clearPendingAct(){pendingAct=null;clearTimeout(pendingActTimer);}
 function log(t){logArr.unshift(t);if(logArr.length>25)logArr.pop();}
 function canAct(){return phase==='bid'&&!busy&&curStar&&(mode===3?turn===mySeat:(mode===1?turn===0:true));}
-function humanRaise(){if(!canAct()||bid+1>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise'});doRaise();}
-function humanRaise5(){if(!canAct()||bid+5>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise5'});doRaise(bid+5);}
-function humanRaise10(){if(!canAct()||bid+10>P[turn].budget)return;if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise10'});doRaise(bid+10);}
+function humanRaise(){if(!canAct()||bid+1>P[turn].budget)return;if(online&&!isHost)return sendActReliable({type:'act',a:'raise'});doRaise();}
+function humanRaise5(){if(!canAct()||bid+5>P[turn].budget)return;if(online&&!isHost)return sendActReliable({type:'act',a:'raise5'});doRaise(bid+5);}
+function humanRaise10(){if(!canAct()||bid+10>P[turn].budget)return;if(online&&!isHost)return sendActReliable({type:'act',a:'raise10'});doRaise(bid+10);}
 function humanPass(){
  if(!canAct())return;
  if(!firstBidDone){toast('⚠️ لازم تقدم عرض أول قبل ما تسلّم!');return;}
- if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'pass'});
+ if(online&&!isHost)return sendActReliable({type:'act',a:'pass'});
  doPass();
 }
 function humanCustom(){
@@ -3869,7 +3890,7 @@ function humanCustom(){
  var v=parseInt($('customBid').value);
  if(!v||v<=bid){toast('أدخل مبلغًا أكبر من '+fmt(bid));return;}
  if(v>P[turn].budget){toast('المبلغ يتجاوز المتبقي ('+fmt(P[turn].budget)+')');return;}
- if(online&&!isHost)return conn&&conn.open&&conn.send({type:'act',a:'raise',v:v});
+ if(online&&!isHost)return sendActReliable({type:'act',a:'raise',v:v});
  doRaise(v);
 }
 function doRaise(v){if(phase!=='bid')return;bid=v||bid+1;firstBidDone=true;log(P[turn].name+' يزايد بـ '+fmt(bid));$('customBid').value='';turn=1-turn;sfxRaise();render();broadcast();startTimer();maybeAI();}
