@@ -2789,19 +2789,31 @@ var MZ_DEV_ID=(function(){
   return d;
  }catch(e){return 'd'+Math.random().toString(36).slice(2,10);}
 })();
+var lbTakenNames={};
 /* {ok:true} = الاسم بتاعك أو جديد | {ok:false,taken:true} = محجوز لحد تاني */
 function checkNameOwnership(n){
  try{
+  if(lbTakenNames[n])return {ok:false,taken:true};
   var row=lbLoad()[n];
   if(!row)return {ok:true,fresh:true};
   if(!row.owner||row.owner===MZ_DEV_ID)return {ok:true};
   return {ok:false,taken:true};
  }catch(e){return {ok:true};}
 }
+/* تأكيد الاسم أونلاين: بنسأل باقي الأجهزة لو الاسم محجوز لحد تاني في الدورة الحالية */
+function verifyNameFree(n,cb){
+ var chk=checkNameOwnership(n);
+ if(!chk.ok){cb(false);return;}
+ lbEnsureChannel();
+ var sent=false;
+ try{if(lbCh&&lbChReady){lbCh.send({type:'broadcast',event:'claim',payload:{name:n,dev:MZ_DEV_ID}});sent=true;}}catch(e){}
+ if(!sent){cb(true);return;}
+ setTimeout(function(){cb(!lbTakenNames[n]);},900);
+}
 function registerNewName(n){
  try{
   var tbl=lbLoad();
-  if(!tbl[n])tbl[n]=lbFreshRow(n,MZ_DEV_ID);
+  if(!tbl[n]||(tbl[n].cycle||'')!==lbCycleKey())tbl[n]=lbFreshRow(n,MZ_DEV_ID);
   else if(!tbl[n].owner)tbl[n].owner=MZ_DEV_ID;
   lbSave(tbl);
   lbEnsureChannel();
@@ -2813,11 +2825,24 @@ function pickMode(m){
  try{
   var n1=$('name1').value.trim();
   if(!n1){setErr('⚠️ اكتب اسمك أولًا قبل الدخول');$('name1').classList.add('err-input');$('name1').focus();return;}
-  var chk=checkNameOwnership(n1);
-  if(!chk.ok){
-   setErr('⚠️ الاسم ده محجوز لحد تاني في التصنيف — اختر اسم مختلف');
+  if(!checkNameOwnership(n1).ok){
+   setErr('⚠️ الاسم ده محجوز لحد تاني — اختر اسم مختلف');
    $('name1').classList.add('err-input');$('name1').focus();return;
   }
+  setErr('⏳ بنتأكد إن الاسم ده مش محجوز…');
+  verifyNameFree(n1,function(free){
+   if(!free){
+    setErr('⚠️ الاسم ده محجوز لحد تاني — اختر اسم مختلف');
+    try{$('name1').classList.add('err-input');$('name1').focus();}catch(e){}
+    return;
+   }
+   setErr('');
+   try{pickModeGo(m,n1);}catch(e){toast('خطأ: '+e.message);}
+  });
+ }catch(e){toast('خطأ: '+e.message);}
+}
+function pickModeGo(m,n1){
+ try{
   registerNewName(n1);
 
   $('name1').classList.remove('err-input');
@@ -2929,8 +2954,33 @@ try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener(
    - موسم أسبوعي 📅: نقط الموسم بتتصفر كل أسبوع (تصنيف منفصل عن الكلي).
    - مواجهات مباشرة ⚔️: سجل فوز/خسارة/تعادل بينك وبين كل خصم لعبت ضده. */
 /* v2: تصنيف جديد من الصفر (النقط القديمة اتصفرت) */
-var LB_KEY='mz_leaderboard_v3';
-try{localStorage.removeItem('mz_leaderboard_v1');localStorage.removeItem('mz_leaderboard_v2');localStorage.removeItem('mz_owner_codes');localStorage.removeItem('mz_names_v1');}catch(e){}
+var LB_KEY='mz_leaderboard_v4';
+try{['mz_leaderboard_v1','mz_leaderboard_v2','mz_leaderboard_v3','mz_owner_codes','mz_names_v1'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+/* ===== دورة التصنيف: التصنيف كله بيبدأ من الصفر كل 7 أيام ===== */
+var LB_CYCLE_KEY='mz_lb_cycle_v1';
+var LB_CYCLE_MS=7*24*60*60*1000;
+var LB_CYCLE_ANCHOR=Date.UTC(2026,0,5,0,0,0); /* الاثنين */
+function lbCycleIndex(){return Math.floor((Date.now()-LB_CYCLE_ANCHOR)/LB_CYCLE_MS);}
+function lbCycleKey(){return 'C'+lbCycleIndex();}
+function lbCycleEnd(){return LB_CYCLE_ANCHOR+(lbCycleIndex()+1)*LB_CYCLE_MS;}
+function lbCycleLeftText(){
+ var ms=lbCycleEnd()-Date.now();if(ms<0)ms=0;
+ var d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000);
+ return d+' يوم و'+h+' ساعة و'+m+' دقيقة';
+}
+var lbJustReset=false;
+/* لو الأسبوع اتغيّر: نمسح كل النقط والأسماء ونبدأ من جديد */
+function lbCheckCycle(){
+ try{
+  var cur=lbCycleKey(),saved=localStorage.getItem(LB_CYCLE_KEY);
+  if(saved!==cur){
+   localStorage.removeItem(LB_KEY);
+   localStorage.setItem(LB_CYCLE_KEY,cur);
+   lbJustReset=!!saved;
+   lbTakenNames={};
+  }
+ }catch(e){}
+}
 
 var LB_CH_NAME='mzaida-leaderboard-global';
 var lbCh=null,lbChReady=false,lbTab='all';
@@ -2948,13 +2998,7 @@ function tierOf(pts){
 }
 /* مفتاح الموسم الحالي — بيتغيّر كل أسبوع (سنة+رقم أسبوع ISO) عشان
    التصنيف الموسمي يتصفر لوحده أوتوماتيك من غير أي تدخل يدوي */
-function currentSeasonKey(){
- var d=new Date();d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
- d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
- var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
- var wk=Math.ceil((((d-yearStart)/864e5)+1)/7);
- return d.getUTCFullYear()+'-W'+(wk<10?'0'+wk:wk);
-}
+function currentSeasonKey(){return lbCycleKey();}
 /* بيرجع مقدار النقط (بالقيمة المطلقة) اللي هتنتقل بين الفريقين حسب فارق
    الأهداف — فارق هدف واحد = 20 نقطة، وكل ما الفارق يكبر كل ما القيمة تقل
    لحد أدنى 10. التعادل = صفر (مفيش نقط تتحرك). الفايز بياخدها موجبة،
@@ -2967,13 +3011,14 @@ function matchPoints(myGoals,oppGoals){
  return pts;
 }
 function lbLoad(){
+ lbCheckCycle();
  try{var raw=localStorage.getItem(LB_KEY);return raw?JSON.parse(raw):{};}catch(e){return {};}
 }
 function lbSave(obj){
  try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
 }
 function lbFreshRow(name,owner){
- return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),seasonPoints:0,h2h:{},owner:owner||''};
+ return {name:name,points:0,matches:0,wins:0,losses:0,streak:0,bestStreak:0,season:currentSeasonKey(),cycle:lbCycleKey(),seasonPoints:0,h2h:{},owner:owner||''};
 
 }
 /* بيدمج نتيجة واحدة (اسم + نقط ± + فوز؟ + اسم الخصم) جوه الجدول المحلي.
@@ -3019,6 +3064,7 @@ function lbEnsureChannel(){
   lbCh=c.channel(LB_CH_NAME,{config:{broadcast:{self:false,ack:false}}});
   lbCh.on('broadcast',{event:'row'},function(m){
    var r=m&&m.payload;if(!r||!r.name)return;
+   if((r.cycle||'')!==lbCycleKey())return; /* نقط من دورة قديمة — بنتجاهلها */
    var tbl=lbLoad();
    var cur=tbl[r.name];
    /* ناخد أعلى نسخة معروفة (أكتر مباريات) عشان محدش يرجّع رقم قديم فوق الجديد */
@@ -3033,6 +3079,20 @@ function lbEnsureChannel(){
     tbl[r.name]=r;lbSave(tbl);
    }
 
+  });
+  /* حد بيسأل: الاسم ده محجوز؟ لو محجوز عندي لجهاز تاني بنرد عليه */
+  lbCh.on('broadcast',{event:'claim'},function(m){
+   var p=m&&m.payload;if(!p||!p.name||!p.dev||p.dev===MZ_DEV_ID)return;
+   try{
+    var row=lbLoad()[p.name];
+    if(row&&row.owner&&row.owner!==p.dev&&(row.cycle||'')===lbCycleKey()){
+     lbCh.send({type:'broadcast',event:'taken',payload:{name:p.name,dev:p.dev}});
+    }
+   }catch(e){}
+  });
+  lbCh.on('broadcast',{event:'taken'},function(m){
+   var p=m&&m.payload;if(!p||!p.name)return;
+   if(p.dev===MZ_DEV_ID)lbTakenNames[p.name]=true;
   });
   lbCh.subscribe(function(status){
    if(status==='SUBSCRIBED'){
@@ -3107,11 +3167,14 @@ function lbRowHTML(r,i,useSeasonPts){
   '<div class="lb-pts">'+pts+' نقطة</div></div>';
 }
 function renderPromoBanner(){
+ lbCheckCycle();
+ var info='<div class="desc" style="margin:6px 0">🔄 التصنيف بيبدأ من الصفر كل 7 أيام — التجديد الجاي بعد <b>'+lbCycleLeftText()+'</b>. بعد كل تجديد لازم كل واحد يختار اسم جديد محدش خده.</div>';
+ if(lbJustReset){info='<div class="promo-banner">🆕 بدأ أسبوع جديد — التصنيف اتصفّر والأسماء رجعت متاحة!</div>'+info;lbJustReset=false;}
  if(pendingPromo){
-  $('lbPromo').innerHTML='<div class="promo-banner">🎉 مبروك! اترقّيت لمستوى <b>'+pendingPromo.ic+' '+pendingPromo.label+'</b></div>';
+  $('lbPromo').innerHTML=info+'<div class="promo-banner">🎉 مبروك! اترقّيت لمستوى <b>'+pendingPromo.ic+' '+pendingPromo.label+'</b></div>';
   pendingPromo=null;
  }else{
-  $('lbPromo').innerHTML='';
+  $('lbPromo').innerHTML=info;
  }
 }
 function loadLeaderboard(){
