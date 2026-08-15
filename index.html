@@ -742,11 +742,8 @@ body{text-rendering:optimizeSpeed}
 <div style="font-size:11px;color:var(--dim);margin-top:-2px">اسحب لأقصى اليسار (0) لتعطيل التايمر في كل مباريات البطولة</div>
 <div class="opt-lbl">💰 ميزانية الفريق في البطولة <span id="tourBudVal">500 مليون</span></div>
 <input type="range" id="tourBud" min="50" max="1000" step="50" value="500" oninput="tourUpdBud(this.value)">
-<div class="opt-lbl">🔌 لو خرجت من المتصفح أثناء البطولة</div>
-<div class="gt-grid3" id="tourPersistGrid">
-<button class="gt-btn sel" id="tps-1" onclick="tourPickPersist(1)"><span class="gt-ic">♾️</span><span class="gt-nm">تفضل شغالة</span><span class="gt-sub">تكمل وتستقبل لاعبين، والاستضافة تنتقل لأي حد متصل</span></button>
-<button class="gt-btn" id="tps-0" onclick="tourPickPersist(0)"><span class="gt-ic">🛑</span><span class="gt-nm">تقفل بخروجي</span><span class="gt-sub">أول ما المضيف يخرج البطولة تنتهي</span></button>
-</div>
+<div class="opt-lbl">☁️ البطولة محفوظة على السيرفر</div>
+<div class="desc" style="margin-bottom:6px">البطولة بتتخزن على السيرفر وبتفضل شغالة حتى لو قفلت المتصفح — والمضيف يفضل هو المضيف زي ما هو، ومحدش بيتشال لمجرد إنه خرج من الموقع.</div>
 <input id="tourPass" placeholder="🔒 كلمة سر للبطولة (اختياري)" maxlength="20" style="text-align:center;margin-top:10px">
 <button class="big-btn green" style="margin-top:10px" onclick="tourCreate()">🏆 إنشاء البطولة</button>
 <div id="tourCreateStatus" class="status"></div>
@@ -6965,7 +6962,7 @@ if(typeof lbRowHTML==='function'){
 }
 
 /* ---------- (3) حفظ المباراة الجارية + الرجوع بعد الريفريش ---------- */
-var LIVE_KEY='mz_live_match_v3',RESUME_WINDOW=10000,OPP_GRACE=10000;
+var LIVE_KEY='mz_live_match_v3',RESUME_WINDOW=15000,OPP_GRACE=15000;
 function liveSave(){
  try{
   if(!inLiveMatch())return;
@@ -7417,5 +7414,249 @@ window.tourRender=tourRender=function(){
 })();
 </script>
 
+
+<script>
+/* ================= تحديث v6 =================
+   1) المضيف يفضل المضيف — مفيش نقل استضافة. البطولة محفوظة على السيرفر (Lovable Cloud)
+      وأي لاعب متصل بيكمّل الحفظ نيابة عنه من غير ما يتغيّر اسم المضيف.
+   2) القرعة بتتعرض عند كل اللاعبين (نفس المواجهات) مع إشعار.
+   3) الخروج من الموقع مش انسحاب — الانسحاب بيتحسب جوه الجيم بس، وبنصبر 15 ثانية.
+   4) اللي يخرج من البطولة قبل القرعة يخرج عادي مع إشعار للباقيين.
+*/
+(function(){try{
+
+var TOUR_ACTING=false, TOUR_GRACE=null, TOURWAIT=null;
+
+/* ---------- (1) مفيش نقل استضافة: بس "كاتب مؤقت" على السيرفر ---------- */
+if(typeof tourPickPersist==='function'){window.tourPickPersist=tourPickPersist=function(){tourSet.persist=1;};}
+if(typeof tourIsPersist==='function'){window.tourIsPersist=tourIsPersist=function(){return true;};}
+tourSet.persist=1;
+
+if(typeof tourBecomeHost==='function'){
+ window.tourBecomeHost=tourBecomeHost=function(){
+  if(!TOUR||TOUR.host)return;
+  /* بناخد دور "الكاتب" مؤقتًا عشان البطولة تكمّل، من غير ما نغيّر المضيف الأصلي */
+  TOUR.host=true;TOUR_ACTING=true;TOUR.acting=true;
+  TOUR_LASTSTATE=Date.now();
+  try{TOURCH.track({c:myCid,n:tourMyName(),h:false,t:Date.now()});}catch(e){}
+  try{tourBroadcastState();}catch(e){}
+  clearInterval(tourStateInt);
+  tourStateInt=setInterval(function(){if(TOUR&&TOUR.host)tourBroadcastState();},2500);
+  try{tourSaveLocal();tourRender();}catch(e){}
+  try{tourNotify('\u2601\ufe0f البطولة شغالة','المضيف مش متصل دلوقتي — البطولة بتكمّل من السيرفر وهو فاضل المضيف');}catch(e){}
+ };
+}
+function tourStepDown(){
+ if(!TOUR||!TOUR_ACTING)return;
+ TOUR_ACTING=false;TOUR.acting=false;TOUR.host=false;
+ clearInterval(tourStateInt);tourStateInt=null;
+ try{tourLobbyStop();}catch(e){}
+ try{TOURCH.track({c:myCid,n:tourMyName(),h:false,t:Date.now()});}catch(e){}
+}
+/* المضيف الأصلي رجع ➜ نرجع لاعبين عاديين */
+setInterval(function(){
+ try{
+  if(!TOUR||!TOUR_ACTING)return;
+  if(TOUR.hostCid&&TOUR.hostCid!==myCid&&TOUR_ONLINE[TOUR.hostCid]!==undefined)tourStepDown();
+ }catch(e){}
+},4000);
+
+/* أي حالة جاية من المضيف الأصلي (أو من كاتب أقدم) وأنا كاتب مؤقت ➜ أتنازل */
+if(typeof tourHandle==='function'){
+ var _th_v6=tourHandle;
+ window.tourHandle=tourHandle=function(d,from){
+  try{
+   if(TOUR&&TOUR_ACTING&&d&&d.type==='state'&&d.st&&d.st.code===TOUR.code){
+    if(from===TOUR.hostCid||String(from)<String(myCid))tourStepDown();
+   }
+   /* رسالة "المضيف خرج" مبقتش تنقل الاستضافة — بس بنكمّل من السيرفر */
+   if(d&&d.type==='hostleft'){TOUR_LASTSTATE=0;}
+  }catch(e){}
+  return _th_v6.apply(this,arguments);
+ };
+}
+/* السيرفر: نحافظ على اسم المضيف الأصلي وقت الاسترجاع */
+if(typeof tourDbAdopt==='function'){
+ var _adopt_v6=tourDbAdopt;
+ window.tourDbAdopt=tourDbAdopt=function(code,pass,cb){
+  return _adopt_v6.call(this,code,pass,function(ok){
+   try{
+    if(ok&&TOUR){
+     var t=sbTbl('tournaments');
+     if(t)t.select('state').eq('code',code).maybeSingle().then(function(res){
+      var s=res&&res.data&&res.data.state;
+      if(s&&TOUR&&TOUR.code===code&&s.hostCid&&s.hostCid!==myCid){
+       TOUR.hostCid=s.hostCid;TOUR.hostName=s.hostName||TOUR.hostName;
+       TOUR_ACTING=true;TOUR.acting=true;
+       try{tourBroadcastState();tourRender();}catch(e){}
+      }
+     },function(){});
+    }
+   }catch(e){}
+   if(cb)cb(ok);
+  });
+ };
+}
+
+/* ---------- (2) القرعة عند الكل ---------- */
+if(typeof tourDrawShow==='function'){
+ var _draws_v6=tourDrawShow;
+ window.tourDrawShow=tourDrawShow=function(ms,cb){
+  try{if(TOURMATCH){if(cb)cb();return;}}catch(e){}
+  try{if(!tourInRoom())show('tourRoom');}catch(e){}
+  return _draws_v6.call(this,ms,cb);
+ };
+}
+/* حارس: أي دور جديد لازم قرعته تتعرض عند كل اللاعبين مرة واحدة */
+setInterval(function(){
+ try{
+  if(!TOUR||TOURMATCH)return;
+  var mx=(TOUR.matches||[]).reduce(function(a,m){return Math.max(a,m.round||0);},0);
+  if(!mx)return;
+  var k=TOUR.code+'#'+mx;
+  if(TOUR_DRAWN[k])return;
+  TOUR_DRAWN[k]=1;
+  var rm=tourRoundMatches(mx);
+  if(!rm.length)return;
+  if(!document.getElementById('tourDrawOv'))tourDrawShow(rm,function(){try{tourRender();}catch(e){}});
+  tourNotify('\U0001f3b2 القرعة','اتعملت قرعة '+tourRoundName(mx,rm.length));
+ }catch(e){}
+},2000);
+
+/* ---------- (3) الخروج من الموقع \u2260 انسحاب ---------- */
+if(typeof tourPrune==='function'){window.tourPrune=tourPrune=function(){/* محدش بيتشال لمجرد إنه قفل الموقع */};}
+
+/* الخروج النهائي قبل القرعة = خروج عادي + إشعار للباقيين */
+if(typeof tourHandle==='function'){
+ var _th_bye=tourHandle;
+ window.tourHandle=tourHandle=function(d,from){
+  try{
+   if(TOUR&&TOUR.host&&d&&d.type==='bye'){
+    var nm='لاعب';(TOUR.players||[]).forEach(function(p){if(p.cid===from)nm=p.name;});
+    var inMatch=(TOUR.matches||[]).some(function(m){return m.started&&!m.done&&((m.a&&m.a.cid===from)||(m.b&&m.b.cid===from));});
+    if(!inMatch){
+     TOUR.players=(TOUR.players||[]).filter(function(p){return p.cid!==from;});
+     try{tourSend({type:'left',name:nm});}catch(e){}
+     try{tourNotify('\U0001f6aa خروج',nm+' خرج من البطولة (من غير أي خصم في النقاط)');}catch(e){}
+     try{tourBroadcastState();tourDbSave(true);tourRender();}catch(e){}
+     return;
+    }
+   }
+   if(d&&d.type==='left'){try{toast('\U0001f6aa '+(d.name||'لاعب')+' خرج من البطولة');}catch(e){}return;}
+  }catch(e){}
+  return _th_bye.apply(this,arguments);
+ };
+}
+
+/* ---------- (4) جوه الجيم: نصبر 15 ثانية قبل احتساب الانسحاب ---------- */
+function tourGraceBox(sec,txt){
+ var ov=document.getElementById('mzGraceOv');
+ if(!ov){ov=document.createElement('div');ov.id='mzGraceOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  document.body.appendChild(ov);}
+ ov.innerHTML='<div style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:340px;text-align:center">'+
+  '<div style="font-size:34px;margin-bottom:6px">\u23f3</div>'+
+  '<div style="font-weight:900;font-size:16px;margin-bottom:6px">'+(txt||'خصمك اتقطع')+'</div>'+
+  '<div style="color:var(--dim);font-size:13px;line-height:1.9">بنستناه يرجع للمباراة…<br><b style="color:var(--gold);font-size:22px">'+sec+'</b> ثانية</div></div>';
+}
+function tourGraceHide(){var ov=document.getElementById('mzGraceOv');if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}
+window.mzStartGrace=function(txt,onTimeout){
+ if(TOUR_GRACE)return;
+ var left=15;
+ tourGraceBox(left,txt);
+ TOUR_GRACE=setInterval(function(){
+  left--;
+  if(TOUR_GRACE&&window.mzGraceCancelled){return;}
+  if(left<=0){clearInterval(TOUR_GRACE);TOUR_GRACE=null;tourGraceHide();try{onTimeout();}catch(e){}return;}
+  tourGraceBox(left,txt);
+ },1000);
+};
+window.mzStopGrace=function(){if(TOUR_GRACE){clearInterval(TOUR_GRACE);TOUR_GRACE=null;}tourGraceHide();};
+
+/* الخصم اتقطع أثناء ماتش بطولة ➜ 15 ثانية مهلة قبل ما نحسبها انسحاب */
+if(typeof endByWithdraw==='function'){
+ var _ebw=endByWithdraw;
+ window.endByWithdraw=endByWithdraw=function(oppName){
+  try{
+   if(typeof TOURMATCH!=='undefined'&&TOURMATCH&&!TOUR_GRACE){
+    var mark=(typeof lastRx!=='undefined')?lastRx:0;
+    mzStartGrace((oppName||'خصمك')+' خرج من المباراة',function(){
+     var back=((typeof lastRx!=='undefined')?lastRx:0)>mark||(conn&&conn.open&&started);
+     if(back){try{toast('\u2705 خصمك رجع — كمّلوا المباراة');}catch(e){}return;}
+     _ebw.call(null,oppName);
+    });
+    var iv=setInterval(function(){
+     if(!TOUR_GRACE){clearInterval(iv);return;}
+     if(((typeof lastRx!=='undefined')?lastRx:0)>mark){clearInterval(iv);mzStopGrace();try{toast('\u2705 خصمك رجع — كمّلوا المباراة');}catch(e){}}
+    },500);
+    return;
+   }
+  }catch(e){}
+  return _ebw.apply(this,arguments);
+ };
+}
+
+/* انتظار دخول الخصم للجيم: 15 ثانية وبعدين زر «فوز بالانسحاب» ---------- */
+if(typeof tourLaunchMatch==='function'){
+ var _tlm=tourLaunchMatch;
+ window.tourLaunchMatch=tourLaunchMatch=function(m){
+  var r=_tlm.apply(this,arguments);
+  try{
+   clearInterval(TOURWAIT);
+   var left=15,mid=(m&&m.id)||'';
+   TOURWAIT=setInterval(function(){
+    try{
+     if(!TOURMATCH||TOURMATCH.mid!==mid){clearInterval(TOURWAIT);TOURWAIT=null;return;}
+     if(started||(conn&&conn.open&&roomFull)){clearInterval(TOURWAIT);TOURWAIT=null;return;}
+     left--;
+     var w=$('waitTxt');
+     var opp=(m.a&&m.a.cid===myCid)?(m.b||{}):(m.a||{});
+     if(left>0){
+      if(w)w.innerHTML='\U0001f3c6 مباراة البطولة<br>بنستنى <b>'+(opp.name||'خصمك')+'</b> يدخل الجيم…<br><b style="color:var(--gold);font-size:22px">'+left+'</b> ثانية';
+     }else{
+      clearInterval(TOURWAIT);TOURWAIT=null;
+      if(w)w.innerHTML='\U0001f3c6 مباراة البطولة<br><b>'+(opp.name||'خصمك')+'</b> مدخلش الجيم.<br>'+
+       '<button class="big-btn green" style="margin-top:10px" onclick="tourClaimWalkover(\''+mid+'\')">\U0001f3c6 احتساب فوز بالانسحاب</button>'+
+       '<button class="big-btn" style="margin-top:8px" onclick="tourWaitMore(\''+mid+'\')">\u23f3 استنى كمان شوية</button>';
+      try{tourNotify('\u23f3 خصمك مدخلش','تقدر تحتسب فوز بالانسحاب أو تستناه شوية');}catch(e){}
+     }
+    }catch(e){}
+   },1000);
+  }catch(e){}
+  return r;
+ };
+}
+window.tourWaitMore=function(mid){
+ var m=tourFindMatch(mid);if(!m)return;
+ try{tourLaunchMatch._retry=1;}catch(e){}
+ var left=15;
+ clearInterval(TOURWAIT);
+ TOURWAIT=setInterval(function(){
+  if(!TOURMATCH||TOURMATCH.mid!==mid||started){clearInterval(TOURWAIT);TOURWAIT=null;return;}
+  left--;
+  var w=$('waitTxt');
+  if(left<=0){clearInterval(TOURWAIT);TOURWAIT=null;
+   if(w)w.innerHTML='\U0001f3c6 مباراة البطولة<br>لسه الخصم مدخلش.<br><button class="big-btn green" style="margin-top:10px" onclick="tourClaimWalkover(\''+mid+'\')">\U0001f3c6 احتساب فوز بالانسحاب</button><button class="big-btn" style="margin-top:8px" onclick="tourWaitMore(\''+mid+'\')">\u23f3 استنى كمان شوية</button>';
+   return;}
+  if(w)w.innerHTML='\U0001f3c6 مباراة البطولة<br>بنستنى الخصم… <b style="color:var(--gold);font-size:22px">'+left+'</b> ثانية';
+ },1000);
+};
+window.tourClaimWalkover=function(mid){
+ var m=tourFindMatch(mid);if(!m||!TOUR)return;
+ var loser=(m.a&&m.a.cid===myCid)?(m.b&&m.b.cid):(m.a&&m.a.cid);
+ try{tourSend({type:'wd',mid:mid,loser:loser,name:tourNameOf(loser)});}catch(e){}
+ if(TOUR.host){try{tourApplyResult(mid,myCid,'انسحاب');}catch(e){}}
+ try{tourNotify('\U0001f3c6 تأهلت','خصمك مدخلش المباراة — اتأهلت بالانسحاب');}catch(e){}
+ try{tourReturnFromMatch();}catch(e){}
+};
+
+/* الخروج من الموقع أثناء البطولة (مش جوه ماتش) = مفيش أي انسحاب */
+try{window.addEventListener('pagehide',function(){
+ try{if(TOUR&&!TOURMATCH)return;}catch(e){}
+});}catch(e){}
+
+}catch(err){try{console.error('v6 patch',err);}catch(e){}}
+})();
+</script>
 </body>
 </html>
