@@ -6913,7 +6913,16 @@ setInterval(function(){
 /* ---------- أدوات مساعدة ---------- */
 function nameMine(){try{return myName();}catch(e){return '';}}
 function nameOpp(){try{return (P[1-mySeat]||{}).name||'الخصم';}catch(e){return 'الخصم';}}
-function inLiveMatch(){return !!(online&&started&&phase!=='end'&&mode!==1);}
+/* المباراة الحية = أونلاين فقط ضد خصم حقيقي (مش ضد الحاسوب ولا لعب محلي) */
+function hasRealOpponent(){
+ try{
+  if(!(online&&mode===3))return false;
+  if(isHost&&typeof roomFull!=='undefined'&&roomFull===false&&!(conn&&conn.open))return false;
+  if(!isHost&&!(conn||savedCode))return false;
+  return true;
+ }catch(e){return false;}
+}
+function inLiveMatch(){return !!(online&&mode===3&&hasRealOpponent()&&started&&phase!=='end');}
 
 /* ---------- (2) نقاط الانسحاب ---------- */
 var WD_PENALTY=15;
@@ -6956,11 +6965,11 @@ if(typeof lbRowHTML==='function'){
 }
 
 /* ---------- (3) حفظ المباراة الجارية + الرجوع بعد الريفريش ---------- */
-var LIVE_KEY='mz_live_match_v3',RESUME_WINDOW=150000,OPP_GRACE=45000;
+var LIVE_KEY='mz_live_match_v3',RESUME_WINDOW=10000,OPP_GRACE=10000;
 function liveSave(){
  try{
   if(!inLiveMatch())return;
-  var o={room:savedCode||roomCode,seat:mySeat,host:!!isHost,gt:gameType,cfg:CFG,
+  var o={room:savedCode||roomCode,seat:mySeat,host:!!isHost,gt:gameType,cfg:CFG,ol:1,md:3,
    stars:stars,pool:pool,snap:(isHost?snap():null),
    me:nameMine(),opp:nameOpp(),
    tour:(typeof TOURMATCH!=='undefined'&&TOURMATCH&&typeof TOUR!=='undefined'&&TOUR)?{code:TOUR.code,mid:TOURMATCH.mid}:null,
@@ -6969,7 +6978,7 @@ function liveSave(){
  }catch(e){}
 }
 function liveClear(){try{localStorage.removeItem(LIVE_KEY);}catch(e){}}
-setInterval(liveSave,2000);
+setInterval(liveSave,1000);
 try{window.addEventListener('pagehide',liveSave);window.addEventListener('beforeunload',liveSave);}catch(e){}
 
 function liveResume(o){
@@ -7003,6 +7012,7 @@ setTimeout(function(){
  var o=null;try{o=JSON.parse(localStorage.getItem(LIVE_KEY)||'null');}catch(e){}
  if(!o||!o.room)return;
  liveClear();
+ if(!(o.ol===1&&o.md===3))return; /* الانسحاب في الأونلاين فقط */
  if(Date.now()-(o.t||0)<=RESUME_WINDOW){liveResume(o);return;}
  lbWithdrawSelf();
  setTimeout(function(){
@@ -7037,12 +7047,12 @@ var lostSince=0;
 setInterval(function(){
  try{
   if(!inLiveMatch()){lostSince=0;return;}
-  var alive=(conn&&conn.open)&&(typeof lastRx==='undefined'||!lastRx||Date.now()-lastRx<15000);
+  var alive=(conn&&conn.open)&&(typeof lastRx==='undefined'||!lastRx||Date.now()-lastRx<6000);
   if(alive){lostSince=0;return;}
   if(!lostSince){lostSince=Date.now();return;}
   if(Date.now()-lostSince>OPP_GRACE){lostSince=0;endByWithdraw(nameOpp());}
  }catch(e){}
-},3000);
+},1500);
 
 /* رسالة bye أثناء مباراة شغالة = انسحاب مش مجرد خروج من الغرفة */
 if(typeof handleData==='function'){
@@ -7135,7 +7145,7 @@ setInterval(function(){
     var k=m.id+'|'+p.cid;
     if(on){tourGone[k]=0;return;}
     if(!tourGone[k]){tourGone[k]=now;return;}
-    if(now-tourGone[k]>60000){
+    if(now-tourGone[k]>15000){
      tourGone[k]=0;
      m.wd=p.cid;
      var opp=(m.a.cid===p.cid?m.b:m.a);
@@ -7174,5 +7184,238 @@ setInterval(function(){
 }catch(err){try{console.error('v3 patch',err);}catch(e){}}
 })();
 </script>
+<script>
+/* ================= تحديث v4 =================
+   1) زر الرجوع (للبطولة / للردهة) مايظهرش غير بعد نهاية المباراة
+   2) بعد ماتش البطولة: كارت نتيجة واضح ومين فاز ومين اتأهل
+   3) الانسحاب: الخصم يكسب +15 والمنسحب -15 وبيتسجّل عدد الانسحابات
+   4) نظام بطولة بمجموعات ➜ ربع ➜ نصف ➜ نهائي
+*/
+(function(){try{
+
+/* ---------- (1) زر الرجوع بعد نهاية الجيم فقط ---------- */
+function mzEnded(){
+ try{
+  if(typeof phase!=='undefined'&&phase==='end')return true;
+  if(typeof started!=='undefined'&&!started)return true;
+ }catch(e){}
+ return false;
+}
+window.mzShowBackBtn=function(){
+ var inGame=false;try{inGame=$('game')&&!$('game').classList.contains('hidden');}catch(e){}
+ var inWait=false;try{inWait=$('wait')&&!$('wait').classList.contains('hidden');}catch(e){}
+ var inTour=(typeof TOURMATCH!=='undefined'&&!!TOURMATCH);
+ var showIt=(inGame||inWait)&&mzEnded();
+ var el=document.getElementById('mzBackBtn');
+ if(el){
+  el.className=showIt?(inTour?'tour':''):'hidden';
+  el.textContent=inTour?'🏆 رجوع للبطولة':'↩ رجوع للردهة';
+ }
+ var tb=document.getElementById('tourBackBtn');
+ if(tb){if(showIt&&inTour)tb.classList.remove('hidden');else tb.classList.add('hidden');}
+};
+setInterval(function(){try{mzShowBackBtn();}catch(e){}},700);
+
+/* ---------- (2) كارت نتيجة مباراة البطولة ---------- */
+var _mzEnd_v4=window.mzGameEnd;
+window.mzGameEnd=mzGameEnd=function(champ,kind){
+ var r;try{r=_mzEnd_v4.apply(this,arguments);}catch(e){}
+ try{
+  if(typeof TOURMATCH!=='undefined'&&TOURMATCH&&typeof TOUR!=='undefined'&&TOUR){
+   var m=null;try{m=tourFindMatch(TOURMATCH.mid);}catch(e){}
+   var isGroup=!!(m&&m.g);
+   var seat=(typeof mySeat!=='undefined'?mySeat:0);
+   var wname=(champ===0||champ===1)?((P[champ]||{}).name||'—'):'';
+   var iWon=(champ===seat);
+   var body;
+   if(champ===-1){
+    body='<div style="font-size:15px;font-weight:900;color:var(--gold)">🤝 تعادل</div>'+
+     '<div style="font-size:12.5px;color:var(--dim);margin-top:4px">'+(isGroup?'كل واحد ياخد نقطة في جدول المجموعة':'هتتعاد المباراة تاني')+'</div>';
+   }else{
+    body='<div style="font-size:16px;font-weight:900;color:var(--acc)">🏆 الفائز: '+wname+(iWon?' (أنت) 🎉':'')+'</div>'+
+     '<div style="font-size:12.5px;color:var(--dim);margin-top:4px">'+
+     (isGroup?('🧩 مباراة دور المجموعات — الفائز +3 نقاط في مجموعة '+m.g)
+             :(iWon?'✅ اتأهلت للدور اللي بعده':'❌ خرجت من البطولة'))+'</div>';
+   }
+   var box='<div class="card" style="margin-top:10px;text-align:center;border:2px solid var(--gold);background:rgba(255,200,60,.07)">'+
+    '<div style="font-weight:900;color:var(--gold);margin-bottom:6px">🏆 نتيجة مباراة البطولة</div>'+body+
+    '<button class="big-btn goldb" style="margin-top:10px" onclick="tourReturnFromMatch()">🏆 رجوع لشاشة البطولة</button></div>';
+   endH=(endH||'')+box;
+   try{render();}catch(e){}
+  }
+ }catch(e){}
+ try{mzShowBackBtn();}catch(e){}
+ return r;
+};
+
+/* ---------- (4) نظام المجموعات ---------- */
+var GNAMES=['A','B','C','D','E','F','G','H'];
+try{if(typeof tourSet!=='undefined')tourSet.fmt=tourSet.fmt||'ko';}catch(e){}
+window.tourPickFmt=function(f){
+ try{tourSet.fmt=f;}catch(e){}
+ ['ko','groups'].forEach(function(k){var b=document.getElementById('tfm-'+k);if(b)b.classList.toggle('sel',k===f);});
+};
+(function(){
+ var g=document.getElementById('tourCntGrid');if(!g)return;
+ var wrap=document.createElement('div');
+ wrap.innerHTML='<div class="set-h" style="margin-top:10px">🧩 نظام البطولة</div>'+
+  '<div class="gt-grid3">'+
+  '<button class="gt-btn sel" id="tfm-ko" onclick="tourPickFmt(\'ko\')"><span class="gt-ic">⚔️</span><span class="gt-nm">خروج المغلوب</span><span class="gt-sub">كل ماتش إقصائي على طول</span></button>'+
+  '<button class="gt-btn" id="tfm-groups" onclick="tourPickFmt(\'groups\')"><span class="gt-ic">🧩</span><span class="gt-nm">مجموعات + إقصائي</span><span class="gt-sub">دور مجموعات ➜ ربع ➜ نصف ➜ نهائي</span></button>'+
+  '</div>';
+ g.parentNode.insertBefore(wrap,g.nextSibling);
+})();
+var _tourCreate_v4=tourCreate;
+window.tourCreate=tourCreate=function(){
+ var r=_tourCreate_v4.apply(this,arguments);
+ try{if(TOUR&&TOUR.set)TOUR.set.fmt=(tourSet.fmt||'ko');}catch(e){}
+ try{tourRender();}catch(e){}
+ return r;
+};
+/* مزامنة المجموعات مع باقي اللاعبين */
+var _tourStatePayload_v4=tourStatePayload;
+window.tourStatePayload=tourStatePayload=function(){
+ var p=_tourStatePayload_v4.apply(this,arguments);
+ try{p.st.groups=TOUR.groups||null;p.st.stage=TOUR.stage||'ko';}catch(e){}
+ return p;
+};
+var _tourHandle_v4=tourHandle;
+window.tourHandle=tourHandle=function(d,from){
+ var r=_tourHandle_v4.apply(this,arguments);
+ try{
+  if(d&&d.type==='state'&&TOUR&&!TOUR.host&&d.st&&d.st.code===TOUR.code){
+   if(d.st.groups)TOUR.groups=d.st.groups;
+   if(d.st.stage)TOUR.stage=d.st.stage;
+  }
+ }catch(e){}
+ return r;
+};
+function mzMakeGroups(list){
+ var n=list.length,ng=(n<=5)?1:Math.ceil(n/4);
+ if(ng>GNAMES.length)ng=GNAMES.length;
+ var gs=[],i;
+ for(i=0;i<ng;i++)gs.push([]);
+ for(i=0;i<n;i++)gs[i%ng].push(list[i]);
+ return gs;
+}
+function mzGoals(m){
+ var o={a:0,b:0};
+ try{var x=(m&&m.score||'').match(/(\d+)\s*-\s*(\d+)/);if(x){o.a=+x[1];o.b=+x[2];}}catch(e){}
+ return o;
+}
+function mzStandings(G){
+ var rows={};
+ (G.players||[]).forEach(function(p){rows[p.cid]={cid:p.cid,name:p.name,pl:0,w:0,d:0,l:0,gd:0,pts:0};});
+ (TOUR&&TOUR.matches||[]).forEach(function(m){
+  if(!m.g||m.g!==G.name||!m.done||!m.a||!m.b)return;
+  var A=rows[m.a.cid],B=rows[m.b.cid];if(!A||!B)return;
+  var g=mzGoals(m);
+  A.pl++;B.pl++;A.gd+=(g.a-g.b);B.gd+=(g.b-g.a);
+  if(!m.winner){A.d++;B.d++;A.pts++;B.pts++;}
+  else if(m.winner===A.cid){A.w++;B.l++;A.pts+=3;}
+  else {B.w++;A.l++;B.pts+=3;}
+ });
+ var arr=Object.keys(rows).map(function(k){return rows[k];});
+ arr.sort(function(x,y){return (y.pts-x.pts)||(y.gd-x.gd)||(y.w-x.w)||String(x.name).localeCompare(String(y.name));});
+ return arr;
+}
+window.mzStandings=mzStandings;
+/* القرعة: لو النظام مجموعات نعمل دور مجموعات الأول */
+var _tourDraw_v4=tourDraw;
+window.tourDraw=tourDraw=function(){
+ if(!TOUR)return;
+ if(!TOUR.host)return toast('🎲 المضيف بس هو اللي يعمل القرعة');
+ var useG=(TOUR.set&&TOUR.set.fmt==='groups')&&(TOUR.players||[]).length>=4;
+ if(!useG)return _tourDraw_v4.apply(this,arguments);
+ var list=tourFairShuffle(TOUR.players);
+ var gs=mzMakeGroups(list);
+ TOUR.groups=gs.map(function(pl,i){return {name:GNAMES[i],players:pl};});
+ TOUR.stage='groups';TOUR.round=1;TOUR.matches=[];
+ TOUR.groups.forEach(function(G,gi){
+  for(var i=0;i<G.players.length;i++)for(var j=i+1;j<G.players.length;j++){
+   TOUR.matches.push({id:'g'+gi+'m'+i+'_'+j,round:1,g:G.name,a:G.players[i],b:G.players[j],ready:{},started:false,done:false,winner:null});
+  }
+ });
+ try{TOUR_DRAWN[TOUR.code+'#1']=1;}catch(e){}
+ try{tourBroadcastState();tourDbSave(true);}catch(e){}
+ try{tourLobbyStop();}catch(e){}
+ tourNotify('🧩 قرعة المجموعات','اتوزعت المجموعات — كل واحد بيلعب مع كل اللي في مجموعته');
+ try{tourDrawShow(tourRoundMatches(1),function(){tourRender();});}catch(e){}
+ try{tourRender();}catch(e){}
+};
+/* نتيجة ماتش مجموعات: 3 نقاط للفوز و1 للتعادل، ومحدش بيخرج قبل ما الدور يخلص */
+var _tourApplyResult_v4=tourApplyResult;
+window.tourApplyResult=tourApplyResult=function(mid,winner,sc){
+ if(!TOUR||!TOUR.host)return;
+ var m=null;try{m=tourFindMatch(mid);}catch(e){}
+ if(!m||!m.g)return _tourApplyResult_v4.apply(this,arguments);
+ if(m.done)return;
+ m.done=true;m.winner=winner||null;m.started=false;
+ if(sc)m.score=sc;
+ var groupMs=(TOUR.matches||[]).filter(function(x){return !!x.g;});
+ if(groupMs.every(function(x){return x.done;}))mzFinishGroups();
+ try{tourBroadcastState();tourDbSave(true);}catch(e){}
+ try{tourRender();}catch(e){}
+};
+function mzFinishGroups(){
+ var qual=[];
+ (TOUR.groups||[]).forEach(function(G){
+  var st=mzStandings(G),take=Math.min(2,st.length),i;
+  for(i=0;i<st.length;i++){
+   var pl=null;(G.players||[]).forEach(function(p){if(p.cid===st[i].cid)pl=p;});
+   if(!pl)continue;
+   if(i<take)qual.push(pl);
+   else{
+    TOUR.out=(TOUR.out||[]).concat([pl.cid]);
+    TOUR.players=(TOUR.players||[]).filter(function(p){return p.cid!==pl.cid;});
+    try{tourSend({type:'eliminated',to:pl.cid});}catch(e){}
+   }
+  }
+ });
+ TOUR.stage='ko';TOUR.round=2;
+ TOUR.matches=TOUR.matches.concat(tourPair(tourFairShuffle(qual),2));
+ tourNotify('➡️ الأدوار الإقصائية','خلص دور المجموعات — اتأهل '+qual.length+' لاعبين');
+ if(!TOURMATCH){try{tourDrawShow(tourRoundMatches(2),function(){tourRender();});}catch(e){}}
+}
+/* أسماء الأدوار */
+var _tourRoundName_v4=tourRoundName;
+window.tourRoundName=tourRoundName=function(r,cnt){
+ try{if(TOUR&&TOUR.groups&&TOUR.groups.length&&+r===1)return '🧩 دور المجموعات';}catch(e){}
+ return _tourRoundName_v4.apply(this,arguments);
+};
+/* لافتة المجموعة فوق كل ماتش */
+var _tourMatchHTML_v4=tourMatchHTML;
+window.tourMatchHTML=tourMatchHTML=function(m){
+ var h=_tourMatchHTML_v4.apply(this,arguments);
+ if(m&&m.g)h='<div style="font-size:11.5px;font-weight:900;color:var(--gold);text-align:center;margin-top:8px">🧩 مجموعة '+m.g+'</div>'+h;
+ return h;
+};
+/* جداول الترتيب */
+var _tourRender_v4=tourRender;
+window.tourRender=tourRender=function(){
+ var r=_tourRender_v4.apply(this,arguments);
+ try{
+  if(TOUR&&TOUR.groups&&TOUR.groups.length){
+   var h='';
+   TOUR.groups.forEach(function(G){
+    var st=mzStandings(G);
+    h+='<div class="card"><div class="set-h">🧩 ترتيب مجموعة '+G.name+'</div>'+
+       '<table class="stat-t"><tr><td>اللاعب</td><td>لعب</td><td>ف</td><td>ت</td><td>خ</td><td>نقاط</td></tr>';
+    st.forEach(function(x,i){
+     h+='<tr'+(i<2?' style="color:var(--acc);font-weight:900"':'')+'><td>'+(i+1)+'. '+x.name+(x.cid===myCid?' (أنت)':'')+'</td><td>'+x.pl+'</td><td>'+x.w+'</td><td>'+x.d+'</td><td>'+x.l+'</td><td><b>'+x.pts+'</b></td></tr>';
+    });
+    h+='</table><div style="font-size:11.5px;color:var(--dim);margin-top:6px">✅ أول اتنين بس هما اللي يتأهلوا للأدوار الإقصائية (فوز 3 نقاط • تعادل نقطة)</div></div>';
+   });
+   var body=document.getElementById('tourBody');
+   if(body)body.innerHTML=h+body.innerHTML;
+  }
+ }catch(e){}
+ return r;
+};
+
+}catch(err){try{console.error('v4 patch',err);}catch(e){}}
+})();
+</script>
+
 </body>
 </html>
