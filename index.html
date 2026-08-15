@@ -8071,5 +8071,124 @@ window.tourReturnFromMatch=tourReturnFromMatch=function(){
 
 }catch(err){try{console.error('v9 patch',err);}catch(e){}}})();
 </script>
+<script>
+/* ================= تحديث v11 =================
+   1) إصلاح الانسحاب الوهمي بعد ما تخلّص المباراة وتفوز
+   2) زر «رجوع للردهة / رجوع للبطولة» جنب زر «العب مجددًا»
+   3) إصلاح شكل وترتيب قائمة المتصدرين (التصنيف)
+*/
+(function(){try{
+
+/* ---------- (1) مفيش انسحاب بعد نهاية المباراة ---------- */
+var MZ_FIN_KEY='mz_match_finished_v1';
+function mzMarkFinished(){
+ try{
+  if(typeof liveClear==='function')liveClear();
+  localStorage.removeItem('mz_live_match_v3');
+  localStorage.setItem(MZ_FIN_KEY,String(Date.now()));
+ }catch(e){}
+}
+window.mzMarkFinished=mzMarkFinished;
+
+/* أي نهاية مباراة (طبيعية أو بالانسحاب) بتمسح حالة المباراة المحفوظة */
+['endGame','mzGameEnd','tpEndGame','boxesEndGame','endByWithdraw','finishGame'].forEach(function(fn){
+ try{
+  if(typeof window[fn]==='function'){
+   var _o=window[fn];
+   window[fn]=function(){ var r; try{ r=_o.apply(this,arguments); }finally{ mzMarkFinished(); setTimeout(mzMarkFinished,300); }
+    return r; };
+  }
+ }catch(e){}
+});
+
+/* حارس دائم: طول ما المباراة خلصت أو مفيش مباراة شغالة، مايتسجلش أي انسحاب */
+setInterval(function(){
+ try{
+  var ended=false;
+  if(typeof phase!=='undefined'&&phase==='end')ended=true;
+  if(typeof started!=='undefined'&&started===false)ended=true;
+  var ovOpen=false;try{ovOpen=$('overlay')&&!$('overlay').classList.contains('hidden');}catch(e){}
+  if(ended||ovOpen){
+   if(typeof inLiveMatch!=='function'||!inLiveMatch())mzMarkFinished();
+  }
+ }catch(e){}
+},500);
+
+/* لو المباراة خلصت خلال آخر 12 ساعة مايتحسبش عليها انسحاب لما تفتح الموقع */
+setTimeout(function(){
+ try{
+  var t=parseInt(localStorage.getItem(MZ_FIN_KEY)||'0',10);
+  if(t&&Date.now()-t<12*60*60*1000)localStorage.removeItem('mz_live_match_v3');
+ }catch(e){}
+},10);
+
+/* ---------- (2) زر الرجوع جنب زر العب مجددًا ---------- */
+window.mzBackFromEnd=function(){
+ try{
+  mzMarkFinished();
+  var inTour=(typeof TOURMATCH!=='undefined'&&!!TOURMATCH);
+  try{$('overlay').classList.add('hidden');}catch(e){}
+  if(inTour&&typeof tourReturnFromMatch==='function'){tourReturnFromMatch();return;}
+  if(typeof exitToOnline==='function'){exitToOnline('↩ رجعت للردهة');return;}
+  if(typeof leaveHome==='function')leaveHome();
+ }catch(e){try{leaveHome();}catch(e2){}}
+};
+setInterval(function(){
+ try{
+  var boxes=document.querySelectorAll('.end-actions');
+  for(var i=0;i<boxes.length;i++){
+   var b=boxes[i];
+   if(b.querySelector('.mz-back-end'))continue;
+   var inTour=(typeof TOURMATCH!=='undefined'&&!!TOURMATCH);
+   var btn=document.createElement('button');
+   btn.className='big-btn mz-back-end'+(inTour?' goldb':'');
+   btn.textContent=inTour?'🏆 رجوع للبطولة':'↩ رجوع للردهة';
+   btn.onclick=function(){mzBackFromEnd();};
+   b.appendChild(btn);
+   b.style.flexWrap='wrap';
+  }
+ }catch(e){}
+},500);
+
+/* ---------- (3) إصلاح قائمة المتصدرين ---------- */
+try{
+ if(typeof lbRowHTML==='function'){
+  window.lbRowHTML=lbRowHTML=function(r,i,useSeasonPts){
+   var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
+   var pts=useSeasonPts?(r.seasonPoints||0):(r.points||0);
+   var streakTag=(r.streak||0)>=2?'<span class="lb-streak">🔥×'+r.streak+'</span>':'';
+   var wdTag=(r.wd?' • 🚪 '+r.wd+' انسحاب':'');
+   var badge='';try{badge=tierBadgeHTML(r.points||0);}catch(e){}
+   return '<div class="lb-row"><div class="lb-rank">'+medal+'</div>'+badge+
+    '<div style="flex:1;min-width:0"><div class="lb-name">'+streakTag+(r.name||'')+'</div>'+
+    '<div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.draws||0)+' تعادل • '+(r.losses||0)+' خسارة • أطول ستريك '+(r.bestStreak||0)+'🔥'+wdTag+'</div></div>'+
+    '<div class="lb-pts">'+pts+' نقطة</div></div>';
+  };
+ }
+ function mzSortRows(rows,useSeason){
+  rows.sort(function(a,b){
+   var pa=useSeason?(a.seasonPoints||0):(a.points||0),pb=useSeason?(b.seasonPoints||0):(b.points||0);
+   return (pb-pa)||((b.wins||0)-(a.wins||0))||((a.losses||0)-(b.losses||0))||String(a.name||'').localeCompare(String(b.name||''));
+  });
+  return rows;
+ }
+ if(typeof fetchLeaderboard==='function'){
+  var _fl=fetchLeaderboard;
+  window.fetchLeaderboard=fetchLeaderboard=function(){return mzSortRows(_fl.apply(this,arguments)||[],false);};
+ }
+ if(typeof fetchSeasonLeaderboard==='function'){
+  var _fs=fetchSeasonLeaderboard;
+  window.fetchSeasonLeaderboard=fetchSeasonLeaderboard=function(){return mzSortRows(_fs.apply(this,arguments)||[],true);};
+ }
+ try{
+  var st=document.createElement('style');
+  st.textContent='.lb-row{display:flex;align-items:center;gap:8px}.lb-row .lb-name{font-weight:900}.lb-row .lb-sub{font-size:11px;opacity:.75;line-height:1.7}.lb-pts{margin-inline-start:auto}';
+  document.head.appendChild(st);
+ }catch(e){}
+}catch(e){}
+
+}catch(err){try{console.error('v11 patch',err);}catch(e){}}})();
+</script>
+
 </body>
 </html>
