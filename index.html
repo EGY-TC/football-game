@@ -7825,5 +7825,251 @@ try{window.addEventListener('pagehide',function(){
 }catch(err){try{console.error('v7 patch',err);}catch(e){}}})();
 </script>
 
+<script>
+/* ================= v9: صلاحيات المشرف + تزامن الاستعداد والنتيجة + قرعة مرة واحدة ================= */
+(function(){try{
+
+/* ---------- (0) أدوات ---------- */
+function isAdmin(){try{return !!(TOUR&&TOUR.hostCid&&TOUR.hostCid===myCid);}catch(e){return false;}}
+window.tourIsAdmin=isAdmin;
+function mid_(m){return m&&m.id;}
+function findM(id){var o=null;try{(TOUR&&TOUR.matches||[]).forEach(function(m){if(m.id===id)o=m;});}catch(e){}return o;}
+function inRoom(){try{return $('tourRoom')&&!$('tourRoom').classList.contains('hidden');}catch(e){return false;}}
+function reRender(){try{if(inRoom())tourRender();}catch(e){}}
+function nameOfCid(c){try{return tourNameOf(c);}catch(e){return 'لاعب';}}
+
+/* ---------- (1) ستايل أزرار المشرف عشان تبان ---------- */
+(function(){
+ var s=document.createElement('style');
+ s.textContent='.mz-adm{display:flex;gap:6px;justify-content:center;margin-top:6px;flex-wrap:wrap}'+
+  '.mz-adm button{border-radius:10px;padding:6px 10px;font-weight:900;font-size:12px;cursor:pointer;border:1px solid;font-family:inherit}'+
+  '.mz-adm .mz-ping{background:rgba(210,153,34,.18);border-color:var(--gold);color:var(--gold)}'+
+  '.mz-adm .mz-kick{background:rgba(248,81,73,.18);border-color:var(--red);color:var(--red)}'+
+  '.mz-adm button:active{transform:scale(.96)}'+
+  '.mz-admtag{display:block;text-align:center;font-size:11px;color:var(--dim);margin:6px 0}';
+ document.head.appendChild(s);
+})();
+
+/* ---------- (2) كارت اللاعبين: أزرار تنبيه/طرد ظاهرة وللمشرف فقط ---------- */
+window.tourPlayersCardHTML=function(){
+ if(!TOUR)return '';
+ var adm=isAdmin();
+ var h='<div class="card"><div class="set-h">👥 اللاعبون ('+(TOUR.players||[]).length+'/'+((TOUR.set&&TOUR.set.n)||'?')+')</div>'+
+  '<div class="mz-admtag">'+(adm?'👑 إنت المشرف — التنبيه والطرد والقرعة وقفل البطولة من عندك بس'
+   :'المشرف: <b>'+((TOUR.hostName)||'—')+'</b> — هو اللي بيعمل القرعة والتنبيه والطرد وقفل البطولة')+'</div>'+
+  '<div class="t-players">';
+ h+=(TOUR.players||[]).map(function(p){
+  var on=false;try{on=tourIsOnline(p.cid);}catch(e){}
+  var btns='';
+  if(adm&&p.cid!==myCid){
+   btns='<div class="mz-adm">'+
+    '<button class="mz-ping" onclick="tourPing(\''+p.cid+'\')">🔔 تنبيه</button>'+
+    '<button class="mz-kick" onclick="tourKick(\''+p.cid+'\')">🚫 طرد</button></div>';
+  }
+  return '<div class="t-pl"><div class="t-av '+tourAvCls(p.cid)+'">'+tourInitials(p.name)+'</div>'+
+   '<div class="t-pn">'+p.name+(p.cid===TOUR.hostCid?' 👑':'')+(p.cid===myCid?' (أنت)':'')+'</div>'+
+   '<div class="t-st'+(on?' ok':'')+'">'+(on?'🟢 متصل':'⚪ برا دلوقتي')+'</div>'+btns+'</div>';
+ }).join('');
+ return h+'</div></div>';
+};
+
+/* ---------- (3) صلاحيات: القرعة / الطرد / التنبيه / قفل البطولة ---------- */
+var _draw9=tourDraw;
+window.tourDraw=tourDraw=function(){
+ if(!TOUR)return;
+ if(!isAdmin())return toast('🎲 المشرف بس هو اللي يعمل القرعة');
+ if((TOUR.matches||[]).length)return toast('✅ القرعة اتعملت خلاص — مش هتتكرر');
+ return _draw9.apply(this,arguments);
+};
+var _kick9=tourKick;
+window.tourKick=tourKick=function(cid){
+ if(!isAdmin())return toast('🚫 الطرد للمشرف بس');
+ return _kick9.apply(this,arguments);
+};
+var _ping9=tourPing;
+window.tourPing=tourPing=function(cid){
+ if(!isAdmin())return toast('🔔 التنبيه للمشرف بس');
+ return _ping9.apply(this,arguments);
+};
+var _close9=tourCloseAll;
+window.tourCloseAll=tourCloseAll=function(){
+ if(!isAdmin())return toast('🛑 قفل البطولة للمشرف بس');
+ return _close9.apply(this,arguments);
+};
+
+/* زر قفل البطولة يظهر للمشرف بس */
+var _render9=tourRender;
+window.tourRender=tourRender=function(){
+ var r=_render9.apply(this,arguments);
+ try{
+  if(!isAdmin()){
+   var body=document.getElementById('tourBody');
+   if(body){
+    var bs=body.querySelectorAll('button');
+    for(var i=0;i<bs.length;i++){
+     var t=bs[i].textContent||'';
+     if(t.indexOf('إغلاق البطولة')>=0||t.indexOf('القرعة')>=0){
+      var c=bs[i].closest?bs[i].closest('.card'):null;
+      if(c&&c.children.length===1)c.parentNode.removeChild(c);else bs[i].parentNode.removeChild(bs[i]);
+     }
+    }
+   }
+  }
+ }catch(e){}
+ return r;
+};
+
+/* ---------- (4) القرعة تتعرض مرة واحدة بس (حتى بعد الريفريش) ---------- */
+var DKEY='mz_tour_drawn_v9';
+function drawnGet(){try{return JSON.parse(localStorage.getItem(DKEY)||'{}')||{};}catch(e){return {};}}
+function drawnSet(k){try{var o=drawnGet();o[k]=Date.now();localStorage.setItem(DKEY,JSON.stringify(o));}catch(e){}}
+function drawnHas(k){var o=drawnGet();return !!o[k];}
+var _dshow9=tourDrawShow;
+window.tourDrawShow=tourDrawShow=function(ms,cb){
+ ms=(ms||[]).filter(function(m){return m&&m.a;});
+ if(!ms.length){if(cb)cb();return;}
+ var rd=ms[0].round||1, key=((TOUR&&TOUR.code)||'x')+'#'+rd;
+ if(drawnHas(key)){try{if(TOUR)TOUR._seenRound=rd;}catch(e){}if(cb)cb();return;}
+ drawnSet(key);
+ try{TOUR_DRAWN[key]=1;}catch(e){}
+ return _dshow9.call(this,ms,cb);
+};
+
+/* ---------- (5) الاستعداد: يظهر عند كل اللاعبين والمباراة تبدأ من غير المشرف ---------- */
+function readyStore(){TOUR._rdy=TOUR._rdy||{};return TOUR._rdy;}
+function markReady(id,cid){
+ if(!TOUR||!id||!cid)return;
+ var s=readyStore();(s[id]=s[id]||{})[cid]=true;
+ var m=findM(id);
+ if(m&&!m.done){m.ready=m.ready||{};m.ready[cid]=true;}
+}
+function bothReady(m){
+ return !!(m&&m.a&&m.b&&m.ready&&m.ready[m.a.cid]&&m.ready[m.b.cid]);
+}
+function tryStart(m){
+ if(!m||m.done||!bothReady(m))return;
+ if(!m.started){m.started=true;}
+ try{if(TOUR&&TOUR.host){tourBroadcastState();tourSend({type:'go',mid:m.id});}}catch(e){}
+ var mine=(m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid);
+ if(mine&&!TOURMATCH){try{tourDrawClose();}catch(e){}try{tourLaunchMatch(m);}catch(e){}}
+}
+function scanStart(){
+ try{(TOUR&&TOUR.matches||[]).forEach(function(m){if(!m.done&&bothReady(m))tryStart(m);});}catch(e){}
+}
+
+var _h9=tourHandle;
+window.tourHandle=tourHandle=function(d,from){
+ var r;
+ try{
+  if(TOUR&&d&&d.type==='ready'&&d.mid){
+   markReady(d.mid,from);
+   window._mzRdyToast=window._mzRdyToast||{};
+   var _tk=d.mid+'|'+from;
+   if(!window._mzRdyToast[_tk]){window._mzRdyToast[_tk]=1;try{toast('✅ '+nameOfCid(from)+' ضغط استعداد');}catch(e){}}
+  }
+ }catch(e){}
+ try{r=_h9.apply(this,arguments);}catch(e){}
+ try{
+  if(TOUR&&d&&d.type==='ready'&&d.mid){scanStart();reRender();}
+  /* النتيجة تتحدث عند كل اللاعبين فورًا من غير ريفريش */
+  if(TOUR&&d&&(d.type==='result'||d.type==='wd')&&d.mid){
+   var m=findM(d.mid);
+   var win=(d.type==='wd')?((m&&m.a&&m.a.cid===d.loser)?(m.b&&m.b.cid):(m&&m.a&&m.a.cid)):d.winner;
+   if(m&&!m.done&&win){
+    m.done=true;m.winner=win;m.started=false;if(d.sc)m.score=d.sc;
+    try{toast('✅ انتهت المباراة — الفائز: '+nameOfCid(win));}catch(e){}
+   }
+   reRender();
+  }
+  if(TOUR&&d&&d.type==='state'){
+   /* دمج الاستعدادات المحلية فوق حالة المشرف */
+   var s=TOUR._rdy||{};
+   Object.keys(s).forEach(function(id){
+    var mm=findM(id);if(!mm||mm.done)return;
+    mm.ready=mm.ready||{};Object.keys(s[id]).forEach(function(c){mm.ready[c]=true;});
+   });
+   scanStart();reRender();
+  }
+ }catch(e){}
+ return r;
+};
+
+var _ready9=tourReady;
+window.tourReady=tourReady=function(midv){
+ if(!TOUR)return;
+ var m=findM(midv);if(!m||m.done)return;
+ markReady(midv,myCid);
+ var r;try{r=_ready9.apply(this,arguments);}catch(e){}
+ /* إعلان الاستعداد للكل (مش للمشرف بس) */
+ var n=0;
+ var iv=setInterval(function(){
+  n++;
+  var mm=findM(midv);
+  if(!TOUR||!mm||mm.done||mm.started||TOURMATCH||n>20){clearInterval(iv);return;}
+  try{tourSend({type:'ready',mid:midv});}catch(e){}
+  scanStart();reRender();
+ },1500);
+ try{tourSend({type:'ready',mid:midv});}catch(e){}
+ scanStart();reRender();
+ return r;
+};
+
+/* حارس دوري: لو الاتنين جاهزين المباراة تبدأ حتى لو المشرف مش موجود */
+setInterval(function(){try{if(TOUR&&!TOURMATCH)scanStart();}catch(e){}},1500);
+
+/* ---------- (6) نهاية المباراة: النتيجة تبان عند الكل بدون ريفريش ---------- */
+var _end9=tourOnGameEnd;
+window.tourOnGameEnd=tourOnGameEnd=function(champ){
+ var r;
+ var m=null,sc='';
+ try{
+  if(TOURMATCH&&TOUR){
+   m=findM(TOURMATCH.mid);
+   try{sc=tourScoreNow();}catch(e){}
+  }
+ }catch(e){}
+ try{r=_end9.apply(this,arguments);}catch(e){}
+ try{
+  if(m&&TOUR){
+   var winner=null;
+   if(champ===0)winner=m.a?m.a.cid:null;else if(champ===1)winner=m.b?m.b.cid:null;
+   if(winner){
+    m.done=true;m.winner=winner;m.started=false;if(sc)m.score=sc;
+    var k=0;
+    var iv=setInterval(function(){
+     k++;
+     try{tourSend({type:'result',mid:m.id,winner:winner,sc:sc});}catch(e){}
+     if(TOUR&&TOUR.host){try{tourBroadcastState();}catch(e){}}
+     if(k>=4)clearInterval(iv);
+    },700);
+    try{tourSend({type:'result',mid:m.id,winner:winner,sc:sc});}catch(e){}
+   }
+   reRender();
+  }
+  try{$('tourBackBtn').classList.remove('hidden');}catch(e){}
+ }catch(e){}
+ return r;
+};
+
+/* عرض النتيجة والسكور في كارت المباراة */
+var _mhtml9=tourMatchHTML;
+window.tourMatchHTML=tourMatchHTML=function(m){
+ var h=_mhtml9.apply(this,arguments);
+ try{
+  if(m&&m.done&&m.score)h=h.replace('✅ انتهت — الفائز:','✅ انتهت ('+m.score+') — الفائز:');
+ }catch(e){}
+ return h;
+};
+
+/* أول ما ترجع من المباراة: تحديث فوري */
+var _ret9=tourReturnFromMatch;
+window.tourReturnFromMatch=tourReturnFromMatch=function(){
+ var r=_ret9.apply(this,arguments);
+ try{reRender();setTimeout(reRender,600);}catch(e){}
+ return r;
+};
+
+}catch(err){try{console.error('v9 patch',err);}catch(e){}}})();
+</script>
 </body>
 </html>
