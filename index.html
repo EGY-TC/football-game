@@ -8190,5 +8190,717 @@ try{
 }catch(err){try{console.error('v11 patch',err);}catch(e){}}})();
 </script>
 
+<!-- GP_GAME_START -->
+<style>
+/* ===== لعبة تخمين اللاعب ===== */
+.gp-wrap{max-width:640px;margin:0 auto}
+.gp-card{background:var(--card,#161b22);border:1px solid var(--line,#2d333b);border-radius:16px;padding:14px;margin-bottom:10px}
+.gp-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.gp-fact{background:var(--card2,#1c2128);border:1px solid var(--line,#2d333b);border-radius:12px;padding:9px 10px;text-align:center}
+.gp-fact .k{font-size:11px;color:var(--dim,#8b949e);font-weight:800;margin-bottom:3px}
+.gp-fact .v{font-size:14px;font-weight:900}
+.gp-clubs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.gp-club{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.35);color:var(--blue,#58a6ff);border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:900}
+.gp-club.q{background:rgba(255,255,255,.05);border-style:dashed;color:var(--dim,#8b949e)}
+.gp-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.gp-opt{background:var(--card2,#1c2128);border:2px solid var(--line,#2d333b);color:var(--txt,#e6edf3);border-radius:14px;padding:14px 8px;font-size:14px;font-weight:900;cursor:pointer;min-height:58px}
+.gp-opt:active{opacity:.85}
+.gp-opt.pick{border-color:var(--blue,#58a6ff)}
+.gp-opt.ok{border-color:var(--acc,#3fb950);background:rgba(63,185,80,.15)}
+.gp-opt.bad{border-color:var(--red,#f85149);background:rgba(248,81,73,.12)}
+.gp-opt:disabled{opacity:.55;cursor:default}
+.gp-time{text-align:center;font-weight:900;font-size:14px;margin:8px 0 2px}
+.gp-time.low{color:var(--red,#f85149)}
+.gp-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:6px}
+.gp-bar>i{display:block;height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);transition:width .4s linear}
+.gp-hint{text-align:center;color:var(--dim,#8b949e);font-size:12px;margin-top:8px;line-height:1.8}
+.gp-answer{font-size:17px;font-weight:900;text-align:center;color:var(--gold,#d29922);margin:6px 0}
+.gp-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card2,#1c2128);border:1px solid var(--line,#2d333b);border-radius:12px;padding:9px 11px;margin-top:7px;font-size:13px}
+.gp-row.win{border-color:var(--acc,#3fb950)}
+.gp-row .who{font-weight:900}
+.gp-row .gv{font-size:11.5px;color:var(--dim,#8b949e)}
+.gp-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gp-mode-btn{background:var(--card2,#1c2128);border:2px solid var(--line,#2d333b);color:var(--txt,#e6edf3);border-radius:14px;padding:12px 8px;font-weight:900;font-size:13px;cursor:pointer}
+.gp-mode-btn.sel{border-color:var(--acc,#3fb950);background:rgba(63,185,80,.12)}
+.gp-src{font-size:10.5px;color:var(--dim,#8b949e);text-align:center;margin-top:8px}
+</style>
+<script>
+/* =========================================================================
+   🕵️ لعبة تخمين اللاعب — إضافة كاملة فوق اللعبة الأصلية (من غير ما نلمس أي كود قديم)
+   • 11 جولة، أونلاين زي باقي الألعاب (نفس سيرفر المزامنة)
+   • وضعين: كتابة الاسم (بمطابقة ذكية بدون إنترنت) أو 4 اختيارات (الأسرع صح يكسب بونص)
+   • مصدر اللاعبين: قاعدة داخلية موثّقة + توسعة لايف مجانية من Wikidata
+   ========================================================================= */
+var GP_ROUNDS=11;
+var gpDeck=[],gpRound=0,gpCur=null,gpPhase='guess',gpScore=[0,0],gpHistory=[];
+var gpAns=[null,null],gpLocked=[false,false],gpCorrect=[false,false],gpFirst=-1,gpTimeLeft=0,gpTimeMax=35;
+var gpAnsMode='type',gpTimerInt=null,gpRoundStart=0,gpTimeTaken=[null,null],gpMsg=['',''];
+
+/* ============ قاعدة اللاعبين الداخلية (موثّقة) ============ */
+/* [الاسم بالعربي, الاسم بالإنجليزي, العلم, الجنسية, المركز, معتزل؟, الأندية, أسماء بديلة] */
+var GP_BASE=[
+["ليونيل ميسي","Lionel Messi","🇦🇷","الأرجنتين","جناح / صانع ألعاب",0,["برشلونة","باريس سان جيرمان","إنتر ميامي"],["ميسي","messi","ليو ميسي","leo messi"]],
+["كريستيانو رونالدو","Cristiano Ronaldo","🇵🇹","البرتغال","مهاجم / جناح",0,["سبورتينج لشبونة","مانشستر يونايتد","ريال مدريد","يوفنتوس","النصر"],["كريستيانو","كرستيانو","cristiano","ronaldo","cr7","سي رونالدو"]],
+["نيمار دا سيلفا","Neymar Jr","🇧🇷","البرازيل","جناح",0,["سانتوس","برشلونة","باريس سان جيرمان","الهلال"],["نيمار","neymar"]],
+["محمد صلاح","Mohamed Salah","🇪🇬","مصر","جناح أيمن",0,["المقاولون العرب","بازل","تشيلسي","فيورنتينا","روما","ليفربول"],["صلاح","salah","مو صلاح","mo salah"]],
+["كيليان مبابي","Kylian Mbappe","🇫🇷","فرنسا","مهاجم / جناح",0,["موناكو","باريس سان جيرمان","ريال مدريد"],["مبابي","mbappe","امبابي"]],
+["كريم بنزيما","Karim Benzema","🇫🇷","فرنسا","مهاجم صريح",0,["ليون","ريال مدريد","الاتحاد"],["بنزيما","benzema"]],
+["لوكا مودريتش","Luka Modric","🇭🇷","كرواتيا","وسط",0,["دينامو زغرب","توتنهام","ريال مدريد","ميلان"],["مودريتش","modric"]],
+["سيرجيو راموس","Sergio Ramos","🇪🇸","إسبانيا","قلب دفاع",0,["إشبيلية","ريال مدريد","باريس سان جيرمان","مونتيري"],["راموس","ramos"]],
+["أندريس إنييستا","Andres Iniesta","🇪🇸","إسبانيا","وسط",1,["برشلونة","فيسل كوبي","إيمولاتو كوبي"],["انييستا","اينيستا","iniesta"]],
+["تشافي هيرنانديز","Xavi Hernandez","🇪🇸","إسبانيا","وسط",1,["برشلونة","السد"],["تشافي","xavi","شافي"]],
+["زين الدين زيدان","Zinedine Zidane","🇫🇷","فرنسا","صانع ألعاب",1,["كان","بوردو","يوفنتوس","ريال مدريد"],["زيدان","zidane","زين الدين"]],
+["رونالدينهو","Ronaldinho","🇧🇷","البرازيل","جناح / صانع ألعاب",1,["جريميو","باريس سان جيرمان","برشلونة","ميلان","فلامنجو","أتلتيكو مينيرو"],["ronaldinho","رونالدينو"]],
+["كاكا","Kaka","🇧🇷","البرازيل","صانع ألعاب",1,["ساو باولو","ميلان","ريال مدريد","أورلاندو سيتي"],["kaka","ريكاردو كاكا"]],
+["تييري هنري","Thierry Henry","🇫🇷","فرنسا","مهاجم",1,["موناكو","يوفنتوس","أرسنال","برشلونة","نيويورك ريد بولز"],["هنري","henry","تيري هنري"]],
+["فرانك لامبارد","Frank Lampard","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","وسط",1,["وست هام","تشيلسي","مانشستر سيتي","نيويورك سيتي"],["لامبارد","lampard"]],
+["ستيفن جيرارد","Steven Gerrard","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","وسط",1,["ليفربول","لوس أنجلوس جالاكسي"],["جيرارد","gerrard","ستيفين جيرارد"]],
+["جون تيري","John Terry","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","قلب دفاع",1,["تشيلسي","أستون فيلا"],["تيري","terry"]],
+["واين روني","Wayne Rooney","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","مهاجم",1,["إيفرتون","مانشستر يونايتد","دي سي يونايتد","ديربي كاونتي"],["روني","rooney"]],
+["زلاتان إبراهيموفيتش","Zlatan Ibrahimovic","🇸🇪","السويد","مهاجم",1,["مالمو","أياكس","يوفنتوس","إنتر","برشلونة","ميلان","باريس سان جيرمان","مانشستر يونايتد","لوس أنجلوس جالاكسي"],["زلاتان","zlatan","ابراهيموفيتش","ibrahimovic"]],
+["كارليس بويول","Carles Puyol","🇪🇸","إسبانيا","قلب دفاع",1,["برشلونة"],["بويول","puyol"]],
+["إيكر كاسياس","Iker Casillas","🇪🇸","إسبانيا","حارس مرمى",1,["ريال مدريد","بورتو"],["كاسياس","casillas","ايكر"]],
+["محمد أبوتريكة","Mohamed Aboutrika","🇪🇬","مصر","صانع ألعاب",1,["ترسانة","الأهلي","بني ياس"],["ابوتريكة","تريكة","aboutrika","ابو تريكة"]],
+["عصام الحضري","Essam El Hadary","🇪🇬","مصر","حارس مرمى",1,["دمياط","الأهلي","سيون","إسماعيلي","وادي دجلة"],["الحضري","el hadary","عصام حضري"]],
+["رياض محرز","Riyad Mahrez","🇩🇿","الجزائر","جناح أيمن",0,["لوهافر","ليستر سيتي","مانشستر سيتي","الأهلي السعودي"],["محرز","mahrez"]],
+["ياسين بونو","Yassine Bounou","🇲🇦","المغرب","حارس مرمى",0,["أتلتيكو مدريد","سرقسطة","جيرونا","إشبيلية","الهلال"],["بونو","bono","bounou","ياسين بونو"]],
+["أشرف حكيمي","Achraf Hakimi","🇲🇦","المغرب","ظهير أيمن",0,["ريال مدريد","بوروسيا دورتموند","إنتر","باريس سان جيرمان"],["حكيمي","hakimi","اشرف حكيمي"]],
+["حكيم زياش","Hakim Ziyech","🇲🇦","المغرب","جناح",0,["هيرنفين","تفينتي","أياكس","تشيلسي","جالاتاسراي"],["زياش","ziyech"]],
+["عمر مرموش","Omar Marmoush","🇪🇬","مصر","مهاجم",0,["وولفسبورج","شتوتجارت","آينتراخت فرانكفورت","مانشستر سيتي"],["مرموش","marmoush"]],
+["محمد النني","Mohamed Elneny","🇪🇬","مصر","وسط دفاعي",0,["المقاولون العرب","بازل","أرسنال","الجزيرة"],["النني","elneny","محمد الننى"]],
+["هاري كين","Harry Kane","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","مهاجم صريح",0,["توتنهام","بايرن ميونخ"],["كين","kane","هاري كاين"]],
+["إيرلينج هالاند","Erling Haaland","🇳🇴","النرويج","مهاجم صريح",0,["مولده","سالزبورج","بوروسيا دورتموند","مانشستر سيتي"],["هالاند","haaland","إيرلينج"]],
+["كيفن دي بروين","Kevin De Bruyne","🇧🇪","بلجيكا","وسط هجومي",0,["جينك","تشيلسي","فيردر بريمن","فولفسبورج","مانشستر سيتي"],["دي بروين","de bruyne","كيفين دي بروين","kdb"]],
+["روبرت ليفاندوفسكي","Robert Lewandowski","🇵🇱","بولندا","مهاجم صريح",0,["لخ بوزنان","بوروسيا دورتموند","بايرن ميونخ","برشلونة"],["ليفاندوفسكي","lewandowski","ليفا"]],
+["توني كروس","Toni Kroos","🇩🇪","ألمانيا","وسط",1,["بايرن ميونخ","باير ليفركوزن","ريال مدريد"],["كروس","kroos"]],
+["مانويل نوير","Manuel Neuer","🇩🇪","ألمانيا","حارس مرمى",0,["شالكه","بايرن ميونخ"],["نوير","neuer"]],
+["توماس مولر","Thomas Muller","🇩🇪","ألمانيا","مهاجم ثاني",0,["بايرن ميونخ","فانكوفر وايتكابس"],["مولر","muller","مولير"]],
+["جاريث بيل","Gareth Bale","🏴󠁧󠁢󠁷󠁬󠁳󠁿","ويلز","جناح",1,["ساوثهامبتون","توتنهام","ريال مدريد","لوس أنجلوس"],["بيل","bale","جاريث"]],
+["إيدين هازارد","Eden Hazard","🇧🇪","بلجيكا","جناح",1,["ليل","تشيلسي","ريال مدريد"],["هازارد","hazard","ايدن هازارد"]],
+["لويس سواريز","Luis Suarez","🇺🇾","الأوروجواي","مهاجم صريح",0,["ناسيونال","جرونينجن","أياكس","ليفربول","برشلونة","أتلتيكو مدريد","جريميو","إنتر ميامي"],["سواريز","suarez","لويس سواريس"]],
+["سيرجيو أجويرو","Sergio Aguero","🇦🇷","الأرجنتين","مهاجم",1,["إندبندينتي","أتلتيكو مدريد","مانشستر سيتي","برشلونة"],["اجويرو","aguero","كون اجويرو"]],
+["أنخيل دي ماريا","Angel Di Maria","🇦🇷","الأرجنتين","جناح",0,["روساريو سنترال","بنفيكا","ريال مدريد","مانشستر يونايتد","باريس سان جيرمان","يوفنتوس"],["دي ماريا","di maria"]],
+["فيرجيل فان دايك","Virgil van Dijk","🇳🇱","هولندا","قلب دفاع",0,["جرونينجن","سلتيك","ساوثهامبتون","ليفربول"],["فان دايك","van dijk","فيرجل فان دايك"]],
+["تياجو سيلفا","Thiago Silva","🇧🇷","البرازيل","قلب دفاع",0,["فلومينينسي","ميلان","باريس سان جيرمان","تشيلسي"],["تياجو سيلفا","thiago silva"]],
+["فينيسيوس جونيور","Vinicius Junior","🇧🇷","البرازيل","جناح أيسر",0,["فلامنجو","ريال مدريد"],["فينيسيوس","vinicius","فينيسيوس جونيور","vini"]],
+["جود بيلينجهام","Jude Bellingham","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","وسط",0,["برمنجهام سيتي","بوروسيا دورتموند","ريال مدريد"],["بيلينجهام","bellingham","جود"]],
+["رودري","Rodri","🇪🇸","إسبانيا","وسط دفاعي",0,["فياريال","أتلتيكو مدريد","مانشستر سيتي"],["rodri","رودري هرنانديز"]],
+["برونو فيرنانديز","Bruno Fernandes","🇵🇹","البرتغال","وسط هجومي",0,["نوفارا","أودينيزي","سامبدوريا","سبورتينج لشبونة","مانشستر يونايتد"],["برونو","bruno fernandes","برونو فرنانديز"]],
+["ساديو ماني","Sadio Mane","🇸🇳","السنغال","جناح",0,["ميتز","سالزبورج","ساوثهامبتون","ليفربول","بايرن ميونخ","النصر"],["ماني","mane","ساديو"]],
+["أنطوان جريزمان","Antoine Griezmann","🇫🇷","فرنسا","مهاجم ثاني",0,["ريال سوسيداد","أتلتيكو مدريد","برشلونة"],["جريزمان","griezmann","جريزمن"]],
+["كاسيميرو","Casemiro","🇧🇷","البرازيل","وسط دفاعي",0,["ساو باولو","ريال مدريد","مانشستر يونايتد"],["casemiro","كازيميرو"]],
+["مسعود أوزيل","Mesut Ozil","🇩🇪","ألمانيا","صانع ألعاب",1,["شالكه","فيردر بريمن","ريال مدريد","أرسنال","فنربخشة","باشاك شهير"],["اوزيل","ozil","مسعود"]],
+["صامويل إيتو","Samuel Eto'o","🇨🇲","الكاميرون","مهاجم",1,["ريال مايوركا","برشلونة","إنتر","أنجي","تشيلسي","إيفرتون"],["ايتو","etoo","eto'o","صامويل ايتو"]],
+["ديدييه دروجبا","Didier Drogba","🇨🇮","ساحل العاج","مهاجم صريح",1,["جانجون","مارسيليا","تشيلسي","شنغهاي شينهوا","جالاتاسراي","مونتريال"],["دروجبا","drogba"]],
+["رونالدو نازاريو","Ronaldo Nazario","🇧🇷","البرازيل","مهاجم صريح",1,["كروزيرو","آيندهوفن","برشلونة","إنتر","ريال مدريد","ميلان","كورينثيانز"],["رونالدو الظاهرة","الظاهرة","ronaldo nazario","r9"]],
+["روبرتو كارلوس","Roberto Carlos","🇧🇷","البرازيل","ظهير أيسر",1,["بالميراس","إنتر","ريال مدريد","فنربخشة","كورينثيانز"],["روبرتو كارلوس","roberto carlos"]],
+["فرانشيسكو توتي","Francesco Totti","🇮🇹","إيطاليا","صانع ألعاب",1,["روما"],["توتي","totti"]],
+["أليساندرو ديل بييرو","Alessandro Del Piero","🇮🇹","إيطاليا","مهاجم ثاني",1,["بادوفا","يوفنتوس","سيدني"],["ديل بييرو","del piero"]],
+["جيانلويجي بوفون","Gianluigi Buffon","🇮🇹","إيطاليا","حارس مرمى",1,["بارما","يوفنتوس","باريس سان جيرمان"],["بوفون","buffon"]],
+["أندريا بيرلو","Andrea Pirlo","🇮🇹","إيطاليا","صانع ألعاب",1,["بريشيا","إنتر","ميلان","يوفنتوس","نيويورك سيتي"],["بيرلو","pirlo"]],
+["باولو مالديني","Paolo Maldini","🇮🇹","إيطاليا","ظهير أيسر / قلب دفاع",1,["ميلان"],["مالديني","maldini"]],
+["ديفيد بيكهام","David Beckham","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","جناح أيمن",1,["مانشستر يونايتد","بريستون","ريال مدريد","لوس أنجلوس جالاكسي","ميلان","باريس سان جيرمان"],["بيكهام","beckham"]],
+["رايان جيجز","Ryan Giggs","🏴󠁧󠁢󠁷󠁬󠁳󠁿","ويلز","جناح أيسر",1,["مانشستر يونايتد"],["جيجز","giggs"]],
+["بول سكولز","Paul Scholes","🏴󠁧󠁢󠁥󠁮󠁧󠁿","إنجلترا","وسط",1,["مانشستر يونايتد"],["سكولز","scholes"]],
+["كارلوس تيفيز","Carlos Tevez","🇦🇷","الأرجنتين","مهاجم",1,["بوكا جونيورز","كورينثيانز","وست هام","مانشستر يونايتد","مانشستر سيتي","يوفنتوس"],["تيفيز","tevez"]],
+["دييجو فورلان","Diego Forlan","🇺🇾","الأوروجواي","مهاجم",1,["إندبندينتي","مانشستر يونايتد","فياريال","أتلتيكو مدريد","إنتر"],["فورلان","forlan"]],
+["إدينسون كافاني","Edinson Cavani","🇺🇾","الأوروجواي","مهاجم صريح",0,["باليرمو","نابولي","باريس سان جيرمان","مانشستر يونايتد","فالنسيا","بوكا جونيورز"],["كافاني","cavani"]],
+["أرين روبن","Arjen Robben","🇳🇱","هولندا","جناح أيمن",1,["جرونينجن","آيندهوفن","تشيلسي","ريال مدريد","بايرن ميونخ"],["روبن","robben"]],
+["فرانك ريبيري","Franck Ribery","🇫🇷","فرنسا","جناح أيسر",1,["مارسيليا","جالاتاسراي","بايرن ميونخ","فيورنتينا","ساليرنيتانا"],["ريبيري","ribery"]],
+["فيليب لام","Philipp Lahm","🇩🇪","ألمانيا","ظهير أيمن",1,["بايرن ميونخ","شتوتجارت"],["لام","lahm"]],
+["إيدين تشيكو"," Edin Dzeko","🇧🇦","البوسنة","مهاجم صريح",0,["فولفسبورج","مانشستر سيتي","روما","إنتر","فنربخشة"],["دجيكو","dzeko","تشيكو"]],
+["محمد كريم بنشرقي","Karim Bencherifa","🇲🇦","المغرب","وسط",1,["الوداد"],["بنشرقي"]],
+["أحمد حسن","Ahmed Hassan","🇪🇬","مصر","وسط",1,["الأهلي","كوجايلي","بشكتاش","الأنيرجي","أنقرة جوجو","الزمالك","الأهلي"],["احمد حسن","ahmed hassan"]],
+["وائل جمعة","Wael Gomaa","🇪🇬","مصر","قلب دفاع",1,["المقاولون العرب","الأهلي"],["وائل جمعه","wael gomaa"]],
+["عمرو زكي","Amr Zaki","🇪🇬","مصر","مهاجم",1,["الزمالك","لوكوموتيف موسكو","ويجان","حرس الحدود"],["عمرو زكى","amr zaki"]],
+["ياسر القحطاني","Yasser Al-Qahtani","🇸🇦","السعودية","مهاجم",1,["القادسية","الهلال","الريان"],["القحطاني","al qahtani"]],
+["سامي الجابر","Sami Al-Jaber","🇸🇦","السعودية","مهاجم",1,["الهلال","وولفرهامبتون"],["الجابر","al jaber"]],
+["عبد الرزاق حمد الله","Abderrazak Hamdallah","🇲🇦","المغرب","مهاجم صريح",0,["الرجاء","آلبورج","قوانغتشو","النصر","الاتحاد","الشباب"],["حمد الله","hamdallah","حمدالله"]]
+];
+
+function gpFromBase(a){
+ return{key:'b:'+a[1],ar:a[0],en:a[1],flag:a[2],nat:a[3],pos:a[4],ret:!!a[5],clubs:a[6].slice(),al:(a[7]||[]).slice(),src:'base'};
+}
+
+/* ============ تطبيع ومطابقة الأسماء (دقيقة ومن غير إنترنت) ============ */
+var GP_STOP={'ال':1,'بن':1,'ابن':1,'دا':1,'دي':1,'دو':1,'de':1,'da':1,'do':1,'van':1,'von':1,'el':1,'al':1,'jr':1,'junior':1,'the':1};
+/* ألقاب مشتركة بين أكتر من لاعب — لوحدها متكفّيش للإجابة */
+var GP_AMBIG={'رونالدو':1,'ronaldo':1,'سيلفا':1,'silva':1,'محمد':1,'mohamed':1,'احمد':1,'ahmed':1,'حسن':1,'hassan':1,'جونيور':1,'junior':1,'سانتوس':1,'santos':1,'جارسيا':1,'garcia':1,'لويس':1,'luis':1,'كارلوس':1,'carlos':1,'دياز':1,'diaz':1,'فيرنانديز':1,'fernandez':1,'الله':1};
+function gpNorm(s){
+ if(!s)return '';
+ s=String(s).toLowerCase();
+ s=s.normalize?s.normalize('NFD').replace(/[\u0300-\u036f]/g,''):s;
+ s=s.replace(/[\u064B-\u0652\u0670\u0640]/g,'');
+ s=s.replace(/[أإآٱ]/g,'ا').replace(/[ىی]/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ة/g,'ه').replace(/گ/g,'ك').replace(/پ/g,'ب').replace(/چ/g,'ج').replace(/ڤ/g,'ف').replace(/ژ/g,'ز');
+ s=s.replace(/[^0-9a-z\u0621-\u064A ]+/g,' ');
+ return s.replace(/\s+/g,' ').trim();
+}
+function gpTokens(s){
+ return gpNorm(s).split(' ').filter(function(t){return t&&!GP_STOP[t];});
+}
+function gpLev(a,b){
+ if(a===b)return 0;
+ var m=a.length,n=b.length;
+ if(!m||!n)return m||n;
+ var prev=[],cur=[],i,j;
+ for(j=0;j<=n;j++)prev[j]=j;
+ for(i=1;i<=m;i++){
+  cur[0]=i;
+  for(j=1;j<=n;j++){
+   cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));
+  }
+  for(j=0;j<=n;j++)prev[j]=cur[j];
+ }
+ return prev[n];
+}
+function gpTokClose(a,b){
+ if(a===b)return true;
+ var L=Math.max(a.length,b.length);
+ if(L<=3)return false;
+ if(a.indexOf(b)===0||b.indexOf(a)===0){if(Math.abs(a.length-b.length)<=2)return true;}
+ var tol=L<=5?1:(L<=8?2:2);
+ return gpLev(a,b)<=tol;
+}
+/* كل الأسماء المقبولة للاعب */
+function gpCandidates(p){
+ var c=[p.ar,p.en].concat(p.al||[]);
+ return c.filter(Boolean);
+}
+/* المطابقة: لازم يكون فيه توكن مميز (مش لقب مشترك) صح، وكل كلمة كتبها موجودة عند اللاعب */
+function gpNameMatches(guess,p){
+ var g=gpTokens(guess);
+ if(!g.length)return false;
+ var cands=gpCandidates(p);
+ var all={},distinct={};
+ cands.forEach(function(c){
+  gpTokens(c).forEach(function(t){all[t]=1;if(!GP_AMBIG[t]&&t.length>2)distinct[t]=1;});
+ });
+ var allK=Object.keys(all),distK=Object.keys(distinct);
+ /* مطابقة كاملة لأي اسم بديل */
+ for(var i=0;i<cands.length;i++){
+  var cn=gpNorm(cands[i]);
+  if(cn===gpNorm(guess))return true;
+ }
+ var hitDistinct=false,ok=true;
+ g.forEach(function(t){
+  var matched=null;
+  for(var k=0;k<allK.length;k++){if(gpTokClose(t,allK[k])){matched=allK[k];break;}}
+  if(!matched){ok=false;return;}
+  if(distinct[matched])hitDistinct=true;
+ });
+ if(!ok)return false;
+ if(hitDistinct)return true;
+ /* كتب لقب مشترك بس (زي "رونالدو") — نقبله فقط لو مفيش تشابه مع لاعب تاني في الديك */
+ var clash=0;
+ (gpDeck||[]).forEach(function(o){
+  if(!o||o.key===p.key)return;
+  var t2={};gpCandidates(o).forEach(function(c){gpTokens(c).forEach(function(x){t2[x]=1;});});
+  var hit=g.every(function(t){return Object.keys(t2).some(function(x){return gpTokClose(t,x);});});
+  if(hit)clash++;
+ });
+ return clash===0;
+}
+
+/* ============ مصدر خارجي مجاني: Wikidata (لاعبين أكتر ومن غير تكرار) ============ */
+function gpUsedLoad(){try{return JSON.parse(localStorage.getItem('gp_used')||'[]');}catch(e){return [];}}
+function gpUsedSave(keys){
+ try{
+  var u=gpUsedLoad().concat(keys);
+  if(u.length>400)u=u.slice(u.length-400);
+  localStorage.setItem('gp_used',JSON.stringify(u));
+ }catch(e){}
+}
+function gpCacheLoad(){
+ try{var j=JSON.parse(localStorage.getItem('gp_wd_cache')||'null');if(j&&j.t&&j.players&&j.players.length)return j;}catch(e){}
+ return null;
+}
+function gpCacheSave(players){
+ try{localStorage.setItem('gp_wd_cache',JSON.stringify({t:Date.now(),players:players.slice(0,600)}));}catch(e){}
+}
+function gpFetchWikidata(){
+ var minLinks=55+Math.floor(Math.random()*70);
+ var q='SELECT ?p ?pl ?cl ?nl ?posl ?dod ?wpe WHERE {'+
+  '?p wdt:P106 wd:Q937857 ; wdt:P54 ?c ; wdt:P27 ?n .'+
+  '?p wikibase:sitelinks ?sl . FILTER(?sl > '+minLinks+')'+
+  'OPTIONAL{?p wdt:P413 ?pos} OPTIONAL{?p wdt:P570 ?dod} OPTIONAL{?p wdt:P2032 ?wpe}'+
+  'SERVICE wikibase:label { bd:serviceParam wikibase:language "ar,en". ?p rdfs:label ?pl. ?c rdfs:label ?cl. ?n rdfs:label ?nl. ?pos rdfs:label ?posl. }'+
+  '} LIMIT 4000';
+ var url='https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q);
+ var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+ var to=setTimeout(function(){try{ctrl&&ctrl.abort();}catch(e){}},40000);
+ return fetch(url,{headers:{'Accept':'application/sparql-results+json'},signal:ctrl?ctrl.signal:undefined})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   clearTimeout(to);
+   if(!j||!j.results||!j.results.bindings)return [];
+   var byId={};
+   j.results.bindings.forEach(function(b){
+    var id=b.p.value,nm=b.pl?b.pl.value:'';
+    if(!nm||/^Q\d+$/.test(nm))return;
+    var o=byId[id]||(byId[id]={key:'w:'+id,ar:nm,en:nm,flag:'🌍',nat:b.nl?b.nl.value:'—',pos:(b.posl&&!/^Q\d+$/.test(b.posl.value))?b.posl.value:'لاعب كرة قدم',ret:!!(b.dod||b.wpe),clubs:[],al:[],src:'wikidata'});
+    var cl=b.cl?b.cl.value:'';
+    if(cl&&!/^Q\d+$/.test(cl)&&o.clubs.indexOf(cl)<0&&!/(منتخب|national football team|under-|olympic)/i.test(cl))o.clubs.push(cl);
+   });
+   var out=[];
+   Object.keys(byId).forEach(function(k){
+    var o=byId[k];
+    if(o.clubs.length>=3&&o.clubs.length<=9&&o.ar.length>4)out.push(o);
+   });
+   return out;
+  })
+  .catch(function(){clearTimeout(to);return [];});
+}
+/* بنسحب اللاعبين من Wikidata في الخلفية ونخزّنهم على الجهاز، فاللعبة بتبدأ فورًا
+   والقاعدة بتكبر مع الوقت من غير أي انتظار من اللاعب */
+var gpFetching=false;
+function gpRefreshLivePool(force){
+ var c=gpCacheLoad();
+ var stale=!c||(Date.now()-c.t>7*24*3600*1000)||c.players.length<40;
+ if(!force&&!stale)return;
+ if(gpFetching)return;
+ gpFetching=true;
+ gpFetchWikidata().then(function(list){
+  gpFetching=false;
+  if(list&&list.length>=20){
+   var old=(gpCacheLoad()||{players:[]}).players,seen={},merged=[];
+   list.concat(old).forEach(function(p){if(!seen[p.key]){seen[p.key]=1;merged.push(p);}});
+   gpCacheSave(merged);
+  }
+ }).catch(function(){gpFetching=false;});
+}
+function gpLivePool(){var c=gpCacheLoad();return c?c.players:[];}
+/* بناء ديك 11 جولة: أولوية للقاعدة الموثّقة + توسعة من Wikidata، ومن غير تكرار للاعبين اللي جم قبل كده */
+function gpBuildDeck(){
+ gpRefreshLivePool(false);
+ var used={};gpUsedLoad().forEach(function(k){used[k]=1;});
+ var base=GP_BASE.map(gpFromBase);
+ var freshBase=shuffle(base.filter(function(p){return !used[p.key];}));
+ if(freshBase.length<6)freshBase=shuffle(base);
+ var extra=gpLivePool().filter(function(p){return p&&p.clubs&&p.clubs.length>=3;});
+ var seenName={},pool=[];
+ freshBase.slice(0,7).forEach(function(p){seenName[gpNorm(p.ar)]=1;pool.push(p);});
+ shuffle(extra).forEach(function(p){
+  if(pool.length>=GP_ROUNDS+6)return;
+  if(used[p.key])return;
+  var n=gpNorm(p.ar);
+  if(seenName[n])return;
+  seenName[n]=1;pool.push(p);
+ });
+ shuffle(base).forEach(function(p){
+  if(pool.length>=GP_ROUNDS)return;
+  var n=gpNorm(p.ar);
+  if(seenName[n])return;
+  seenName[n]=1;pool.push(p);
+ });
+ var deck=shuffle(pool).slice(0,GP_ROUNDS);
+ var namesAll=base.map(function(b){return b.ar;}).concat(extra.map(function(e){return e.ar;}));
+ deck.forEach(function(p){
+  var others=shuffle(namesAll.filter(function(n){return gpNorm(n)!==gpNorm(p.ar);})).slice(0,3);
+  p.opts=shuffle([p.ar].concat(others));
+ });
+ gpUsedSave(deck.map(function(p){return p.key;}));
+ return Promise.resolve(deck);
+}
+
+/* ============ إعدادات الوضع ============ */
+function pickGPMode(m){
+ gpAnsMode=m;
+ var a=document.getElementById('gpm0'),b=document.getElementById('gpm1');
+ if(a)a.classList.toggle('sel',m==='type');
+ if(b)b.classList.toggle('sel',m==='choice');
+}
+function gpIs(){return gameType==='guessplayer';}
+
+/* ============ إدارة الجولات (المضيف) ============ */
+function gpReset(){gpRound=0;gpScore=[0,0];gpHistory=[];gpCur=null;gpPhase='guess';gpAns=[null,null];gpLocked=[false,false];gpCorrect=[false,false];gpFirst=-1;gpTimeTaken=[null,null];gpMsg=['',''];}
+function gpStopTimer(){if(gpTimerInt){clearInterval(gpTimerInt);gpTimerInt=null;}}
+function gpStartTimer(){
+ gpStopTimer();
+ gpTimerInt=setInterval(function(){
+  if(gpPhase!=='guess'){gpStopTimer();return;}
+  gpTimeLeft--;
+  if(gpTimeLeft<=0){gpTimeLeft=0;gpStopTimer();gpReveal();return;}
+  gpTickUI();if(online&&isHost)broadcast();
+ },1000);
+}
+function startGPRound(){
+ if(online&&!isHost)return;
+ if(gpRound>=gpDeck.length)return endGPGame();
+ gpCur=gpDeck[gpRound];
+ gpAns=[null,null];gpLocked=[false,false];gpCorrect=[false,false];gpFirst=-1;gpTimeTaken=[null,null];gpMsg=['',''];
+ gpPhase='guess';
+ gpTimeMax=(gpAnsMode==='choice')?20:40;
+ gpTimeLeft=gpTimeMax;gpRoundStart=Date.now();
+ log('الجولة '+(gpRound+1)+': مين اللاعب ده؟');
+ render();if(online&&isHost)broadcast();
+ gpStartTimer();
+ if(mode===1)gpAiAnswer();
+}
+function gpAiAnswer(){
+ var delay=(gpAnsMode==='choice'?1500:4000)+Math.random()*5000;
+ setTimeout(function(){
+  if(gpPhase!=='guess'||gpLocked[1])return;
+  var smart=Math.random()<0.55;
+  var val;
+  if(gpAnsMode==='choice')val=smart?gpCur.ar:shuffle(gpCur.opts.filter(function(o){return o!==gpCur.ar;}))[0];
+  else val=smart?gpCur.ar:'لاعب مش عارفه';
+  gpSubmit(1,val);
+ },delay);
+}
+function gpSubmit(seat,val){
+ if(gpPhase!=='guess'||gpLocked[seat])return false;
+ if(val===null||val===undefined)return false;
+ val=String(val).trim();
+ if(!val)return false;
+ gpAns[seat]=val;gpLocked[seat]=true;
+ gpTimeTaken[seat]=Math.max(0.1,(Date.now()-gpRoundStart)/1000);
+ var ok=(gpAnsMode==='choice')?(gpNorm(val)===gpNorm(gpCur.ar)):gpNameMatches(val,gpCur);
+ gpCorrect[seat]=ok;
+ if(ok&&gpFirst===-1)gpFirst=seat;
+ log((P[seat]?P[seat].name:'لاعب')+' قفل إجابته');
+ if(gpLocked[0]&&gpLocked[1]){setTimeout(gpReveal,350);}
+ else{render();if(online&&isHost)broadcast();}
+ return true;
+}
+function gpReveal(){
+ if(online&&!isHost)return;
+ if(gpPhase==='reveal')return;
+ gpStopTimer();
+ gpPhase='reveal';
+ var pts=[0,0];
+ [0,1].forEach(function(s){if(gpCorrect[s])pts[s]+=1;});
+ if(gpFirst>=0&&gpCorrect[gpFirst])pts[gpFirst]+=1;/* بونص السرعة لأسرع إجابة صح */
+ gpScore[0]+=pts[0];gpScore[1]+=pts[1];
+ gpHistory.push({ar:gpCur.ar,flag:gpCur.flag,nat:gpCur.nat,pos:gpCur.pos,ret:gpCur.ret,clubs:gpCur.clubs.slice(0,6),
+  a0:gpAns[0],a1:gpAns[1],c0:gpCorrect[0],c1:gpCorrect[1],t0:gpTimeTaken[0],t1:gpTimeTaken[1],p0:pts[0],p1:pts[1],first:gpFirst});
+ log('الإجابة الصحيحة: '+gpCur.ar);
+ var meSeat=online?mySeat:0;
+ try{sfxRoundOutcome(gpCorrect[meSeat]?true:false);}catch(e){}
+ render();if(online&&isHost)broadcast();
+}
+function gpNext(){
+ if(online&&!isHost)return;
+ gpRound++;
+ startGPRound();
+}
+function gpNextClick(){
+ if(online&&!isHost){sendActReliable({type:'act',a:'gpnext'});return;}
+ gpNext();
+}
+/* أفعال اللاعب */
+function gpMySeat(){return online?mySeat:0;}
+function gpCanAct(seat){return gpPhase==='guess'&&!gpLocked[seat]&&(mode===3?seat===mySeat:(mode===1?seat===0:true));}
+function gpSend(seat,val){
+ if(!gpCanAct(seat))return;
+ if(online&&!isHost){gpLocked[seat]=true;gpAns[seat]=val;render();sendActReliable({type:'act',a:'gpans',v:val});return;}
+ gpSubmit(seat,val);
+}
+function gpConfirmType(seat){
+ var el=document.getElementById('gpIn'+seat);
+ if(!el)return;
+ var v=el.value.trim();
+ if(!v){toast('✍️ اكتب اسم اللاعب الأول');return;}
+ gpSend(seat,v);
+}
+function gpPick(seat,idx){
+ if(!gpCur||!gpCur.opts)return;
+ gpSend(seat,gpCur.opts[idx]);
+}
+
+/* ============ الواجهة ============ */
+function gpTickUI(){
+ var bar=document.getElementById('gpBarI'),lbl=document.getElementById('gpTimeLbl');
+ if(!bar||!lbl)return;
+ bar.style.width=Math.max(0,Math.min(100,gpTimeLeft/gpTimeMax*100))+'%';
+ lbl.textContent='⏱️ '+gpTimeLeft+' ثانية';
+ lbl.className='gp-time'+(gpTimeLeft<=5?' low':'');
+}
+function gpStatusLine(p){return p.ret?'🎖️ معتزل':'🟢 لسه بيلعب';}
+function renderGP(){
+ var box=document.getElementById('viewGP');
+ if(!box)return;
+ if(!gpCur||!P[0]||!P[1]){box.innerHTML='<div class="gp-card" style="text-align:center">⏳ بنجهّز اللاعبين…</div>';return;}
+ var me=gpMySeat(),other=1-me;
+ var h='';
+ h+='<div class="tp-scoreboard"><div class="tp-sc'+(gpScore[0]>gpScore[1]?' lead':'')+'"><div class="nm2">'+P[0].name+'</div><div class="pts">'+gpScore[0]+'</div></div><div class="tp-sc'+(gpScore[1]>gpScore[0]?' lead':'')+'"><div class="nm2">'+P[1].name+'</div><div class="pts">'+gpScore[1]+'</div></div></div>';
+ h+='<div class="tp-progress">';
+ for(var i=0;i<gpDeck.length;i++){
+  var cls='';
+  if(i<gpHistory.length){var hh=gpHistory[i];cls=(hh.p0>hh.p1?'done0':(hh.p1>hh.p0?'done1':'donedraw'));}
+  h+='<div class="tp-dot '+cls+(i===gpRound?' cur':'')+'">'+(i+1)+'</div>';
+ }
+ h+='</div>';
+ h+='<div class="tp-round-pill">الجولة '+(gpRound+1)+' / '+gpDeck.length+'</div>';
+
+ h+='<div class="gp-card">';
+ h+='<div style="text-align:center;font-size:34px">🕵️</div>';
+ h+='<div style="text-align:center;font-weight:900;font-size:16px;margin-top:4px">مين اللاعب ده؟</div>';
+ h+='<div class="gp-facts">';
+ h+='<div class="gp-fact"><div class="k">الجنسية</div><div class="v">'+(gpCur.flag||'🌍')+' '+gpCur.nat+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">المركز</div><div class="v">'+gpCur.pos+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">الحالة</div><div class="v">'+gpStatusLine(gpCur)+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">عدد الأندية</div><div class="v">'+gpCur.clubs.length+'</div></div>';
+ h+='</div>';
+ h+='<div class="gp-clubs">'+gpCur.clubs.slice(0,7).map(function(c){return '<span class="gp-club">'+c+'</span>';}).join('')+'</div>';
+ h+='</div>';
+
+ if(gpPhase==='guess'){
+  var pct=Math.max(0,Math.min(100,gpTimeLeft/gpTimeMax*100));
+  h+='<div class="gp-bar"><i id="gpBarI" style="width:'+pct+'%"></i></div>';
+  h+='<div id="gpTimeLbl" class="gp-time'+(gpTimeLeft<=5?' low':'')+'">⏱️ '+gpTimeLeft+' ثانية</div>';
+  var seats=(mode===2)?[0,1]:[me];
+  seats.forEach(function(seat){
+   h+='<div class="gp-card">';
+   h+='<div style="font-weight:900;margin-bottom:6px">'+P[seat].name+'</div>';
+   if(gpLocked[seat]){
+    h+='<div class="tp-lockstatus">🔒 اتقفلت إجابتك ('+(gpAns[seat]||'')+') — استنى الطرف التاني…</div>';
+   }else if(gpAnsMode==='choice'){
+    h+='<div class="gp-opts">';
+    gpCur.opts.forEach(function(o,idx){
+     h+='<button class="gp-opt" onclick="gpPick('+seat+','+idx+')">'+o+'</button>';
+    });
+    h+='</div>';
+   }else{
+    h+='<input id="gpIn'+seat+'" placeholder="اكتب اسم اللاعب…" autocomplete="off" onkeydown="if(event.key===\'Enter\')gpConfirmType('+seat+')">';
+    h+='<button class="big-btn green" style="margin-top:8px" onclick="gpConfirmType('+seat+')">✅ قفل الإجابة</button>';
+    h+='<div class="gp-hint">مش لازم الاسم كامل — "صلاح" أو "mo salah" أو حتى غلطة إملائية بسيطة بتتقبل.</div>';
+   }
+   h+='</div>';
+  });
+  if(mode!==2){
+   h+='<div class="gp-hint">'+(gpLocked[other]?('✅ '+P[other].name+' قفل إجابته'):(P[other].name+' لسه بيفكر…'))+'</div>';
+  }
+ }else if(gpPhase==='reveal'){
+  var last=gpHistory[gpHistory.length-1]||{};
+  h+='<div class="gp-card">';
+  h+='<div class="gp-answer">✅ الإجابة: '+(gpCur.flag||'')+' '+gpCur.ar+'</div>';
+  [0,1].forEach(function(s){
+   var c=s===0?last.c0:last.c1,a=s===0?last.a0:last.a1,t=s===0?last.t0:last.t1,p=s===0?last.p0:last.p1;
+   h+='<div class="gp-row'+(c?' win':'')+'"><div><div class="who">'+(c?'✅ ':'❌ ')+P[s].name+'</div><div class="gv">إجابته: '+(a||'— مجاوبش')+(t?(' • '+t.toFixed(1)+' ث'):'')+'</div></div><div class="df">+'+p+'</div></div>';
+  });
+  if(last.first>=0&&(last.p0===2||last.p1===2))h+='<div class="gp-hint">⚡ بونص السرعة راح لـ '+P[last.first].name+'</div>';
+  h+='</div>';
+  var canAdvance=(mode===3?isHost:true);
+  if(canAdvance){
+   h+='<button class="big-btn green" onclick="gpNextClick()">'+((gpRound+1>=gpDeck.length)?'🏁 النتيجة النهائية':'الجولة الجاية ➜')+'</button>';
+  }else{
+   h+='<div class="gp-hint">بانتظار المضيف يبدأ الجولة الجاية…</div>';
+  }
+ }
+ h+='<div class="gp-src">📚 مصدر البيانات: قاعدة اللعبة الموثّقة + Wikidata (تحديث لايف)</div>';
+ var keep={};
+ [0,1].forEach(function(s){var el=document.getElementById('gpIn'+s);if(el)keep[s]={v:el.value,f:(document.activeElement===el),c:el.selectionStart};});
+ box.innerHTML=h;
+ [0,1].forEach(function(s){
+  var el=document.getElementById('gpIn'+s);
+  if(el&&keep[s]&&keep[s].v){el.value=keep[s].v;if(keep[s].f){try{el.focus();el.setSelectionRange(keep[s].c,keep[s].c);}catch(e){}}}
+ });
+}
+
+function endGPGame(){
+ gpStopTimer();
+ phase='end';
+ try{sfxFanfare();}catch(e){}
+ var champ=gpScore[0]>gpScore[1]?0:(gpScore[1]>gpScore[0]?1:-1);
+ var c0=gpHistory.filter(function(h){return h.c0;}).length;
+ var c1=gpHistory.filter(function(h){return h.c1;}).length;
+ var histHtml=gpHistory.map(function(h,i){
+  return '<div class="gp-row"><div><div class="who">'+(i+1)+'. '+(h.flag||'')+' '+h.ar+'</div><div class="gv">'+(h.c0?'✅':'❌')+' '+P[0].name+' • '+(h.c1?'✅':'❌')+' '+P[1].name+'</div></div><div class="df">'+h.p0+' - '+h.p1+'</div></div>';
+ }).join('');
+ try{recordMatchResult(P[0].name,gpScore[0],P[1].name,gpScore[1]);}catch(e){}
+ endH='<h2>النتيجة النهائية — تخمين اللاعب</h2>'+
+  (champ===-1?'<div class="winner-banner">🤝 تعادل '+gpScore[0]+' - '+gpScore[1]+'</div>':'<div class="winner-banner">🏆 البطل: '+P[champ].name+' ('+gpScore[0]+' - '+gpScore[1]+')</div>')+
+  '<table class="stat-t"><tr><td></td><td><b>'+P[0].name+'</b></td><td><b>'+P[1].name+'</b></td></tr>'+
+  '<tr><td>إجابات صحيحة</td><td><b>'+c0+'</b> / '+gpHistory.length+'</td><td><b>'+c1+'</b> / '+gpHistory.length+'</td></tr>'+
+  '<tr><td>النقاط</td><td><b>'+gpScore[0]+'</b></td><td><b>'+gpScore[1]+'</b></td></tr></table>'+
+  '<div class="tp-stat-box" style="margin-top:10px"><b>📜 كل الجولات:</b></div>'+histHtml+
+  (typeof pointsSummaryHTML==='function'?pointsSummaryHTML():'')+
+  '<div class="end-actions"><button class="big-btn goldb" onclick="shareResult()">🔗 شارك النتيجة</button><button class="big-btn green" onclick="quickRematch()">🔁 العب مجددًا</button></div>';
+ try{mzGameEnd(champ,'gp');}catch(e){}
+ shareText='🕵️ تخمين اللاعب — النتيجة النهائية\n'+
+  (champ===-1?('🤝 تعادل '+gpScore[0]+' - '+gpScore[1]):('🏆 البطل: '+P[champ].name+' ('+gpScore[0]+' - '+gpScore[1]+')'))+'\n'+
+  '✅ '+P[0].name+': '+c0+' صح — ✅ '+P[1].name+': '+c1+' صح\n'+
+  '🎮 العب معانا: مزاد النجوم';
+ render();if(online&&isHost)broadcast();
+}
+
+/* ============ بدء اللعبة ============ */
+function gpInitGame(){
+ started=true;logArr=[];gpReset();
+ updateGameTitleUI();
+ show('game');
+ setView('gp');
+ startGPRound();
+}
+function gpHostStart(btn,prevTxt){
+ btn.disabled=true;btn.textContent='⏳ بنجهّز اللاعبين…';
+ gpBuildDeck().then(function(deck){
+  gpDeck=deck;
+  btn.disabled=false;btn.textContent=prevTxt;
+  if(online&&isHost){
+   if(!conn||!conn.open){toast('لا يوجد خصم متصل بعد');return;}
+   pendingRematch=false;
+   P=balanceCards([mkP(myName()),mkP(guestName||'الخصم')]);
+   stars=[];pool=[];lastAppliedSeq=-1;msgSeq=0;
+   try{conn.send({type:'start',cfg:CFG,gameType:'guessplayer',p:P,stars:[],pool:[],gpDeck:gpDeck,gpAnsMode:gpAnsMode});}catch(e){}
+   document.getElementById('chatBox').classList.remove('hidden');
+   document.getElementById('connLbl').textContent='🟢 متصل • 2/2';
+  }else{
+   P=balanceCards([mkP(myName()),mkP(mode===1?(document.getElementById('name2').value.trim()||'الحاسوب'):(document.getElementById('name2').value.trim()||'اللاعب الثاني'))]);
+   stars=[];pool=[];
+  }
+  gpInitGame();
+ }).catch(function(){
+  btn.disabled=false;btn.textContent=prevTxt;
+  toast('⚠️ تعذر تجهيز اللاعبين — جرّب تاني');
+ });
+}
+
+/* ============ ربط اللعبة بالنظام القديم (بالتغليف — من غير تعديل الكود الأصلي) ============ */
+(function(){
+ var _pick=window.pickGameType;
+ window.pickGameType=function(t){
+  try{_pick(t);}catch(e){}
+  var isGP=(t==='guessplayer');
+  var g4=document.getElementById('gt4');if(g4)g4.classList.toggle('sel',isGP);
+  ['gt0','gt1','gt2','gt3'].forEach(function(id){var b=document.getElementById(id);if(b&&isGP)b.classList.remove('sel');});
+  var gb=document.getElementById('gpBox');if(gb)gb.classList.toggle('hidden',!isGP);
+  document.getElementById('timeBudBox').classList.toggle('hidden',t==='transferprice'||isGP);
+  if(isGP){
+   gameType='guessplayer';
+   document.getElementById('roomGameType').textContent='نوع اللعبة: 🕵️ تخمين اللاعب — يقدر يتغيّر من الصفحة الرئيسية قبل إنشاء/دخول الغرفة';
+   document.getElementById('setGameType').textContent='نوع اللعبة: 🕵️ تخمين اللاعب';
+   document.getElementById('gameDesc').innerHTML='🕵️ <b>تخمين اللاعب</b>: 11 جولة — كل جولة بتشوف الأندية اللي لعب فيها اللاعب، جنسيته، مركزه، وهل لسه بيلعب ولا معتزل.<br>اكتب اسمه (مش لازم بالظبط — اللعبة بتفهم "صلاح" أو "mo salah") أو العب بوضع الـ4 اختيارات واللي يجاوب صح أسرع ياخد بونص.<br>أكتر واحد يجمع نقط بعد 11 جولة هو البطل.';
+   document.getElementById('startBtn').textContent='🕵️ ابدأ التخمين';
+  }
+ };
+
+ var _title=window.updateGameTitleUI;
+ window.updateGameTitleUI=function(){
+  try{_title();}catch(e){}
+  if(gameType==='guessplayer'){
+   document.getElementById('gameTitle').textContent='🕵️ تخمين اللاعب';
+   document.getElementById('tabsRow').classList.add('hidden');
+  }
+ };
+
+ var _setView=window.setView;
+ window.setView=function(v){
+  if(v==='gp'){
+   view='gp';
+   ['viewBid','viewBoxes','viewSquads','viewTP'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.add('hidden');});
+   document.getElementById('viewGP').classList.remove('hidden');
+   renderGP();return;
+  }
+  var g=document.getElementById('viewGP');if(g)g.classList.add('hidden');
+  return _setView(v);
+ };
+
+ var _render=window.render;
+ window.render=function(){
+  if(gameType!=='guessplayer')return _render();
+  if(phase==='end'){
+   document.getElementById('overlay').classList.remove('hidden');
+   document.getElementById('obox').innerHTML=endH;
+   return;
+  }
+  document.getElementById('overlay').classList.add('hidden');
+  if(view!=='gp')window.setView('gp');
+  renderGP();
+  document.getElementById('roundLbl').textContent='تخمين اللاعب';
+  document.getElementById('log').innerHTML=logArr.map(function(l){return '<div>'+l+'</div>';}).join('');
+ };
+
+ var _snap=window.snap;
+ window.snap=function(){
+  var s=_snap();
+  s.gpRound=gpRound;s.gpCur=gpCur;s.gpPhase=gpPhase;s.gpScore=gpScore;s.gpHistory=gpHistory;
+  s.gpLocked=gpLocked;s.gpCorrect=gpCorrect;s.gpFirst=gpFirst;s.gpTimeLeft=gpTimeLeft;s.gpTimeMax=gpTimeMax;s.gpAnsMode=gpAnsMode;
+  /* إجابة الخصم متتبعتش قبل الكشف */
+  s.gpAns=(gpPhase==='reveal')?gpAns:[gpLocked[0]?'🔒':null,gpLocked[1]?'🔒':null];
+  return s;
+ };
+
+ var _apply=window.applySnap;
+ window.applySnap=function(s){
+  if(s&&typeof s.gpRound!=='undefined'){
+   gpRound=s.gpRound||0;gpCur=s.gpCur||null;gpPhase=s.gpPhase||'guess';gpScore=s.gpScore||[0,0];gpHistory=s.gpHistory||[];
+   gpLocked=s.gpLocked||[false,false];gpCorrect=s.gpCorrect||[false,false];gpFirst=(typeof s.gpFirst==='number')?s.gpFirst:-1;
+   gpTimeLeft=s.gpTimeLeft||0;gpTimeMax=s.gpTimeMax||40;gpAnsMode=s.gpAnsMode||gpAnsMode;gpAns=s.gpAns||[null,null];
+  }
+  return _apply(s);
+ };
+
+ var _start=window.startFromSettings;
+ window.startFromSettings=function(){
+  if(gameType!=='guessplayer')return _start();
+  var btn=document.getElementById('startBtn');
+  gpHostStart(btn,'🕵️ ابدأ التخمين');
+ };
+
+ var _handle=window.handleData;
+ window.handleData=function(d){
+  if(!d||!d.type)return _handle(d);
+  /* أفعال الضيف عند المضيف */
+  if(d.type==='act'&&isHost&&(d.a==='gpans'||d.a==='gpnext')){
+   if(d.id){
+    if(!window._gpSeen)window._gpSeen={};
+    if(window._gpSeen[d.id]){try{conn.send({type:'ack',id:d.id});}catch(e){}return;}
+    window._gpSeen[d.id]=1;
+    try{conn.send({type:'ack',id:d.id});}catch(e){}
+   }
+   if(d.a==='gpans')gpSubmit(1,d.v);
+   else gpNext();
+   return;
+  }
+  if((d.type==='start'||d.type==='resume')&&!isHost&&d.gameType==='guessplayer'){
+   if(d.gpDeck)gpDeck=d.gpDeck;
+   if(d.gpAnsMode)gpAnsMode=d.gpAnsMode;
+  }
+  var r=_handle(d);
+  if((d.type==='start'||d.type==='resume')&&!isHost&&gameType==='guessplayer'){
+   updateGameTitleUI();window.setView('gp');render();
+  }
+  return r;
+ };
+})();
+
+/* زرار نوع اللعبة + صندوق الإعدادات بيتحقنوا هنا عشان الكود الأصلي يفضل زي ما هو */
+(function(){
+ function inject(){
+  var grid=document.querySelector('.gt-grid3');
+  if(grid&&!document.getElementById('gt4')){
+   var b=document.createElement('button');
+   b.className='gt-btn';b.id='gt4';
+   b.setAttribute('onclick',"pickGameType('guessplayer')");
+   b.innerHTML='<span class="gt-ic">🕵️</span><span class="gt-nm">تخمين اللاعب</span><span class="gt-sub">من الأندية والجنسية والمركز — مين اللاعب؟</span>';
+   grid.appendChild(b);
+  }
+  var tb=document.getElementById('timeBudBox');
+  if(tb&&!document.getElementById('gpBox')){
+   var div=document.createElement('div');
+   div.id='gpBox';div.className='hidden';
+   div.innerHTML='<div class="opt-lbl" style="margin-top:0">🎮 طريقة الإجابة</div>'+
+    '<div class="gp-mode-grid">'+
+    '<button class="gp-mode-btn sel" id="gpm0" onclick="pickGPMode(\'type\')">✍️ اكتب الاسم<br><span style="font-size:11px;color:var(--dim)">مطابقة ذكية للأسماء</span></button>'+
+    '<button class="gp-mode-btn" id="gpm1" onclick="pickGPMode(\'choice\')">🔢 4 اختيارات<br><span style="font-size:11px;color:var(--dim)">الأسرع صح ياخد بونص</span></button>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--dim);margin-top:8px;line-height:1.8">11 جولة • إجابة صح = نقطة، وأسرع إجابة صح تاخد نقطة بونص.<br>اللاعبين بيتجابوا من قاعدة اللعبة + Wikidata، ومش بيتكرروا في الجيمات الجاية.</div>';
+   tb.parentNode.insertBefore(div,tb);
+  }
+  var vg=document.getElementById('viewTP');
+  if(vg&&!document.getElementById('viewGP')){
+   var v=document.createElement('div');v.id='viewGP';v.className='hidden';
+   vg.parentNode.insertBefore(v,vg.nextSibling);
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);
+ else inject();
+ /* تحميل قاعدة لاعبين أكبر من Wikidata في الخلفية (مرة كل أسبوع) */
+ setTimeout(function(){try{gpRefreshLivePool(false);}catch(e){}},4000);
+})();
+</script>
+
+<!-- GP_GAME_END -->
 </body>
 </html>
