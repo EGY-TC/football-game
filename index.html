@@ -7658,5 +7658,86 @@ try{window.addEventListener('pagehide',function(){
 }catch(err){try{console.error('v6 patch',err);}catch(e){}}
 })();
 </script>
+<script>
+/* ===== v7: مزامنة القرعة عند كل اللاعبين في نفس اللحظة ===== */
+(function(){try{
+ var CLK=0;
+ window.mzNow=function(){return Date.now()+CLK;};
+
+ if(typeof tourStatePayload==='function'){
+  var _sp7=tourStatePayload;
+  window.tourStatePayload=tourStatePayload=function(){
+   var p=_sp7.apply(this,arguments);
+   try{p.st.now=Date.now();p.st.drawAt=(TOUR&&TOUR.drawAt)||null;}catch(e){}
+   return p;
+  };
+ }
+ if(typeof tourHandle==='function'){
+  var _th7=tourHandle;
+  window.tourHandle=tourHandle=function(d,from){
+   var r=_th7.apply(this,arguments);
+   try{
+    if(d&&d.type==='state'&&d.st){
+     if(typeof d.st.now==='number'&&!(TOUR&&TOUR.host))CLK=d.st.now-Date.now();
+     if(TOUR&&!TOUR.host&&d.st.drawAt){
+      TOUR.drawAt=TOUR.drawAt||{};
+      for(var k in d.st.drawAt){if(!TOUR.drawAt[k])TOUR.drawAt[k]=d.st.drawAt[k];}
+     }
+    }
+   }catch(e){}
+   return r;
+  };
+ }
+
+ function ui(n){
+  var ov=document.getElementById('mzDrawWait');
+  if(n===-1){if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);return;}
+  if(!ov){
+   ov=document.createElement('div');ov.id='mzDrawWait';
+   ov.setAttribute('style','position:fixed;inset:0;z-index:99998;background:rgba(3,8,20,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font-family:inherit;text-align:center');
+   ov.innerHTML='<div style="font-size:22px;font-weight:800">🎲 القرعة هتبدأ عند كل اللاعبين</div>'+
+     '<div id="mzDrawNum" style="font-size:64px;font-weight:900;color:#ffd54a">…</div>'+
+     '<div style="opacity:.75;font-size:14px">استنى شوية — بنزامن الكل مع بعض</div>';
+   document.body.appendChild(ov);
+  }
+  var el=document.getElementById('mzDrawNum');
+  if(el)el.textContent=(n==null?'…':String(n));
+ }
+
+ if(typeof tourDrawShow==='function'){
+  var _show7=tourDrawShow, pend={};
+  window.tourDrawShow=tourDrawShow=function(ms,cb){
+   ms=(ms||[]).filter(function(m){return m&&m.a;});
+   if(!ms.length){if(cb)cb();return;}
+   var rd=ms[0].round||1, key=((TOUR&&TOUR.code)||'x')+'#'+rd;
+   if(pend[key])return;
+   pend[key]=1;
+   if(TOUR&&TOUR.host){
+    TOUR.drawAt=TOUR.drawAt||{};
+    if(!TOUR.drawAt[rd])TOUR.drawAt[rd]=Date.now()+4000;
+    try{tourBroadcastState();}catch(e){}
+   }
+   var t0=Date.now();
+   function at(){try{return (TOUR&&TOUR.drawAt&&TOUR.drawAt[rd])||0;}catch(e){return 0;}}
+   function tick(){
+    var a=at();
+    if(!a){
+     if(Date.now()-t0>4000){
+      a=Math.ceil((mzNow()+2500)/5000)*5000; /* شبكة زمنية موحدة لكل الأجهزة */
+      try{if(TOUR){TOUR.drawAt=TOUR.drawAt||{};TOUR.drawAt[rd]=a;}}catch(e){}
+     }else{ui(null);return setTimeout(tick,200);}
+    }
+    var left=a-mzNow();
+    if(left>0){ui(Math.max(1,Math.ceil(left/1000)));return setTimeout(tick,150);}
+    ui(-1);delete pend[key];
+    try{if(TOURMATCH){if(cb)cb();return;}}catch(e){}
+    _show7.call(null,ms,cb);
+   }
+   tick();
+  };
+ }
+}catch(err){try{console.error('v7 patch',err);}catch(e){}}})();
+</script>
+
 </body>
 </html>
