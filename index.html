@@ -15,6 +15,21 @@ window.addEventListener('load',function(){setTimeout(function(){
 <meta name="version" content="v6-light">
 <meta http-equiv="Cache-Control" content="no-store">
 <title>⚽ مزاد النجوم</title>
+<meta name="description" content="مزاد النجوم — العب مباريات ومسابقات كورة أونلاين مع أصحابك: مزاد نجوم، صناديق، بطولات، وتحدي تخمين اللاعب.">
+<!-- Open Graph / مشاركة اللينك على واتساب وتليجرام وفيسبوك -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="⚽ مزاد النجوم">
+<meta property="og:description" content="العب مباريات ومسابقات كورة أونلاين مع أصحابك: مزاد نجوم، صناديق، بطولات، وتحدي تخمين اللاعب.">
+<meta property="og:image" content="icon-192.png">
+<meta property="og:locale" content="ar_AR">
+<!-- ⚠️ لازم تستبدل السطرين دول بالدومين الحقيقي بتاعك، وإلا الصورة مش هتظهر في واتساب/تليجرام
+     (واتساب وتليجرام بيتطلبوا لينك كامل absolute مش نسبي):
+<meta property="og:url" content="https://YOUR-DOMAIN-HERE">
+<meta property="og:image" content="https://YOUR-DOMAIN-HERE/icon-192.png"> -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="⚽ مزاد النجوم">
+<meta name="twitter:description" content="العب مباريات ومسابقات كورة أونلاين مع أصحابك">
+<meta name="twitter:image" content="icon-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
@@ -7291,9 +7306,12 @@ if(typeof mzGameEnd==='function'){
 }
 
 /* ---------- (4) تحسين البطولة ---------- */
+/* أي رسالة توصل من لاعب (مش بس presence) = دليل إنه متصل فعليًا الآن — بيمنع اعتباره "منسحب" غلط */
+var TOUR_SEEN={};
 if(typeof tourHandle==='function'){
  var _tourHandle=tourHandle;
  window.tourHandle=tourHandle=function(d,from){
+  try{if(from)TOUR_SEEN[from]=Date.now();}catch(e){}
   try{
    if(d&&d.type==='wd'&&TOUR){
     var m=null;(TOUR.matches||[]).forEach(function(x){if(x.id===d.mid)m=x;});
@@ -7310,21 +7328,31 @@ if(typeof tourHandle==='function'){
   return _tourHandle.apply(this,arguments);
  };
 }
-/* المضيف: أي ماتش شغال ولاعبه مختفي من البطولة أكتر من دقيقة = انسحاب وتأهل الخصم */
-var tourGone={};
+/* المضيف: أي ماتش شغال ولاعبه مختفي فعليًا لفترة طويلة = انسحاب وتأهل الخصم.
+   (تم توسيع مهلة السماح + إضافة فترة أمان بعد بداية الماتش مباشرة، عشان نتجنب
+   اعتبار خصم متصل فعليًا "منسحب" بسبب تأخر بسيط في تحديث حالة presence وقت بداية الماتش) */
+var tourGone={},tourMatchStartSeen={};
+var TOUR_WD_GRACE_MS=20000;   /* فترة أمان بعد بداية الماتش قبل ما نراقب الانسحاب أصلًا */
+var TOUR_WD_OFFLINE_MS=30000; /* المدة المطلوبة كإنقطاع فعلي قبل اعتباره منسحب */
+var TOUR_WD_SEEN_MS=15000;    /* لو وصلت أي رسالة منه خلال المدة دي، يبقى متصل حتى لو presence متأخر */
 setInterval(function(){
  try{
   if(typeof TOUR==='undefined'||!TOUR||!TOUR.host)return;
   var now=Date.now();
+  var liveIds={};
   (TOUR.matches||[]).forEach(function(m){
    if(m.done||!m.started||!m.a||!m.b)return;
+   liveIds[m.id]=1;
+   if(!tourMatchStartSeen[m.id])tourMatchStartSeen[m.id]=now;
+   if(now-tourMatchStartSeen[m.id]<TOUR_WD_GRACE_MS)return; /* لسه في فترة الأمان */
    [m.a,m.b].forEach(function(p){
     if(!p||p.cid===myCid)return;
     var on=false;try{on=tourIsOnline(p.cid);}catch(e){on=true;}
+    if(!on&&TOUR_SEEN[p.cid]&&(now-TOUR_SEEN[p.cid])<TOUR_WD_SEEN_MS)on=true;
     var k=m.id+'|'+p.cid;
     if(on){tourGone[k]=0;return;}
     if(!tourGone[k]){tourGone[k]=now;return;}
-    if(now-tourGone[k]>15000){
+    if(now-tourGone[k]>TOUR_WD_OFFLINE_MS){
      tourGone[k]=0;
      m.wd=p.cid;
      var opp=(m.a.cid===p.cid?m.b:m.a);
@@ -7333,6 +7361,8 @@ setInterval(function(){
     }
    });
   });
+  /* نظّف حالة الماتشات اللي خلصت عشان الميموري ميكبرش على الفاضي */
+  Object.keys(tourMatchStartSeen).forEach(function(id){if(!liveIds[id])delete tourMatchStartSeen[id];});
  }catch(e){}
 },5000);
 /* عرض «انسحاب» في شجرة البطولة */
