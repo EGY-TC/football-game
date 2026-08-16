@@ -613,6 +613,21 @@ body{text-rendering:optimizeSpeed}
 .lockBtn{background-color:#16a34a!important;color:#ffffff!important;border:2px solid #0f7a37!important;font-size:16px!important;min-height:54px!important;letter-spacing:.3px;width:100%;flex-shrink:0;white-space:normal}
 .lockBtn:active{opacity:.85}
 </style>
+<style>
+#pwaInstallBtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+ background:linear-gradient(135deg,#d29922,#f0c04a);color:#0d1117;border:0;border-radius:16px;
+ padding:18px 20px;font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.45);font-family:'Cairo',sans-serif;margin-top:14px;transition:transform .12s}
+#pwaInstallBtn:active{transform:scale(.98)}
+#pwaInstallBtn.show{display:flex}
+#pwaInstallBtn.hidden{display:none!important}
+#pwaSheet{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
+#pwaSheet.show{display:flex}
+#pwaSheet .bx{background:#161b22;border:1px solid #2d333b;border-radius:18px;max-width:360px;width:100%;padding:18px;text-align:center;color:#e6edf3;font-family:'Cairo',sans-serif}
+#pwaSheet img{width:74px;height:74px;border-radius:18px;margin-bottom:10px}
+#pwaSheet h3{font-size:17px;font-weight:900;margin-bottom:8px}
+#pwaSheet p{font-size:13px;line-height:1.9;color:#8b949e}
+#pwaSheet button{margin-top:12px;width:100%;background:#d29922;color:#0d1117;border:0;border-radius:12px;padding:11px;font-weight:900;font-family:'Cairo',sans-serif;cursor:pointer}
+</style>
 </head>
 <body>
 <div class="salawat">🌙 صلِّ على النبي ﷺ <span class="s2">اللهم صلِّ وسلم عليه</span></div>
@@ -665,6 +680,8 @@ body{text-rendering:optimizeSpeed}
 </div>
 <div id="homeErr" class="status"></div>
 </div>
+
+<button id="pwaInstallBtn" class="show">📲 أضف التطبيق للشاشة الرئيسية</button>
 </div>
 <div id="settings" class="screen hidden">
 <div class="hdr"><button class="back" onclick="settingsBack()">↩ رجوع</button><h1>⚙️ إعدادات اللعبة</h1></div>
@@ -8913,22 +8930,12 @@ function gpHostStart(btn,prevTxt){
 </script>
 
 <!-- GP_GAME_END -->
-<style>
-#pwaInstallBtn{position:fixed;left:12px;bottom:12px;z-index:99999;display:none;align-items:center;gap:8px;
- background:linear-gradient(135deg,#d29922,#f0c04a);color:#0d1117;border:0;border-radius:14px;
- padding:11px 15px;font-weight:900;font-size:13.5px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.45);font-family:'Cairo',sans-serif}
-#pwaInstallBtn.show{display:flex}
-#pwaSheet{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
-#pwaSheet.show{display:flex}
-#pwaSheet .bx{background:#161b22;border:1px solid #2d333b;border-radius:18px;max-width:360px;width:100%;padding:18px;text-align:center;color:#e6edf3;font-family:'Cairo',sans-serif}
-#pwaSheet img{width:74px;height:74px;border-radius:18px;margin-bottom:10px}
-#pwaSheet h3{font-size:17px;font-weight:900;margin-bottom:8px}
-#pwaSheet p{font-size:13px;line-height:1.9;color:#8b949e}
-#pwaSheet button{margin-top:12px;width:100%;background:#d29922;color:#0d1117;border:0;border-radius:12px;padding:11px;font-weight:900;font-family:'Cairo',sans-serif;cursor:pointer}
-</style>
-<button id="pwaInstallBtn">📲 أضف التطبيق للشاشة الرئيسية</button>
+
+
+
+
 <div id="pwaSheet"><div class="bx">
-  <img src="icons/icon-192.png" alt="أيقونة التطبيق">
+  <img src="icon-192.png" alt="أيقونة التطبيق">
   <h3>ثبّت مزاد النجوم على جهازك</h3>
   <p id="pwaSteps"></p>
   <button onclick="document.getElementById('pwaSheet').classList.remove('show')">تمام</button>
@@ -8940,18 +8947,16 @@ function gpHostStart(btn,prevTxt){
  var ua=navigator.userAgent||'';
  var isIOS=/iPad|iPhone|iPod/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
  var prompt_=null;
- if(standalone)return;
- window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();prompt_=e;btn.classList.add('show');});
- if(isIOS)btn.classList.add('show');
- setTimeout(function(){if(!prompt_&&!isIOS&&!standalone)btn.classList.add('show');},4000);
+ if(standalone){btn.classList.remove('show');btn.classList.add('hidden');return;}
+ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();prompt_=e;btn.classList.add('show');btn.classList.remove('hidden');});
  btn.addEventListener('click',function(){
-  if(prompt_){prompt_.prompt();prompt_.userChoice.then(function(r){if(r.outcome==='accepted')btn.classList.remove('show');prompt_=null;});return;}
+  if(prompt_){prompt_.prompt();prompt_.userChoice.then(function(r){if(r.outcome==='accepted'){btn.classList.remove('show');btn.classList.add('hidden');}prompt_=null;});return;}
   steps.innerHTML=isIOS
    ? 'من متصفح Safari:<br>1) اضغط زر المشاركة <b>⬆️</b> بالأسفل<br>2) اختر <b>إضافة إلى الشاشة الرئيسية</b><br>3) اضغط <b>إضافة</b>'
    : 'من متصفح Chrome:<br>1) اضغط زر القائمة <b>⋮</b> بالأعلى<br>2) اختر <b>إضافة إلى الشاشة الرئيسية</b> أو <b>تثبيت التطبيق</b><br>3) اضغط <b>تثبيت</b>';
   sheet.classList.add('show');
  });
- window.addEventListener('appinstalled',function(){btn.classList.remove('show');});
+ window.addEventListener('appinstalled',function(){btn.classList.remove('show');btn.classList.add('hidden');});
 })();
 </script>
 </body>
