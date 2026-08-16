@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
- <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xzcxp2drrt");
+ <script>
+/* Clarity: بعد تحميل الصفحة عشان الفتح يبقى أسرع */
+window.addEventListener('load',function(){setTimeout(function(){
+  (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","xzcxp2drrt");
+},2500);});
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -16,8 +17,18 @@
 <title>⚽ مزاد النجوم</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مزاد النجوم">
+<link rel="preconnect" href="https://itdtszwmjiwcalhruric.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
 <script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <style>
  body {
   -webkit-user-select: none; /* Safari */
@@ -8902,5 +8913,46 @@ function gpHostStart(btn,prevTxt){
 </script>
 
 <!-- GP_GAME_END -->
+<style>
+#pwaInstallBtn{position:fixed;left:12px;bottom:12px;z-index:99999;display:none;align-items:center;gap:8px;
+ background:linear-gradient(135deg,#d29922,#f0c04a);color:#0d1117;border:0;border-radius:14px;
+ padding:11px 15px;font-weight:900;font-size:13.5px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.45);font-family:'Cairo',sans-serif}
+#pwaInstallBtn.show{display:flex}
+#pwaSheet{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
+#pwaSheet.show{display:flex}
+#pwaSheet .bx{background:#161b22;border:1px solid #2d333b;border-radius:18px;max-width:360px;width:100%;padding:18px;text-align:center;color:#e6edf3;font-family:'Cairo',sans-serif}
+#pwaSheet img{width:74px;height:74px;border-radius:18px;margin-bottom:10px}
+#pwaSheet h3{font-size:17px;font-weight:900;margin-bottom:8px}
+#pwaSheet p{font-size:13px;line-height:1.9;color:#8b949e}
+#pwaSheet button{margin-top:12px;width:100%;background:#d29922;color:#0d1117;border:0;border-radius:12px;padding:11px;font-weight:900;font-family:'Cairo',sans-serif;cursor:pointer}
+</style>
+<button id="pwaInstallBtn">📲 أضف التطبيق للشاشة الرئيسية</button>
+<div id="pwaSheet"><div class="bx">
+  <img src="icons/icon-192.png" alt="أيقونة التطبيق">
+  <h3>ثبّت مزاد النجوم على جهازك</h3>
+  <p id="pwaSteps"></p>
+  <button onclick="document.getElementById('pwaSheet').classList.remove('show')">تمام</button>
+</div></div>
+<script>
+(function(){
+ var btn=document.getElementById('pwaInstallBtn'),sheet=document.getElementById('pwaSheet'),steps=document.getElementById('pwaSteps');
+ var standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+ var ua=navigator.userAgent||'';
+ var isIOS=/iPad|iPhone|iPod/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
+ var prompt_=null;
+ if(standalone)return;
+ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();prompt_=e;btn.classList.add('show');});
+ if(isIOS)btn.classList.add('show');
+ setTimeout(function(){if(!prompt_&&!isIOS&&!standalone)btn.classList.add('show');},4000);
+ btn.addEventListener('click',function(){
+  if(prompt_){prompt_.prompt();prompt_.userChoice.then(function(r){if(r.outcome==='accepted')btn.classList.remove('show');prompt_=null;});return;}
+  steps.innerHTML=isIOS
+   ? 'من متصفح Safari:<br>1) اضغط زر المشاركة <b>⬆️</b> بالأسفل<br>2) اختر <b>إضافة إلى الشاشة الرئيسية</b><br>3) اضغط <b>إضافة</b>'
+   : 'من متصفح Chrome:<br>1) اضغط زر القائمة <b>⋮</b> بالأعلى<br>2) اختر <b>إضافة إلى الشاشة الرئيسية</b> أو <b>تثبيت التطبيق</b><br>3) اضغط <b>تثبيت</b>';
+  sheet.classList.add('show');
+ });
+ window.addEventListener('appinstalled',function(){btn.classList.remove('show');});
+})();
+</script>
 </body>
 </html>
