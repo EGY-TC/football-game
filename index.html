@@ -3370,16 +3370,26 @@ function handleData(d){
   if(d.a==='tpguess'){tpSubmitGuess(1,d.v);return;}
   if(d.a==='tpnext'){tpNextRound();return;}
   if(phase==='bid'&&turn===1){
-   if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget)doRaise(d.v);}else if(bid+1<=P[1].budget)doRaise();}
-   else if(d.a==='raise5'){if(bid+5<=P[1].budget)doRaise(bid+5);}
-   else if(d.a==='raise10'){if(bid+10<=P[1].budget)doRaise(bid+10);}
+   var actApplied=false;
+   if(d.a==='raise'){if(d.v){if(d.v>bid&&d.v<=P[1].budget){doRaise(d.v);actApplied=true;}}else if(bid+1<=P[1].budget){doRaise();actApplied=true;}}
+   else if(d.a==='raise5'){if(bid+5<=P[1].budget){doRaise(bid+5);actApplied=true;}}
+   else if(d.a==='raise10'){if(bid+10<=P[1].budget){doRaise(bid+10);actApplied=true;}}
    else if(d.a==='pass'){
     if(!firstBidDone){conn.send({type:'sys',t:'⚠️ يجب تقديم عرض أول قبل التمرير'});return;}
-    doPass();
+    doPass();actApplied=true;
    }
+   /* لو الفعل معملش حاجة (مثلاً الميزانية خلصت أو الدور اتغيّر بالظبط لحظة الإرسال بسبب اللاق)،
+      كان بيتجاهل بصمت رغم إن الضيف بياخد ack ويفتكر إن زراره اشتغل. دلوقتي نبعت الحالة الحقيقية
+      فورًا عشان الضيف يتزامن على طول بدل ما يحس إن زرار المزايدة مش شغال. */
+   if(!actApplied)broadcastNow();
   }
   else if(phase==='captain'&&d.a==='captain'){
    if(typeof d.idx==='number'&&d.idx>=0&&d.idx<P[1].squad.length){captainIdx[1]=d.idx;log(P[1].name+' اختار '+P[1].squad[d.idx].ar+' كابتنًا');checkCaptains();}
+  }
+  else if(d.a==='raise'||d.a==='raise5'||d.a==='raise10'||d.a==='pass'){
+   /* الفعل وصل لكن المرحلة اتغيّرت خالص (مثلاً الجولة خلصت) قبل ما يوصل — نفس الشيء،
+      نزامن الضيف فورًا بدل ما يفضل حاسس إنه معلّق. */
+   broadcastNow();
   }
  }
 }
@@ -7948,6 +7958,11 @@ var GP_ROUNDS=11;
 var gpDeck=[],gpRound=0,gpCur=null,gpPhase='guess',gpScore=[0,0],gpHistory=[];
 var gpAns=[null,null],gpLocked=[false,false],gpCorrect=[false,false],gpFirst=-1,gpTimeLeft=0,gpTimeMax=35;
 var gpAnsMode='type',gpTimerInt=null,gpRoundStart=0,gpTimeTaken=[null,null],gpMsg=['',''];
+/* مسودة اسم اللاعب اللي بيكتبها كل مقعد — بتتخزن مع كل ضغطة زرار (زي blindDraft بالظبط)
+   عشان لو حصل أي إعادة رسم (تايمر/مزامنة أونلاين) في نفس لحظة الكتابة، الحروف اللي
+   اتكتبت متتشلش؛ الاعتماد على DOM value وحده مش مضمون 100% مع كل السيناريوهات. */
+var gpDraft=['',''];
+function gpOnInput(seat,el){gpDraft[seat]=el.value||'';}
 
 /* ============ قاعدة اللاعبين الداخلية (موثّقة) ============ */
 /* [الاسم بالعربي, الاسم بالإنجليزي, العلم, الجنسية, المركز, معتزل؟, الأندية, أسماء بديلة] */
@@ -8201,6 +8216,7 @@ function startGPRound(){
  if(gpRound>=gpDeck.length)return endGPGame();
  gpCur=gpDeck[gpRound];
  gpAns=[null,null];gpLocked=[false,false];gpCorrect=[false,false];gpFirst=-1;gpTimeTaken=[null,null];gpMsg=['',''];
+ gpDraft=['',''];
  gpPhase='guess';
  gpTimeMax=(gpAnsMode==='choice')?20:40;
  gpTimeLeft=gpTimeMax;gpRoundStart=Date.now();
@@ -8270,9 +8286,9 @@ function gpSend(seat,val){
 }
 function gpConfirmType(seat){
  var el=document.getElementById('gpIn'+seat);
- if(!el)return;
- var v=el.value.trim();
+ var v=((el?el.value:gpDraft[seat])||'').trim();
  if(!v){toast('✍️ اكتب اسم اللاعب الأول');return;}
+ gpDraft[seat]='';
  gpSend(seat,v);
 }
 function gpPick(seat,idx){
@@ -8336,7 +8352,7 @@ function renderGP(){
     });
     h+='</div>';
    }else{
-    h+='<input id="gpIn'+seat+'" placeholder="اكتب اسم اللاعب…" autocomplete="off" onkeydown="if(event.key===\'Enter\')gpConfirmType('+seat+')">';
+    h+='<input id="gpIn'+seat+'" placeholder="اكتب اسم اللاعب…" autocomplete="off" oninput="gpOnInput('+seat+',this)" onkeydown="if(event.key===\'Enter\')gpConfirmType('+seat+')">';
     h+='<button class="big-btn green" style="margin-top:8px" onclick="gpConfirmType('+seat+')">✅ قفل الإجابة</button>';
     h+='<div class="gp-hint">مش لازم الاسم كامل — "صلاح" أو "mo salah" أو حتى غلطة إملائية بسيطة بتتقبل.</div>';
    }
@@ -8364,11 +8380,22 @@ function renderGP(){
  }
  h+='<div class="gp-src">📚 مصدر البيانات: قاعدة اللعبة الموثّقة + Wikidata (تحديث لايف)</div>';
  var keep={};
- [0,1].forEach(function(s){var el=document.getElementById('gpIn'+s);if(el)keep[s]={v:el.value,f:(document.activeElement===el),c:el.selectionStart};});
+ [0,1].forEach(function(s){
+  var el=document.getElementById('gpIn'+s);
+  if(el){
+   /* لو لأي سبب gpOnInput فاتته آخر حرف (مثلاً حدث إعادة رسم في نفس اللحظة)،
+      خد القيمة من الـ DOM نفسه كمصدر احتياطي قبل ما نمسحه */
+   if(el.value)gpDraft[s]=el.value;
+   keep[s]={f:(document.activeElement===el),c:el.selectionStart};
+  }
+ });
  box.innerHTML=h;
  [0,1].forEach(function(s){
   var el=document.getElementById('gpIn'+s);
-  if(el&&keep[s]&&keep[s].v){el.value=keep[s].v;if(keep[s].f){try{el.focus();el.setSelectionRange(keep[s].c,keep[s].c);}catch(e){}}}
+  if(el&&gpDraft[s]){
+   el.value=gpDraft[s];
+   if(keep[s]&&keep[s].f){try{el.focus();el.setSelectionRange(keep[s].c,keep[s].c);}catch(e){}}
+  }
  });
 }
 
