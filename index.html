@@ -16,8 +16,7 @@ window.addEventListener('load',function(){setTimeout(function(){
 <meta http-equiv="Cache-Control" content="no-store">
 <title>⚽ مزاد النجوم</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -3523,7 +3522,7 @@ function makeNetConn(code,host,opts){
      if(s2&&s2.theirs.length){checkPresence();return;}
      opened=false;shim.open=false;fire('close');
      if(host&&netCh===shim)conn=shim;
-    },9000);
+    },3000);
    }
   }
  }
@@ -3858,8 +3857,8 @@ function scheduleRejoin(){
  clearTimeout(openWatch);
  rejoinTries++;
  if(rejoinTries===2)escalateRelay();
- if(rejoinTries>14){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
- if(rejoinTries>6)$('connLbl').textContent='🟡 إعادة الاتصال…';
+ if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
+ $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
  autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
 }
 function wireConn(){
@@ -3869,7 +3868,7 @@ function wireConn(){
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
   try{if(peer&&peer.id)conn.send({type:'peerid',id:peer.id});}catch(e){}
  });
- conn.on('data',function(d){lastRx=Date.now();try{handleData(d);}catch(e){console.error(e);}});
+ conn.on('data',function(d){lastRx=Date.now();try{handleData(d);}catch(e){toast('⚠️ خطأ أثناء المزامنة، جرّب إعادة الاتصال لو استمرت المشكلة');console.error(e);}});
  conn.on('close',function(){
   clearInterval(hbInt);
   oppPeerId=null;try{if(currentCall)currentCall.close();}catch(e){}currentCall=null;
@@ -3877,7 +3876,7 @@ function wireConn(){
   if(isHost){
    if(hostRejecting){hostRejecting=false;}
    else if(pendingRematch){pendingRematch=false;toast('🚪 الخصم غادر قبل ما يبدأ الجولة الجديدة');setStatus('🚪 الخصم غادر — بانتظار انضمام لاعب تاني بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
-   else{$('connLbl').textContent='🟡 بانتظار الخصم…';}
+   else{toast('انقطع اتصال الخصم — بانتظار عودته بنفس الرمز');$('connLbl').textContent='🟡 بانتظار الخصم…';}
   }
   else if(rejectedAuth){rejectedAuth=false;}
   else if(pendingRematch){pendingRematch=false;toast('🚪 الخصم غادر قبل ما يبدأ الجولة الجديدة');setStatus('🚪 المضيف غادر قبل بدء الجولة الجديدة — اختر غرفة تانية');show('room');}
@@ -3886,10 +3885,10 @@ function wireConn(){
  });
  conn.on('error',function(e){
   if(!isHost)scheduleRejoin();
-  else{$('connLbl').textContent='🟡 بانتظار الخصم…';}
+  else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},2500);
+ hbInt=setInterval(function(){if(conn&&conn.open&&!document.hidden)try{conn.send({type:'ping'});}catch(e){}},4000);
  startHostResync();
  clearInterval(watchdog);
  var lastSyncReq=0;
@@ -3950,7 +3949,7 @@ function handleData(d){
    setTimeout(function(){try{if(conn)conn.close();}catch(e){}},300);
    return;
   }
-  if(started){guestName=d.name;guestCid=d.cid||guestCid;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});$('connLbl').textContent='🟢 متصل • 2/2';}
+  if(started){guestName=d.name;guestCid=d.cid||guestCid;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
   else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;if(typeof TOURMATCH!=='undefined'&&TOURMATCH){setTimeout(function(){try{startFromSettings();}catch(e){}},700);}}
  }
  else if(d.type==='reject'&&!isHost){
@@ -4039,9 +4038,9 @@ function startHostResync(){
  stopHostResync();
  resyncInt=setInterval(function(){
   if(!(online&&isHost&&started&&conn&&conn.open))return;
-  if(Date.now()-lastFullBroadcast<700)return;
+  if(Date.now()-lastFullBroadcast<1400)return;
   broadcastNow();
- },350);
+ },700);
 }
 function stopHostResync(){if(resyncInt){clearInterval(resyncInt);resyncInt=null;}}
 /* ===== حرس الضيف ضد التعليق =====
@@ -4050,7 +4049,7 @@ function stopHostResync(){if(resyncInt){clearInterval(resyncInt);resyncInt=null;
    رسالة الحالة الجديدة ضاعت في النت. الحل: الضيف بيراقب آخر حالة وصلته، ولو
    عدّى 2.5 ثانية من غير أي حالة بيطلب مزامنة من المضيف تلقائيًا كل ثانية. */
 var lastSnapAt=0,guestWatchInt=null,guestSyncAsks=0;
-var GUEST_SYNC_BTN='';
+var GUEST_SYNC_BTN='<button class="big-btn" style="margin-top:8px" onclick="guestForceSync()">🔄 مش بيكمل؟ اضغط للمزامنة</button>';
 function guestRequestSync(){
  if(!(online&&!isHost&&conn&&conn.open))return;
  try{conn.send({type:'sync'});}catch(e){}
@@ -4061,14 +4060,15 @@ function startGuestWatch(){
  guestWatchInt=setInterval(function(){
   if(!(online&&!isHost&&started&&conn&&conn.open))return;
   var gap=Date.now()-lastSnapAt;
-  if(gap<1200){guestSyncAsks=0;return;}
+  if(gap<2500){guestSyncAsks=0;return;}
   guestSyncAsks++;
   guestRequestSync();
- },400);
+  if(guestSyncAsks===3)toast('⏳ بنعيد المزامنة مع المضيف…');
+ },1000);
 }
 function stopGuestWatch(){if(guestWatchInt){clearInterval(guestWatchInt);guestWatchInt=null;}}
 /* زرار يدوي في شاشة انتظار المضيف — لو حصل أي تعليق اللاعب يقدر يزامن بنفسه */
-function guestForceSync(){guestRequestSync();}
+function guestForceSync(){toast('🔄 جاري المزامنة مع المضيف…');guestRequestSync();}
 /* تحديث خفيف لشريط/عداد الوقت فقط (من غير إعادة بناء الصفحة كلها) — بيتنفذ كل ثانية
    بدل ما كانت اللعبة بتعيد رسم كل حاجة (الفرق والكروت واللوج) 4 مرات في الثانية،
    وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
@@ -4214,7 +4214,7 @@ function startTimer(){
 var pendingAct=null,pendingActTimer=null,pendingActTries=0;
 var nextActId=1;
 function sendActReliable(payload){
- if(!(conn&&conn.open))return;
+ if(!(conn&&conn.open)){toast('⚠️ الاتصال مقطوع، جاري إعادة المحاولة…');return;}
  payload.id=myCid+'-'+(nextActId++);
  pendingAct=payload;pendingActTries=0;
  clearTimeout(pendingActTimer);
@@ -4224,12 +4224,13 @@ function sendActReliable(payload){
   if(!pendingAct)return;
   pendingActTries++;
   try{if(conn&&conn.open)conn.send(payload);}catch(e){}
-  if(pendingActTries>=14){pendingAct=null;return;}
+  if(pendingActTries===3)toast('⏳ الاتصال بطيء، جاري إعادة المحاولة…');
+  if(pendingActTries>=8){pendingAct=null;toast('⚠️ تعذر إرسال الإجراء — تحقق من الاتصال');return;}
   pendingActTimer=setTimeout(function(){
    if(!pendingAct)return;
    attempt();
    try{if(conn&&conn.open)conn.send({type:'sync'});}catch(e){}
-  },450);
+  },800);
  }
  attempt();
 }
@@ -7159,7 +7160,7 @@ var lostSince=0;
 setInterval(function(){
  try{
   if(!inLiveMatch()){lostSince=0;return;}
-  var alive=(conn&&conn.open)&&(typeof lastRx==='undefined'||!lastRx||Date.now()-lastRx<15000);
+  var alive=(conn&&conn.open)&&(typeof lastRx==='undefined'||!lastRx||Date.now()-lastRx<6000);
   if(alive){lostSince=0;return;}
   if(!lostSince){lostSince=Date.now();return;}
   if(Date.now()-lostSince>OPP_GRACE){lostSince=0;endByWithdraw(nameOpp());}
@@ -7697,12 +7698,12 @@ if(typeof endByWithdraw==='function'){
     var mark=(typeof lastRx!=='undefined')?lastRx:0;
     mzStartGrace((oppName||'خصمك')+' خرج من المباراة',function(){
      var back=((typeof lastRx!=='undefined')?lastRx:0)>mark||(conn&&conn.open&&started);
-     if(back){return;}
+     if(back){try{toast('\u2705 خصمك رجع — كمّلوا المباراة');}catch(e){}return;}
      _ebw.call(null,oppName);
     });
     var iv=setInterval(function(){
      if(!TOUR_GRACE){clearInterval(iv);return;}
-     if(((typeof lastRx!=='undefined')?lastRx:0)>mark){clearInterval(iv);mzStopGrace();}
+     if(((typeof lastRx!=='undefined')?lastRx:0)>mark){clearInterval(iv);mzStopGrace();try{toast('\u2705 خصمك رجع — كمّلوا المباراة');}catch(e){}}
     },500);
     return;
    }
@@ -8959,377 +8960,6 @@ function gpHostStart(btn,prevTxt){
  });
  window.addEventListener('appinstalled',function(){btn.classList.remove('show');btn.classList.add('hidden');});
 })();
-</script>
-
-<!-- ===== v8: تحسينات الموبايل + الأداء + ثبات الاتصال والمؤقت ===== -->
-<style>
-body{padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
-/* شريط علوي ثابت لزر التثبيت — أول حاجة تبان من غير ما تمرر الشاشة */
-#pwaTopBar{position:sticky;top:0;z-index:9000;display:none;gap:8px;align-items:center;justify-content:center;
- padding:8px 10px;margin:-6px -7px 8px;background:linear-gradient(180deg,#101a2b,rgba(16,26,43,.92));
- border-bottom:1px solid var(--line);backdrop-filter:none}
-#pwaTopBar.show{display:flex}
-#pwaTopBar .lbl{font-size:12px;font-weight:800;color:var(--dim)}
-#pwaTopBar #pwaInstallBtn{animation:none!important;min-height:38px;font-size:13.5px}
-/* هيدر الصفحة الرئيسية: العنوان في سطر والأزرار في صف منظم تحته */
-.hdr{flex-wrap:wrap;justify-content:center;row-gap:8px}
-.hdr h1{flex:1 0 100%;order:-1;text-align:center;margin:0}
-.hdr .back,.hdr button{flex:1 1 auto;min-width:0;min-height:42px;font-size:13px;white-space:nowrap;padding:8px 10px}
-@media(max-width:520px){
- .hdr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
- .hdr h1{grid-column:1/-1;font-size:17px}
- .hdr .back,.hdr button{width:100%;font-size:12px;padding:8px 4px;overflow:hidden;text-overflow:ellipsis}
- /* بانر الواتساب أصغر عشان المحتوى المهم يبان بسرعة */
- .wa-banner{padding:8px 10px!important;margin:6px auto 8px!important}
- .wa-banner div{font-size:12px!important;margin-bottom:6px!important}
- .wa-banner a{padding:7px 14px!important;font-size:12px!important}
- .salawat{font-size:12px}
- input,select,textarea{font-size:16px}
- button{min-height:40px}
-}
-/* شاشة بداية فورية تمنع الإحساس باللاق أول ما تفتح الموقع */
-#bootSplash{position:fixed;inset:0;z-index:99999;background:#0b1220;display:flex;flex-direction:column;
- align-items:center;justify-content:center;gap:14px;color:#e8eef7;font-family:'Cairo',sans-serif}
-#bootSplash.gone{display:none}
-#bootSplash .t{font-size:20px;font-weight:900}
-#bootSplash .d{width:120px;height:6px;border-radius:99px;background:#1a2334;overflow:hidden;position:relative}
-#bootSplash .d i{position:absolute;inset:0;width:40%;background:#2ecc71;border-radius:99px;animation:bootSlide 1s linear infinite!important}
-@keyframes bootSlide{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
-</style>
-<div id="pwaTopBar"><span class="lbl">شغّل اللعبة أسرع 👇</span></div>
-<div id="bootSplash"><div class="t">⚽ مزاد النجوم</div><div class="d"><i></i></div></div>
-<script>
-(function(){
- /* 1) إخفاء شاشة البداية */
- function hideSplash(){var b=document.getElementById('bootSplash');if(b)b.classList.add('gone');}
- if(document.readyState==='complete')setTimeout(hideSplash,60);
- else window.addEventListener('load',function(){setTimeout(hideSplash,60);});
- setTimeout(hideSplash,4000);
-
- /* 2) نقل زر "أضف للشاشة" لأعلى الصفحة */
- function liftInstall(){
-  var btn=document.getElementById('pwaInstallBtn'),bar=document.getElementById('pwaTopBar');
-  if(!btn||!bar)return;
-  var standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  bar.appendChild(btn);
-  if(!standalone)bar.classList.add('show');
-  document.body.insertBefore(bar,document.body.firstChild);
-  var sp=document.getElementById('bootSplash');if(sp)document.body.appendChild(sp);
-  window.addEventListener('appinstalled',function(){bar.classList.remove('show');});
-  var mo=new MutationObserver(function(){ if(btn.classList.contains('hidden'))bar.classList.remove('show'); });
-  mo.observe(btn,{attributes:true,attributeFilter:['class']});
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',liftInstall);else liftInstall();
-
- /* 3) بانر الواتساب: كلاس عشان التنسيق المتجاوب */
- try{var wa=document.querySelector('a[href*="chat.whatsapp.com"]');if(wa&&wa.parentElement)wa.parentElement.classList.add('wa-banner');}catch(e){}
-
- /* 4) المؤقت عند الضيف: عدّ محلي من timeEndAt بدل الاعتماد على وصول كل تيك من المضيف
-       (ده كان سبب إن العداد "يقطع" أو يقف في النت الضعيف) */
- setInterval(function(){
-  try{
-   if(!window.online||window.isHost)return;
-   if(!window.timeEndAt||!window.CFG||!(window.CFG.timer>0))return;
-   var ph=window.phase; if(ph!=='bid'&&ph!=='blind')return;
-   var t=Math.ceil((window.timeEndAt-Date.now())/1000);
-   if(t<0)t=0;
-   if(t!==window.timeLeft){window.timeLeft=t;try{renderTimerBar();}catch(e){}}
-  }catch(e){}
- },200);
-
- /* 5) أي بيانات جاية = الاتصال شغال: نشيل رسائل/شاشات "انقطع الاتصال" القديمة فورًا */
- if(typeof window.handleData==='function'){
-  var _hd=window.handleData;
-  window.handleData=handleData=function(d){
-   try{
-    window.lastRx=Date.now();
-    var r=document.getElementById('reconn');
-    if(r&&!r.classList.contains('hidden'))r.classList.add('hidden');
-    var cl=document.getElementById('connLbl');
-    if(cl&&window.conn&&window.conn.open&&cl.textContent.indexOf('🟢')<0)cl.textContent='🟢 متصل • 2/2';
-   }catch(e){}
-   return _hd.apply(this,arguments);
-  };
- }
-
- /* 6) رجوع التطبيق من الخلفية: نبضة + مزامنة فورية للطرفين بدل انتظار الدورة الجاية */
- document.addEventListener('visibilitychange',function(){
-  if(document.hidden)return;
-  try{
-   if(window.conn&&window.conn.open){
-    window.conn.send({type:'ping'});
-    if(!window.isHost)window.conn.send({type:'sync'});
-    else if(typeof broadcastNow==='function')broadcastNow();
-   }
-  }catch(e){}
- });
-})();
-</script>
-<!-- ===== v12: مزامنة موثوقة للاستعداد وبدء/نتائج مباريات البطولة ===== -->
-<script>
-(function(){try{
- var TOUR_EVENT_SEEN={},TOUR_EVENT_POLL=null;
-
- function teFind(mid){var out=null;try{(TOUR&&TOUR.matches||[]).forEach(function(m){if(m.id===mid)out=m;});}catch(e){}return out;}
- function teId(ev){return [ev.type,ev.mid||'',ev.cid||'',ev.winner||'',ev.loser||''].join(':');}
- function teMerge(events){
-  if(!TOUR)return;
-  TOUR.events=TOUR.events||{};
-  Object.keys(events||{}).forEach(function(k){if(!TOUR.events[k])TOUR.events[k]=events[k];});
- }
- function tePaint(){try{if($('tourRoom')&&!$('tourRoom').classList.contains('hidden'))tourRender();}catch(e){}}
-
- function teProcess(ev){
-  if(!TOUR||!ev||!ev.type)return;
-  var id=teId(ev),m=teFind(ev.mid);
-  if(!m)return;
-  if(ev.type==='ready'&&ev.cid&&!m.done){
-   TOUR._rdy=TOUR._rdy||{};(TOUR._rdy[m.id]=TOUR._rdy[m.id]||{})[ev.cid]=true;
-   m.ready=m.ready||{};m.ready[ev.cid]=true;
-   if(m.a&&m.b&&m.ready[m.a.cid]&&m.ready[m.b.cid]&&!m.started){
-    m.started=true;
-    if(TOUR.host){try{tourBroadcastState();tourDbSave(true);tourSend({type:'go',mid:m.id});}catch(e){}}
-    /* كل طرف يبدأ مباراته بنفسه؛ مش لازم يكون المضيف واحدًا منهم */
-    if(!TOURMATCH&&((m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid))){
-     setTimeout(function(){try{if(TOUR&&!TOURMATCH&&!m.done)tourLaunchMatch(m);}catch(e){}},120);
-    }
-   }
-   tePaint();
-  }
-  if(ev.type==='start'&&!m.done){
-   m.started=true;
-   if(!TOURMATCH&&((m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid))){
-    setTimeout(function(){try{if(TOUR&&!TOURMATCH&&!m.done)tourLaunchMatch(m);}catch(e){}},120);
-   }
-   tePaint();
-  }
-  if(ev.type==='result'&&!m.done){
-   /* صاحب الحالة يطبّق النتيجة كاملة (التأهل والدور التالي)، والباقي يعرضها فورًا. */
-   if(TOUR.host){
-    try{tourApplyResult(m.id,ev.winner||null,ev.score||'');}catch(e){}
-   }else{
-    m.done=true;m.started=false;m.winner=ev.winner||null;if(ev.score)m.score=ev.score;
-   }
-   tePaint();
-  }
-  TOUR_EVENT_SEEN[id]=1;
- }
- function teProcessAll(){
-  if(!TOUR)return;
-  Object.keys(TOUR.events||{}).sort().forEach(function(k){var ev=TOUR.events[k];if(ev&&!TOUR_EVENT_SEEN[teId(ev)])teProcess(ev);});
- }
-
- /* نحفظ الحدث داخل حالة البطولة نفسها. القراءة قبل الكتابة + المحاولات المتباعدة
-    تمنع ضغطة اللاعب الثاني من مسح ضغطة الأول لو حصلتا في نفس اللحظة. */
- function teCloudWrite(ev,attempt){
-  attempt=attempt||0;
-  try{
-   if(!TOUR||!TOUR.code)return;
-   var t=sbTbl('tournaments');if(!t)return;
-   t.select('state').eq('code',TOUR.code).maybeSingle().then(function(res){
-    if(!TOUR||!res||!res.data||!res.data.state)return;
-    var state=res.data.state,events=state.events||{};events[teId(ev)]=ev;state.events=events;
-    t.update({state:state,updated_at:new Date().toISOString()}).eq('code',TOUR.code).then(function(){
-     if(attempt<3)setTimeout(function(){teCloudWrite(ev,attempt+1);},700+attempt*450+(String(myCid).charCodeAt(0)%7)*35);
-    },function(){if(attempt<3)setTimeout(function(){teCloudWrite(ev,attempt+1);},900);});
-   },function(){if(attempt<3)setTimeout(function(){teCloudWrite(ev,attempt+1);},900);});
-  }catch(e){}
- }
- function teEmit(ev){
-  if(!TOUR)return;
-  ev.at=ev.at||Date.now();ev.by=ev.by||myCid;
-  TOUR.events=TOUR.events||{};TOUR.events[teId(ev)]=ev;
-  teProcess(ev);
-  try{tourSend({type:'tevent',event:ev});}catch(e){}
-  teCloudWrite(ev,0);
- }
- window.tourReliableEvent=teEmit;
-
- /* سجل الأحداث جزء من كل بث/حفظ، فلا يمسحه الحفظ الدوري للمضيف. */
- if(typeof tourStatePayload==='function'){
-  var _tePayload=tourStatePayload;
-  window.tourStatePayload=tourStatePayload=function(){var p=_tePayload.apply(this,arguments);try{p.st.events=(TOUR&&TOUR.events)||{};}catch(e){}return p;};
- }
- if(typeof tourHandle==='function'){
-  var _teHandle=tourHandle;
-  window.tourHandle=tourHandle=function(d,from){
-   if(d&&d.type==='tevent'&&d.event){teMerge((function(){var x={};x[teId(d.event)]=d.event;return x;})());teProcessAll();return;}
-   if(d&&d.type==='state'&&d.st&&d.st.events)teMerge(d.st.events);
-   var r=_teHandle.apply(this,arguments);
-   if(d&&d.type==='state'&&d.st&&d.st.events){teMerge(d.st.events);teProcessAll();}
-   return r;
-  };
- }
-
- /* ضغطة الاستعداد تتسجل كبند مستقل بدل الاعتماد على رسالة لحظية فقط. */
- if(typeof tourReady==='function'){
-  var _teReady=tourReady;
-  window.tourReady=tourReady=function(mid){
-   var r=_teReady.apply(this,arguments);
-   try{teEmit({type:'ready',mid:mid,cid:myCid});}catch(e){}
-   return r;
-  };
- }
- /* نهاية المباراة تتسجل حتى لو المضيف داخل مباراة أخرى أو الاتصال اللحظي اتأخر. */
- if(typeof tourOnGameEnd==='function'){
-  var _teEnd=tourOnGameEnd;
-  window.tourOnGameEnd=tourOnGameEnd=function(champ){
-   var mid=null,winner=null,score='';
-   try{if(TOURMATCH){mid=TOURMATCH.mid;var m=teFind(mid);if(m){winner=champ===0?(m.a&&m.a.cid):(champ===1?(m.b&&m.b.cid):null);}score=typeof tourScoreNow==='function'?tourScoreNow():'';}}catch(e){}
-   var r=_teEnd.apply(this,arguments);
-   if(mid)try{teEmit({type:'result',mid:mid,winner:winner,score:score});}catch(e){}
-   return r;
-  };
- }
-
- /* قراءة سجل الأحداث عند الجميع، بما فيهم المضيف وهو داخل جيم آخر. */
- function tePoll(){
-  try{
-   if(!TOUR||!TOUR.code)return;
-   var t=sbTbl('tournaments');if(!t)return;
-   t.select('state').eq('code',TOUR.code).maybeSingle().then(function(res){
-    if(!TOUR||!res||!res.data||!res.data.state)return;
-    teMerge(res.data.state.events||{});teProcessAll();
-   },function(){});
-  }catch(e){}
- }
- TOUR_EVENT_POLL=setInterval(tePoll,1400);
-
- /* في المباريات الأخرى نظهر بالاسم مَن استعد ومَن لم يستعد. */
- if(typeof tourMatchHTML==='function'){
-  var _teHtml=tourMatchHTML;
-  window.tourMatchHTML=tourMatchHTML=function(m){
-   var h=_teHtml.apply(this,arguments);
-   try{
-    if(m&&!m.done&&!m.started&&m.a&&m.b){
-     var ar=!!(m.ready&&m.ready[m.a.cid]),br=!!(m.ready&&m.ready[m.b.cid]);
-     if(ar!==br){
-      var readyName=ar?m.a.name:m.b.name,waitName=ar?m.b.name:m.a.name;
-      h=h.replace('⌛ واحد جاهز والتاني لسه','✅ '+readyName+' مستعد — ⌛ بانتظار '+waitName);
-     }
-    }
-   }catch(e){}
-   return h;
-  };
- }
-}catch(err){try{console.error('tournament sync v12',err);}catch(e){}}})();
-</script>
-
-<!-- ===== v13: مزامنة صامتة وأسرع + إخفاء رسائل الاتصال المزعجة ===== -->
-<script>
-(function(){try{
- /* 1) فلتر رسائل: أي رسالة عن الاتصال/المزامنة مبتظهرش للاعب أثناء اللعب */
- if(typeof window.toast==='function'){
-  var _t=window.toast;
-  var BAD=['الاتصال','اتصال','المزامنة','مزامنة','بطيء','بطئ','انقطع','مقطوع'];
-  window.toast=function(m){
-   try{var s=String(m||'');for(var i=0;i<BAD.length;i++){if(s.indexOf(BAD[i])>=0)return;}}catch(e){}
-   return _t.apply(this,arguments);
-  };
- }
- /* 2) نبضة مزامنة للطرفين بنفس المعدل: المضيف يبعت الحالة، الضيف يطلبها */
- setInterval(function(){
-  try{
-   if(!window.online||!window.started)return;
-   if(!(window.conn&&window.conn.open))return;
-   if(window.isHost){if(typeof broadcastNow==='function')broadcastNow();}
-   else{window.conn.send({type:'sync'});}
-  }catch(e){}
- },1500);
- /* 3) أول ما أي بيانات توصل: الاتصال شغال ➜ نخفي أي شاشة/علامة انقطاع فورًا */
- if(typeof window.handleData==='function'){
-  var _hd2=window.handleData;
-  window.handleData=handleData=function(d){
-   try{
-    window.lastRx=Date.now();
-    var r=document.getElementById('reconn');if(r)r.classList.add('hidden');
-    var cl=document.getElementById('connLbl');
-    if(cl&&window.conn&&window.conn.open&&cl.textContent.indexOf('🟢')<0)cl.textContent='🟢 متصل • 2/2';
-   }catch(e){}
-   return _hd2.apply(this,arguments);
-  };
- }
-}catch(e){}})();
-</script>
-
-<!-- ===== v14: إصلاح بدء مباريات البطولة عند ضغط استعداد من الطرفين ===== -->
-<script>
-(function(){try{
- function T(){return (typeof TOUR!=='undefined')?TOUR:null;}
- function M(id){var o=null;try{((T()&&T().matches)||[]).forEach(function(x){if(x.id===id)o=x;});}catch(e){}return o;}
- function mine(m){return !!(m&&((m.a&&m.a.cid===myCid)||(m.b&&m.b.cid===myCid)));}
- function store(){var t=T();if(!t)return {};t._rdy=t._rdy||{};return t._rdy;}
- function mark(mid,cid){
-  if(!T()||!mid||!cid)return;
-  var s=store();(s[mid]=s[mid]||{})[cid]=true;
-  var m=M(mid);if(m&&!m.done){m.ready=m.ready||{};m.ready[cid]=true;}
- }
- /* لو وصلت رسالة استعداد بمعرّف مش مطابق للاعبين، نعتبرها من الخصم في نفس المباراة */
- function markSmart(mid,cid){
-  var m=M(mid);if(!m)return;
-  var ok=(m.a&&m.a.cid===cid)||(m.b&&m.b.cid===cid);
-  if(!ok&&m.a&&m.b){cid=(m.a.cid===myCid)?m.b.cid:m.a.cid;}
-  mark(mid,cid);
- }
- /* استقبال مباشر لأي رسالة استعداد */
- if(typeof tourHandle==='function'){
-  var _h=tourHandle;
-  window.tourHandle=tourHandle=function(d,from){
-   try{
-    if(T()&&d){
-     if(d.type==='ready'&&d.mid)markSmart(d.mid,d.cid||from);
-     if(d.type==='tevent'&&d.event&&d.event.type==='ready'&&d.event.mid)markSmart(d.event.mid,d.event.cid||from);
-     if(d.type==='go'&&d.mid){var gm=M(d.mid);if(gm&&gm.a&&gm.b){mark(d.mid,gm.a.cid);mark(d.mid,gm.b.cid);}}
-    }
-   }catch(e){}
-   return _h.apply(this,arguments);
-  };
- }
- /* كل ضغطة استعداد بتتكرر بهدوء لحد ما المباراة تبدأ */
- var REPEAT={};
- if(typeof tourReady==='function'){
-  var _r=tourReady;
-  window.tourReady=tourReady=function(mid){
-   try{mark(mid,myCid);var t=T();if(t){t._myReady=t._myReady||{};t._myReady[mid]=true;}}catch(e){}
-   var out;try{out=_r.apply(this,arguments);}catch(e){}
-   REPEAT[mid]=Date.now();
-   return out;
-  };
- }
- /* حارس دوري: يدمج الاستعدادات ويبدأ المباراة عند الطرفين */
- setInterval(function(){
-  try{
-   var t=T();if(!t||!t.matches)return;
-   /* دمج كل أحداث الاستعداد المسجّلة (حتى لو حالة المضيف مسحتها) */
-   try{Object.keys(t.events||{}).forEach(function(k){var ev=t.events[k];if(ev&&ev.type==='ready'&&ev.mid&&ev.cid)mark(ev.mid,ev.cid);});}catch(e){}
-   var s=store();
-   Object.keys(s).forEach(function(id){
-    var m=M(id);if(!m||m.done)return;
-    m.ready=m.ready||{};Object.keys(s[id]).forEach(function(c){m.ready[c]=true;});
-   });
-   if(t._myReady)Object.keys(t._myReady).forEach(function(id){var m=M(id);if(m&&!m.done){m.ready=m.ready||{};m.ready[myCid]=true;}});
-   /* إعادة إرسال هادية للاستعداد لحد ما تبدأ */
-   Object.keys(REPEAT).forEach(function(id){
-    var m=M(id);
-    if(!m||m.done||m.started||(Date.now()-REPEAT[id])>90000){delete REPEAT[id];return;}
-    try{tourSend({type:'ready',mid:id,cid:myCid});}catch(e){}
-    try{if(typeof tourReliableEvent==='function')tourReliableEvent({type:'ready',mid:id,cid:myCid});}catch(e){}
-   });
-   /* البدء: أي مباراة الطرفين فيها جاهزين تبدأ فورًا عند صاحبها */
-   var repaint=false;
-   t.matches.forEach(function(m){
-    if(m.done||!m.a||!m.b)return;
-    if(!(m.ready&&m.ready[m.a.cid]&&m.ready[m.b.cid]))return;
-    if(!m.started){m.started=true;repaint=true;try{if(t.host){tourBroadcastState();tourSend({type:'go',mid:m.id});}}catch(e){}}
-    if(mine(m)&&typeof TOURMATCH!=='undefined'&&!TOURMATCH){
-     try{if(typeof tourDrawClose==='function')tourDrawClose();}catch(e){}
-     try{tourLaunchMatch(m);}catch(e){}
-    }
-   });
-   if(repaint)try{tourRender();}catch(e){}
-  }catch(e){}
- },700);
-}catch(err){try{console.error('tour ready v14',err);}catch(e){}}})();
 </script>
 </body>
 </html>
