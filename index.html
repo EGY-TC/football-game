@@ -614,11 +614,14 @@ body{text-rendering:optimizeSpeed}
 .lockBtn:active{opacity:.85}
 </style>
 <style>
-#pwaInstallBtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
- background:linear-gradient(135deg,#d29922,#f0c04a);color:#0d1117;border:0;border-radius:16px;
- padding:18px 20px;font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.45);font-family:'Cairo',sans-serif;margin-top:14px;transition:transform .12s}
+#pwaInstallBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ background:linear-gradient(135deg,#d29922,#f0c04a)!important;color:#0d1117!important;
+ border:2px solid #f0c04a!important;border-radius:14px;padding:8px 12px;font-weight:900;
+ font-size:13px;white-space:nowrap;cursor:pointer;box-shadow:0 4px 14px rgba(210,153,34,.35);
+ font-family:'Cairo',sans-serif;transition:transform .12s;animation:pwaPulse 2s ease-in-out infinite}
+@keyframes pwaPulse{0%,100%{box-shadow:0 4px 14px rgba(210,153,34,.35)}50%{box-shadow:0 4px 20px rgba(240,192,74,.75)}}
 #pwaInstallBtn:active{transform:scale(.98)}
-#pwaInstallBtn.show{display:flex}
+#pwaInstallBtn.show{display:inline-flex}
 #pwaInstallBtn.hidden{display:none!important}
 #pwaSheet{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
 #pwaSheet.show{display:flex}
@@ -644,7 +647,7 @@ body{text-rendering:optimizeSpeed}
   </a>
 </div>
 <div id="home" class="screen">
-<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button class="back tour-navbtn" onclick="openTournaments()">🥇 البطولات</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
+<div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button class="back tour-navbtn" onclick="openTournaments()">🥇 البطولات</button><button id="pwaInstallBtn" class="back show" title="أضف التطبيق للشاشة الرئيسية">📲 أضف للشاشة</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
 <p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
 <div class="card tour-cta" onclick="openTournaments()">
   <div class="tour-cta-ic">🥇</div>
@@ -681,7 +684,6 @@ body{text-rendering:optimizeSpeed}
 <div id="homeErr" class="status"></div>
 </div>
 
-<button id="pwaInstallBtn" class="show">📲 أضف التطبيق للشاشة الرئيسية</button>
 </div>
 <div id="settings" class="screen hidden">
 <div class="hdr"><button class="back" onclick="settingsBack()">↩ رجوع</button><h1>⚙️ إعدادات اللعبة</h1></div>
