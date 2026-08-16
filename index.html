@@ -1753,6 +1753,7 @@ var gameType='auction';
 var mode=1,online=false,isHost=false,mySeat=0,peer=null,conn=null,roomCode='',guestName='',view='bid',hbInt=null,savedCode='',started=false;
 var roomFull=false,guestCid='';
 var helloRetryInt=null;
+var lastConnCloseAt=0; /* وقت آخر قطع فعلي للاتصال — بيستخدم عشان نعرف هل العودة دي محسوسة فعلًا ولا مجرد تجديد داخلي سريع */
 var roomPass='',isPublicRoom=false,rejectedAuth=false,hostRejecting=false,joinAttemptTries=0;
 var CFG={budget:500,timer:20};
 var P=[],stars=[],pool=[],curStar=null,round=0,bid=0,turn=0,phase='bid',timeLeft=0,timeEndAt=0,timerInt=null,busy=false,logArr=[],ovH='',ovG='',endH='',prevBid=-1,lastCardRound=-1,shareText='';
@@ -2848,7 +2849,8 @@ function makeNetConn(code,host,opts){
      if(s2&&s2.theirs.length){checkPresence();return;}
      opened=false;shim.open=false;fire('close');
      if(host&&netCh===shim)conn=shim;
-    },3000);
+    },6000); /* مهلة موسّعة (كانت 3 ثواني) عشان نت الأماكن المغلقة زي الجيم يقدر ياخد فرصة يرجع
+                من غير ما يتحسب "انقطاع" فوري ويقلق اللاعبين من غير داعي */
    }
   }
  }
@@ -3211,6 +3213,7 @@ function wireConn(){
  conn.on('data',function(d){lastRx=Date.now();try{handleData(d);}catch(e){toast('⚠️ خطأ أثناء المزامنة، جرّب إعادة الاتصال لو استمرت المشكلة');console.error(e);}});
  conn.on('close',function(){
   clearInterval(hbInt);
+  lastConnCloseAt=Date.now();
   oppPeerId=null;try{if(currentCall)currentCall.close();}catch(e){}currentCall=null;
   conn=null;
   if(isHost){
@@ -3228,16 +3231,24 @@ function wireConn(){
   else{toast('خطأ اتصال: '+(e&&e.type?e.type:'غير معروف'));$('connLbl').textContent='🟡 بانتظار الخصم…';}
  });
  clearInterval(hbInt);
- hbInt=setInterval(function(){if(conn&&conn.open&&!document.hidden)try{conn.send({type:'ping'});}catch(e){}},4000);
+ hbInt=setInterval(function(){if(conn&&conn.open)try{conn.send({type:'ping'});}catch(e){}},4000);
  startHostResync();
  clearInterval(watchdog);
- var lastSyncReq=0;
+ var lastSyncReq=0,syncMisses=0;
  watchdog=setInterval(function(){
   if(!online)return;
   if(!conn||!conn.open)return;
-  if(!isHost&&started&&lastRx&&Date.now()-lastRx>2200&&Date.now()-lastSyncReq>1200){lastSyncReq=Date.now();try{conn.send({type:'sync'});}catch(e){}}
-  if(lastRx&&Date.now()-lastRx>10000){
-   lastRx=Date.now();
+  /* نت ضعيف (زي جوه الجيم): بدل ما نستنى ونقفل الاتصال على طول، نحاول نطلب
+     مزامنة أكتر من مرة على فترات متزايدة — أغلب انقطاعات الإشارة اللحظية
+     بترجع لوحدها خلال ثواني قليلة، وطلب sync متكرر بيخلي اللعبة تكمل من
+     غير ما اللاعب يحس بأي حاجة. */
+  if(started&&lastRx&&Date.now()-lastRx>2500&&Date.now()-lastSyncReq>1500){
+   lastSyncReq=Date.now();syncMisses++;
+   try{conn.send({type:'sync'});}catch(e){}
+  }
+  if(lastRx&&Date.now()-lastRx<2500)syncMisses=0;
+  if(lastRx&&Date.now()-lastRx>20000){
+   lastRx=Date.now();syncMisses=0;
    try{conn.close();}catch(e){}
    if(isHost){$('connLbl').textContent='🟡 بانتظار الخصم…';}
    else scheduleRejoin();
@@ -3246,6 +3257,14 @@ function wireConn(){
 }
 document.addEventListener('visibilitychange',function(){
  if(document.hidden)return;
+ /* الصفحة رجعت مرئية بعد ما كانت في الخلفية — المتصفح (خصوصًا على الموبايل)
+    بيوقف كل setInterval وقت الاختفاء، فالـ watchdog والـ heartbeat بيفضلوا
+    واقفين طول فترة الاختفاء. لو سبناهم يشتغلوا عادي، أول تيك هيلاقي lastRx
+    "قديم" بسبب توقف المؤقتات مش بسبب انقطاع حقيقي، وكان بيقفل الاتصال غلط
+    ويوريك رسالة "اتقطع الاتصال" رغم إن خصمك فاضل متصل طول الوقت.
+    عشان كده أول حاجة نعمله: نصفّر lastRx فورًا (نعتبر اللحظة دي "استلام جديد")
+    قبل ما أي watchdog يتاح له يحكم غلط. */
+ lastRx=Date.now();
  /* المضيف (أو اللعب المحلي): لما التبويب يرجع من الخلفية، اتصفحات بتبطئ setInterval
     فبنعيد حساب الوقت المتبقي فورًا من timeEndAt بدل ما نستنى التيك الجاي، عشان
     الوقت المعروض يبقى دقيق على طول ومايفضلش "واقف" شكليًا. */
@@ -3255,7 +3274,7 @@ document.addEventListener('visibilitychange',function(){
   render();if(online&&isHost)broadcast();
  }
  if(!online)return;
- if(isHost)return;
+ if(isHost){if(conn&&conn.open){try{conn.send({type:'ping'});}catch(e){}}return;}
  if(conn&&conn.open)conn.send({type:'sync'});
  else scheduleRejoin();
 });
@@ -3289,7 +3308,15 @@ function handleData(d){
    setTimeout(function(){try{if(conn)conn.close();}catch(e){}},300);
    return;
   }
-  if(started){guestName=d.name;guestCid=d.cid||guestCid;conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');$('connLbl').textContent='🟢 متصل • 2/2';}
+  if(started){
+   guestName=d.name;guestCid=d.cid||guestCid;
+   conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,s:snap()});
+   /* لو الانقطاع كان أقل من ٤ ثواني (تجديد اتصال داخلي عادي) ميتعرضش إشعار "عاد الخصم"
+      عشان منقلقش اللاعب من غير داعي كل ما النت يهتز لحظيًا */
+   var gapMs=lastConnCloseAt?(Date.now()-lastConnCloseAt):99999;
+   if(gapMs>4000){conn.send({type:'sys',t:'✅ '+d.name+' عاد للاتصال — اللعبة مستمرة'});toast('✅ عاد الخصم للاتصال (2/2)');}
+   $('connLbl').textContent='🟢 متصل • 2/2';
+  }
   else if(roomFull&&guestCid===(d.cid||'')){
    /* نفس الضيف بعت hello تاني (لأن رسالته الأولى اتأخرت) — نرد بتأكيد بس من غير ما نكرر التوست أو نصفّر الشاشة */
    try{conn.send({type:'sys',t:'✅ متصل بالفعل'});}catch(e){}
@@ -3306,6 +3333,12 @@ function handleData(d){
  else if(d.type==='S'&&!isHost){applySnap(d.s);}
  else if(d.type==='T'&&!isHost){timeLeft=d.t;renderTimerBar();}
  else if(d.type==='sync'&&isHost&&started){conn.send({type:'resume',cfg:CFG,gameType:gameType,p:P,stars:stars,tpDiff:tpDiff,tpDeck:tpDeck,s:snap()});}
+ else if(d.type==='sync'&&!isHost){
+  /* المضيف مبعتلي sync يستفسر لو أنا لسه متصل — أرد فورًا (حتى لو الرسالة
+     نفسها أصلاً حدّثت lastRx عنده) عشان يتأكد إن القناة شغالة كويس في
+     الاتجاهين ومايقفلش الاتصال غلط بسبب نت ضعيف مؤقت */
+  try{conn.send({type:'ping'});}catch(e){}
+ }
  else if(d.type==='rematch'){
   clearInterval(timerInt);started=false;ovH='';ovG='';endH='';cardFlow=null;
   phase='bid';$('overlay').classList.add('hidden');pendingRematch=true;
@@ -4902,6 +4935,10 @@ function dismissOnbTip(){
    إقصائية بين اللاعبين على السيرفر (Supabase Realtime).
    المضيف هو صاحب الحالة (state) وبيبثها لكل المشتركين. */
 var TOUR=null,TOURCH=null,TOURCH_SUB=false,TOURMATCH=null,tourStateInt=null,tourSearchT=null;
+/* TOUR_ACTING: "كاتب مؤقت" وقت غياب المضيف الأصلي — بيفرّق بين "بقيت المضيف
+   الحقيقي" و"بس بكتب حالة السيرفر مؤقتًا لحد ما المضيف الأصلي يرجع". اتنقلت
+   هنا (كانت متعرفة متأخر جوه IIFE) عشان تبقى متاحة من أول استخدام لها. */
+var TOUR_ACTING=false;
 var tourSet={n:4,gt:'auction',timer:20,budget:500,persist:1},tourPassInput='';
 var TOUR_ONLINE={},TOUR_LASTSTATE=0,tourWatchInt=null;
 var TOUR_READY_INT=null;
@@ -5827,7 +5864,10 @@ function tourDbSave(force){
 function tourDbDelete(code){
  try{var t=sbTbl('tournaments');if(!t||!code)return;t.delete().eq('code',code).then(function(){},function(){});}catch(e){}
 }
-/* لو محدش أونلاين: بنجيب آخر حالة محفوظة من السيرفر ونكمّل البطولة */
+/* لو محدش أونلاين: بنجيب آخر حالة محفوظة من السيرفر ونكمّل البطولة.
+   لو المضيف المسجل في السيرفر هو نفسي (يعني رجعت بنفس myCid — إما لأني نفس
+   الجهاز أو استوردت هويتي من جهاز تاني) ببقى المضيف الحقيقي زي ما كنت من غير
+   أي "تنازل" لاحق. لو حد غيري، باخد دور "كاتب مؤقت" بس لحد ما يرجع. */
 function tourDbAdopt(code,pass,cb){
  try{
   var t=sbTbl('tournaments');if(!t)return;
@@ -5844,14 +5884,26 @@ function tourDbAdopt(code,pass,cb){
    TOUR.set=s.set||TOUR.set;TOUR.players=s.players||[];TOUR.round=s.round||0;
    TOUR.matches=s.matches||[];TOUR.champion=s.champion||null;TOUR.kicked=s.kicked||[];TOUR.out=s.out||[];
    TOUR.pass=row.pass||'';
+   var iAmOriginalHost=!!(row.host_cid&&row.host_cid===myCid);
    /* مفيش مضيف أونلاين — بناخد الاستضافة عشان البطولة تكمّل */
    var me=null;TOUR.players.forEach(function(p){if(p.cid===myCid)me=p;});
    if(!me&&!TOUR.matches.length&&TOUR.players.length<((TOUR.set&&TOUR.set.n)||0)){
     TOUR.players.push({cid:myCid,name:tourMyName()});
    }
-   TOUR.host=true;TOUR.hostCid=myCid;TOUR.hostName=tourMyName();
+   TOUR.host=true;
+   if(iAmOriginalHost){
+    /* أنا المضيف الأصلي راجع (بنفس myCid — جهازي القديم أو هوية مستوردة) —
+       مفيش داعي لأي وضع "مؤقت"، أنا المضيف زي ما كنت بالظبط. */
+    TOUR.hostCid=myCid;TOUR.hostName=tourMyName();TOUR_ACTING=false;TOUR.acting=false;
+   }else{
+    /* حد تاني هو المضيف المسجل بس مش أونلاين دلوقتي — بكتب الحالة مؤقتًا
+       بس ساكن اسم/هوية المضيف الأصلي زي ما هو، عشان لو رجع يستلم مكانه
+       تاني من غير أي لخبطة في البيانات. */
+    TOUR.hostCid=row.host_cid||myCid;TOUR.hostName=(s&&s.hostName)||TOUR.hostName;
+    TOUR_ACTING=true;TOUR.acting=true;
+   }
    TOUR_LASTSTATE=Date.now();
-   try{if(TOURCH)TOURCH.track({c:myCid,n:tourMyName(),h:true,t:Date.now()});}catch(e){}
+   try{if(TOURCH)TOURCH.track({c:myCid,n:tourMyName(),h:!TOUR_ACTING,t:Date.now()});}catch(e){}
    tourBroadcastState();
    clearInterval(tourStateInt);
    tourStateInt=setInterval(function(){if(TOUR&&TOUR.host)tourBroadcastState();},1200);
@@ -6924,7 +6976,7 @@ window.tourRender=tourRender=function(){
 */
 (function(){try{
 
-var TOUR_ACTING=false, TOUR_GRACE=null, TOURWAIT=null;
+var TOUR_GRACE=null, TOURWAIT=null;
 
 /* ---------- (1) مفيش نقل استضافة: بس "كاتب مؤقت" على السيرفر ---------- */
 if(typeof tourPickPersist==='function'){window.tourPickPersist=tourPickPersist=function(){tourSet.persist=1;};}
@@ -6974,28 +7026,10 @@ if(typeof tourHandle==='function'){
   return _th_v6.apply(this,arguments);
  };
 }
-/* السيرفر: نحافظ على اسم المضيف الأصلي وقت الاسترجاع */
-if(typeof tourDbAdopt==='function'){
- var _adopt_v6=tourDbAdopt;
- window.tourDbAdopt=tourDbAdopt=function(code,pass,cb){
-  return _adopt_v6.call(this,code,pass,function(ok){
-   try{
-    if(ok&&TOUR){
-     var t=sbTbl('tournaments');
-     if(t)t.select('state').eq('code',code).maybeSingle().then(function(res){
-      var s=res&&res.data&&res.data.state;
-      if(s&&TOUR&&TOUR.code===code&&s.hostCid&&s.hostCid!==myCid){
-       TOUR.hostCid=s.hostCid;TOUR.hostName=s.hostName||TOUR.hostName;
-       TOUR_ACTING=true;TOUR.acting=true;
-       try{tourBroadcastState();tourRender();}catch(e){}
-      }
-     },function(){});
-    }
-   }catch(e){}
-   if(cb)cb(ok);
-  });
- };
-}
+/* السيرفر: منطق حفظ اسم المضيف الأصلي وقت الاسترجاع اتدمج جوه tourDbAdopt
+   نفسها (بمقارنة row.host_cid مع myCid) بدل ما يتكرر هنا في طبقة ترقيع
+   منفصلة — كانت بتعمل نداء سيرفر إضافي زيادة وفيه احتمال نافذة تضارب حالة
+   قصيرة قبل ما تتنفذ. */
 
 /* ---------- (2) القرعة عند الكل ---------- */
 if(typeof tourDrawShow==='function'){
