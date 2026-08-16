@@ -25,10 +25,26 @@ window.addEventListener('load',function(){setTimeout(function(){
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مزاد النجوم">
 <link rel="preconnect" href="https://itdtszwmjiwcalhruric.supabase.co" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="preload" as="script" href="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js">
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
 
 <script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<style>
+/* ===== شاشة تحميل أولية: تمنع الضغط على أزرار قبل ما اللعبة تجهز ===== */
+#bootGate{position:fixed;inset:0;z-index:99999;background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease}
+#bootGate.out{opacity:0;pointer-events:none}
+#bootGate .bg-logo{font-size:44px;animation:bgpulse 1.2s ease-in-out infinite}
+@keyframes bgpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+#bootGate .bg-ring{width:46px;height:46px;border:4px solid #2d333b;border-top-color:#3fb950;border-radius:50%;animation:bgspin .8s linear infinite}
+@keyframes bgspin{to{transform:rotate(360deg)}}
+#bootGate .bg-txt{color:#e6edf3;font-family:'Cairo',sans-serif;font-weight:900;font-size:15px}
+#bootGate .bg-sub{color:#8b949e;font-family:'Cairo',sans-serif;font-weight:700;font-size:12px}
+</style>
 <style>
  body {
   -webkit-user-select: none; /* Safari */
@@ -633,6 +649,31 @@ body{text-rendering:optimizeSpeed}
 </style>
 </head>
 <body>
+<div id="bootGate">
+ <div class="bg-logo">⚽</div>
+ <div class="bg-ring"></div>
+ <div class="bg-txt">جاري تجهيز اللعبة…</div>
+ <div class="bg-sub" id="bootGateSub">بيتم تحميل مكتبات الاتصال</div>
+</div>
+<script>
+(function(){
+ var start=Date.now(),done=false,MAXWAIT=8000;
+ function ready(){return typeof Peer!=='undefined' && !!(window.supabase||window.Supabase);}
+ function hide(){
+  if(done)return;done=true;
+  var g=document.getElementById('bootGate');
+  if(g){g.classList.add('out');setTimeout(function(){g.remove();},400);}
+ }
+ (function tick(){
+  if(done)return;
+  if(ready()){hide();return;}
+  if(Date.now()-start>MAXWAIT){hide();return;} /* أقصى انتظار 8 ثواني حتى لو فشل تحميل مكتبة، عشان مايفضلش المستخدم واقف للأبد */
+  var sub=document.getElementById('bootGateSub');
+  if(sub && Date.now()-start>3000)sub.textContent='بياخد وقت أطول من المعتاد… لسه بنحاول';
+  setTimeout(tick,150);
+ })();
+})();
+</script>
 <div class="salawat">🌙 صلِّ على النبي ﷺ <span class="s2">اللهم صلِّ وسلم عليه</span></div>
  <div style="background:linear-gradient(135deg,#075e54,#128c7e);padding:12px 16px;margin:10px auto 14px;max-width:680px;border-radius:15px;text-align:center;box-shadow:0 5px 18px rgba(0,0,0,.3);">
   <div style="color:white;font-size:14px;font-weight:900;margin-bottom:8px;">
@@ -6249,10 +6290,11 @@ function tourMatchHTML(m){
 function tourCloseAll(){
  if(!TOUR||!TOUR.host)return;
  if(!confirm('إغلاق البطولة نهائيًا عند كل اللاعبين؟'))return;
+ try{tourDbDelete(TOUR.code);}catch(e){} /* نمسح صف السيرفر فورًا عشان أي حد بيعمل poll يكتشف الإغلاق حتى لو الـ broadcast اتفقد */
  var i=0;
  var iv=setInterval(function(){
   i++;try{tourSend({type:'closed',force:true});}catch(e){}
-  if(i>=4){clearInterval(iv);
+  if(i>=8){clearInterval(iv);
    tourChannelClose();TOUR=null;TOURMATCH=null;tourClearLocal();
    try{$('tourBackBtn').classList.add('hidden');}catch(e){}
    show('tourHome');toast('🛑 اتقفلت البطولة عند الكل');
@@ -6353,11 +6395,25 @@ function tourAutoReconnect(){
  },1200);
 }
 
-/* أول ما ترجع للتطبيق: مزامنة فورية من غير ما تفقد مكانك */
+/* أول ما ترجع للتطبيق (فتحت الشاشة تاني/رجعت من تطبيق تاني): مزامنة فورية وقوية
+   من غير ما تفقد مكانك — بتعيد فتح القناة لو اتقفلت، وتعيد إرسال أي "استعداد" كان متعلق. */
 try{document.addEventListener('visibilitychange',function(){
  if(document.hidden||!TOUR)return;
- try{if(TOUR.host)tourBroadcastState();else tourSend({type:'want'});}catch(e){}
- try{tourCheckResume();if($('tourRoom')&&!$('tourRoom').classList.contains('hidden'))tourRender();}catch(e){}
+ try{
+  /* لو القناة اتقفلت (النظام بيعلق الاتصالات لما الشاشة تتقفل) نفتحها تاني */
+  if(!TOURCH||!TOURCH_SUB){tourChannelOpen(TOUR.code);}
+ }catch(e){}
+ setTimeout(function(){
+  try{if(TOUR&&TOUR.host){tourBroadcastState();tourDbSave(true);}else{tourSend({type:'want'});tourDbPullOnce();}}catch(e){}
+  /* أي ماتش ضغطنا "بدء" فيه ولسه ماتأكدش: نبعت الاستعداد تاني فورًا */
+  try{
+   if(TOUR&&TOUR._myReady){Object.keys(TOUR._myReady).forEach(function(mid){
+    var m=(typeof findM==='function')?findM(mid):null;
+    if(m&&!m.done&&!m.started){try{tourSend({type:'ready',mid:mid});}catch(e){}}
+   });}
+  }catch(e){}
+  try{tourCheckResume();if(typeof scanStart==='function')scanStart();if($('tourRoom')&&!$('tourRoom').classList.contains('hidden'))tourRender();}catch(e){}
+ },350);
 });}catch(e){}
 
 /* لما المضيف يقفل المتصفح: نبلّغ الباقيين فورًا عشان الاستضافة تنتقل من غير انتظار */
@@ -6780,12 +6836,22 @@ function tourDbApplyRow(row){
  if(fresh)TOUR_LASTSTATE=Date.now();
  tourHandle({type:'state',st:s},row.host_cid||s.hostCid||'');
 }
+var TOUR_DB_MISS=0;
 function tourDbPullOnce(){
  try{
   if(!TOUR||!TOUR.code||TOUR.host)return;
   var t=sbTbl('tournaments');if(!t)return;
   t.select('state,host_cid,updated_at').eq('code',TOUR.code).maybeSingle().then(function(res){
-   if(res&&res.data)tourDbApplyRow(res.data);
+   if(res&&res.data){TOUR_DB_MISS=0;tourDbApplyRow(res.data);return;}
+   /* الصف اتمسح من السيرفر = المضيف قفل البطولة نهائيًا. بنتأكد مرتين متتاليين قبل ما نتصرف عشان نتجنب أي غلطة شبكة مؤقتة */
+   TOUR_DB_MISS++;
+   if(TOUR_DB_MISS>=2&&TOUR&&!TOUR.host){
+    toast('🛑 المضيف أنهى البطولة');
+    try{tourChannelClose();}catch(e){}
+    TOUR=null;TOURMATCH=null;try{tourClearLocal();}catch(e){}
+    try{$('tourBackBtn').classList.add('hidden');}catch(e){}
+    show('tourHome');
+   }
   },function(){});
  }catch(e){}
 }
@@ -8222,39 +8288,65 @@ try{
 
 <!-- GP_GAME_START -->
 <style>
-/* ===== لعبة تخمين اللاعب ===== */
-.gp-wrap{max-width:640px;margin:0 auto}
-.gp-card{background:var(--card,#161b22);border:1px solid var(--line,#2d333b);border-radius:16px;padding:14px;margin-bottom:10px}
-.gp-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.gp-fact{background:var(--card2,#1c2128);border:1px solid var(--line,#2d333b);border-radius:12px;padding:9px 10px;text-align:center}
-.gp-fact .k{font-size:11px;color:var(--dim,#8b949e);font-weight:800;margin-bottom:3px}
-.gp-fact .v{font-size:14px;font-weight:900}
-.gp-clubs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
-.gp-club{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.35);color:var(--blue,#58a6ff);border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:900}
-.gp-club.q{background:rgba(255,255,255,.05);border-style:dashed;color:var(--dim,#8b949e)}
-.gp-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.gp-opt{background:var(--card2,#1c2128);border:2px solid var(--line,#2d333b);color:var(--txt,#e6edf3);border-radius:14px;padding:14px 8px;font-size:14px;font-weight:900;cursor:pointer;min-height:58px}
-.gp-opt:active{opacity:.85}
-.gp-opt.pick{border-color:var(--blue,#58a6ff)}
-.gp-opt.ok{border-color:var(--acc,#3fb950);background:rgba(63,185,80,.15)}
-.gp-opt.bad{border-color:var(--red,#f85149);background:rgba(248,81,73,.12)}
+/* ===== لعبة تخمين اللاعب — تصميم هادي ومريح للعين، متظبط للموبايل ===== */
+.gp-wrap{max-width:640px;margin:0 auto;--gpT:#2dd4bf;--gpT2:#60a5fa;--gpBg:#0d1620;--gpBg2:#152331;--gpLn:#25384a;--gpDim:#8ea6b8;--gpTxt:#f2f8fa}
+.gp-card{background:linear-gradient(165deg,var(--gpBg2),var(--gpBg));border:1px solid var(--gpLn);border-radius:22px;padding:18px;margin-bottom:12px;box-shadow:0 8px 22px rgba(0,0,0,.28);animation:gpIn .35s ease}
+@keyframes gpIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.gp-q-ic{text-align:center;font-size:32px;margin-bottom:4px;filter:drop-shadow(0 3px 8px rgba(45,212,191,.4))}
+.gp-q-tt{text-align:center;font-weight:900;font-size:16px;color:var(--gpTxt);letter-spacing:.2px}
+.gp-facts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.gp-fact{background:rgba(45,212,191,.06);border:1px solid var(--gpLn);border-radius:15px;padding:11px 8px;text-align:center}
+.gp-fact .k{font-size:10.5px;color:var(--gpDim);font-weight:800;margin-bottom:4px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:4px}
+.gp-fact .v{font-size:14.5px;font-weight:900;color:var(--gpTxt)}
+.gp-clubs{display:flex;flex-wrap:wrap;align-items:center;gap:5px;justify-content:center;margin-top:14px}
+.gp-club{background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.32);color:var(--gpT2);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800}
+.gp-club:first-of-type{background:rgba(45,212,191,.16);border-color:rgba(45,212,191,.45);color:var(--gpT)}
+.gp-arrow{color:var(--gpDim);font-size:11px;opacity:.6}
+.gp-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.gp-opt{display:flex;align-items:center;gap:10px;background:var(--gpBg2,#152331);border:1.5px solid var(--gpLn);color:var(--gpTxt);border-radius:16px;padding:12px;font-size:13.5px;font-weight:800;cursor:pointer;min-height:56px;text-align:right;line-height:1.3;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.gp-opt-lbl{flex:0 0 auto;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--gpLn);color:var(--gpDim);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.gp-opt-tx{flex:1;min-width:0}
+.gp-opt:active{transform:scale(.97)}
+.gp-opt.pick{border-color:var(--gpT2);background:rgba(96,165,250,.10)}
+.gp-opt.pick .gp-opt-lbl{border-color:var(--gpT2);color:var(--gpT2)}
+.gp-opt.ok{border-color:#34d399;background:rgba(52,211,153,.16)}
+.gp-opt.ok .gp-opt-lbl{background:#34d399;color:#04241a;border-color:#34d399}
+.gp-opt.bad{border-color:#f87171;background:rgba(248,113,113,.12)}
+.gp-opt.bad .gp-opt-lbl{background:#f87171;color:#2b0505;border-color:#f87171}
 .gp-opt:disabled{opacity:.55;cursor:default}
-.gp-time{text-align:center;font-weight:900;font-size:14px;margin:8px 0 2px}
-.gp-time.low{color:var(--red,#f85149)}
-.gp-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:6px}
-.gp-bar>i{display:block;height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);transition:width .4s linear}
-.gp-hint{text-align:center;color:var(--dim,#8b949e);font-size:12px;margin-top:8px;line-height:1.8}
-.gp-answer{font-size:17px;font-weight:900;text-align:center;color:var(--gold,#d29922);margin:6px 0}
-.gp-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card2,#1c2128);border:1px solid var(--line,#2d333b);border-radius:12px;padding:9px 11px;margin-top:7px;font-size:13px}
-.gp-row.win{border-color:var(--acc,#3fb950)}
-.gp-row .who{font-weight:900}
-.gp-row .gv{font-size:11.5px;color:var(--dim,#8b949e)}
+.gp-time{text-align:center;font-weight:900;font-size:13.5px;margin:9px 0 3px;color:var(--gpDim)}
+.gp-time.low{color:#f87171}
+.gp-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:6px}
+.gp-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gpT),var(--gpT2));transition:width .4s linear;border-radius:99px}
+.gp-hint{text-align:center;color:var(--gpDim);font-size:12px;margin-top:9px;line-height:1.8}
+.gp-answer{font-size:18px;font-weight:900;text-align:center;color:var(--gpT);margin:6px 0}
+.gp-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--gpBg2);border:1px solid var(--gpLn);border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13px}
+.gp-row.win{border-color:var(--gpT)}
+.gp-row .who{font-weight:900;color:var(--gpTxt)}
+.gp-row .gv{font-size:11.5px;color:var(--gpDim)}
 .gp-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.gp-mode-btn{background:var(--card2,#1c2128);border:2px solid var(--line,#2d333b);color:var(--txt,#e6edf3);border-radius:14px;padding:12px 8px;font-weight:900;font-size:13px;cursor:pointer}
-.gp-mode-btn.sel{border-color:var(--acc,#3fb950);background:rgba(63,185,80,.12)}
-.gp-src{font-size:10.5px;color:var(--dim,#8b949e);text-align:center;margin-top:8px}
+.gp-mode-btn{background:var(--gpBg2,#152331);border:1.5px solid var(--gpLn);color:var(--gpTxt,#f2f8fa);border-radius:14px;padding:12px 8px;font-weight:900;font-size:13px;cursor:pointer}
+.gp-mode-btn.sel{border-color:var(--gpT,#2dd4bf);background:rgba(45,212,191,.12)}
+.gp-src{font-size:10.5px;color:var(--gpDim);text-align:center;margin-top:10px;opacity:.65}
+/* لوحة الدرجات وشريط تقدّم الجولات — نفس روح الهدوء */
+#viewGP .tp-scoreboard{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px}
+#viewGP .tp-sc{flex:1;background:var(--gpBg2);border:1px solid var(--gpLn);border-radius:15px;padding:11px;text-align:center;transition:border-color .2s ease}
+#viewGP .tp-sc.lead{border-color:var(--gpT);box-shadow:0 0 0 1px rgba(45,212,191,.25) inset}
+#viewGP .tp-sc .nm2{font-size:12px;font-weight:800;color:var(--gpDim);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#viewGP .tp-sc .pts{font-size:21px;font-weight:900;color:var(--gpTxt)}
+#viewGP .tp-sc.lead .pts{color:var(--gpT)}
+#viewGP .tp-round-pill{text-align:center;font-size:12px;font-weight:800;background:var(--gpBg2);border-radius:12px;padding:8px;margin-bottom:10px;border:1px solid var(--gpLn);color:var(--gpDim)}
+#viewGP .tp-progress{display:flex;gap:4px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+#viewGP .tp-dot{width:22px;height:22px;border-radius:7px;background:var(--gpBg2);border:1px solid var(--gpLn);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:var(--gpDim)}
+#viewGP .tp-dot.done0{background:rgba(45,212,191,.22);border-color:var(--gpT);color:var(--gpT)}
+#viewGP .tp-dot.done1{background:rgba(248,113,113,.18);border-color:#f87171;color:#f87171}
+#viewGP .tp-dot.donedraw{background:rgba(250,204,21,.18);border-color:#facc15;color:#facc15}
+#viewGP .tp-dot.cur{box-shadow:0 0 0 2px rgba(255,255,255,.22)}
+#viewGP .tp-lockstatus{text-align:center;font-size:12.5px;color:var(--gpDim);margin-top:8px;font-weight:700}
+@media(max-width:360px){.gp-opts{grid-template-columns:1fr}.gp-facts{grid-template-columns:1fr 1fr}}
 </style>
 <script>
+
 /* =========================================================================
    🕵️ لعبة تخمين اللاعب — إضافة كاملة فوق اللعبة الأصلية (من غير ما نلمس أي كود قديم)
    • 11 جولة، أونلاين زي باقي الألعاب (نفس سيرفر المزامنة)
@@ -8350,6 +8442,37 @@ var GP_BASE=[
 
 function gpFromBase(a){
  return{key:'b:'+a[1],ar:a[0],en:a[1],flag:a[2],nat:a[3],pos:a[4],ret:!!a[5],clubs:a[6].slice(),al:(a[7]||[]).slice(),src:'base'};
+}
+/* تصنيف المركز لمجموعات عريضة (حراسة/دفاع/وسط/هجوم) عشان نقدر نلاقي لاعبين "شبه" بعض */
+function gpPosGroup(pos){
+ pos=pos||'';
+ if(/حارس|goalkeeper/i.test(pos))return 'gk';
+ if(/دفاع|ظهير|defen[cs]e|back/i.test(pos))return 'def';
+ if(/وسط|صانع|midfield|playmak/i.test(pos))return 'mid';
+ return 'fwd';
+}
+function gpPosIcon(pos){var g=gpPosGroup(pos);return g==='gk'?'🧤':g==='def'?'🛡️':g==='mid'?'🎯':'⚽';}
+/* اختيار مشتتات (خيارات غلط) واقعية: من نفس الجنسية أولًا، وبعدين نفس المركز، وبعدين نفس الحالة (بيلعب/معتزل) —
+   عشان الاختيارات تكون قريبة من بعض ومن الوصف، ومينفعش حد يلاقيها بديهية */
+function gpDistractors(target,poolAll){
+ var tn=gpNorm(target.ar);
+ var cands=(poolAll||[]).filter(function(p){return p&&p.ar&&gpNorm(p.ar)!==tn;});
+ function score(c){
+  var s=0;
+  if(c.nat&&target.nat&&c.nat===target.nat)s+=4;
+  if(gpPosGroup(c.pos)===gpPosGroup(target.pos))s+=2;
+  if(!!c.ret===!!target.ret)s+=1;
+  return s;
+ }
+ var scored=shuffle(cands).map(function(c){return {c:c,s:score(c)};});
+ scored.sort(function(a,b){return b.s-a.s;});
+ var out=[],seen={};seen[tn]=1;
+ for(var i=0;i<scored.length&&out.length<3;i++){
+  var nm=gpNorm(scored[i].c.ar);
+  if(seen[nm])continue;
+  seen[nm]=1;out.push(scored[i].c.ar);
+ }
+ return out;
 }
 
 /* ============ تطبيع ومطابقة الأسماء (دقيقة ومن غير إنترنت) ============ */
@@ -8523,9 +8646,17 @@ function gpBuildDeck(){
   seenName[n]=1;pool.push(p);
  });
  var deck=shuffle(pool).slice(0,GP_ROUNDS);
- var namesAll=base.map(function(b){return b.ar;}).concat(extra.map(function(e){return e.ar;}));
+ var allObjs=base.concat(extra);
  deck.forEach(function(p){
-  var others=shuffle(namesAll.filter(function(n){return gpNorm(n)!==gpNorm(p.ar);})).slice(0,3);
+  var others=gpDistractors(p,allObjs);
+  /* لو لسه ناقص (نادر) كمّل عشوائي عادي عشان مايقفش عدد الاختيارات */
+  if(others.length<3){
+   var have={};[p.ar].concat(others).forEach(function(n){have[gpNorm(n)]=1;});
+   shuffle(allObjs).forEach(function(c){
+    if(others.length>=3)return;
+    var nm=gpNorm(c.ar);if(have[nm])return;have[nm]=1;others.push(c.ar);
+   });
+  }
   p.opts=shuffle([p.ar].concat(others));
  });
  gpUsedSave(deck.map(function(p){return p.key;}));
@@ -8649,6 +8780,7 @@ function gpStatusLine(p){return p.ret?'🎖️ معتزل':'🟢 لسه بيلع
 function renderGP(){
  var box=document.getElementById('viewGP');
  if(!box)return;
+ box.classList.add('gp-wrap');
  if(!gpCur||!P[0]||!P[1]){box.innerHTML='<div class="gp-card" style="text-align:center">⏳ بنجهّز اللاعبين…</div>';return;}
  var me=gpMySeat(),other=1-me;
  var h='';
@@ -8663,15 +8795,15 @@ function renderGP(){
  h+='<div class="tp-round-pill">الجولة '+(gpRound+1)+' / '+gpDeck.length+'</div>';
 
  h+='<div class="gp-card">';
- h+='<div style="text-align:center;font-size:34px">🕵️</div>';
- h+='<div style="text-align:center;font-weight:900;font-size:16px;margin-top:4px">مين اللاعب ده؟</div>';
+ h+='<div class="gp-q-ic">'+gpPosIcon(gpCur.pos)+'</div>';
+ h+='<div class="gp-q-tt">مين اللاعب ده؟</div>';
  h+='<div class="gp-facts">';
- h+='<div class="gp-fact"><div class="k">الجنسية</div><div class="v">'+(gpCur.flag||'🌍')+' '+gpCur.nat+'</div></div>';
- h+='<div class="gp-fact"><div class="k">المركز</div><div class="v">'+gpCur.pos+'</div></div>';
- h+='<div class="gp-fact"><div class="k">الحالة</div><div class="v">'+gpStatusLine(gpCur)+'</div></div>';
- h+='<div class="gp-fact"><div class="k">عدد الأندية</div><div class="v">'+gpCur.clubs.length+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">🌍 الجنسية</div><div class="v">'+(gpCur.flag||'🌍')+' '+gpCur.nat+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">'+gpPosIcon(gpCur.pos)+' المركز</div><div class="v">'+gpCur.pos+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">📶 الحالة</div><div class="v">'+gpStatusLine(gpCur)+'</div></div>';
+ h+='<div class="gp-fact"><div class="k">🏟️ عدد الأندية</div><div class="v">'+gpCur.clubs.length+'</div></div>';
  h+='</div>';
- h+='<div class="gp-clubs">'+gpCur.clubs.slice(0,7).map(function(c){return '<span class="gp-club">'+c+'</span>';}).join('')+'</div>';
+ h+='<div class="gp-clubs">'+gpCur.clubs.slice(0,7).map(function(c,ci){return (ci?'<span class="gp-arrow">←</span>':'')+'<span class="gp-club">'+c+'</span>';}).join('')+'</div>';
  h+='</div>';
 
  if(gpPhase==='guess'){
@@ -8686,8 +8818,9 @@ function renderGP(){
     h+='<div class="tp-lockstatus">🔒 اتقفلت إجابتك ('+(gpAns[seat]||'')+') — استنى الطرف التاني…</div>';
    }else if(gpAnsMode==='choice'){
     h+='<div class="gp-opts">';
+    var lbls=['A','B','C','D'];
     gpCur.opts.forEach(function(o,idx){
-     h+='<button class="gp-opt" onclick="gpPick('+seat+','+idx+')">'+o+'</button>';
+     h+='<button class="gp-opt" onclick="gpPick('+seat+','+idx+')"><span class="gp-opt-lbl">'+(lbls[idx]||(idx+1))+'</span><span class="gp-opt-tx">'+o+'</span></button>';
     });
     h+='</div>';
    }else{
