@@ -31,7 +31,10 @@ window.addEventListener('load',function(){setTimeout(function(){
 <meta name="twitter:description" content="العب مباريات ومسابقات كورة أونلاين مع أصحابك">
 <meta name="twitter:image" content="icon-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<!-- الخط بيتحمّل من غير ما يوقف رسم الصفحة (كان بيأخّر ظهور الموقع على النت الضعيف) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap"></noscript>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -44,11 +47,28 @@ window.addEventListener('load',function(){setTimeout(function(){
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://unpkg.com">
-<link rel="preload" as="script" href="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js">
-<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
-
-<script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل بعد ما الصفحة تشتغل خالص،
+     عشان الشاشة تبقى قابلة للضغط فورًا من غير أي لاق في أول 5 ثواني. -->
+<script>
+(function(){
+ var LIBS=[
+  'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js'
+ ];
+ function load(src){
+  var s=document.createElement('script');s.src=src;s.async=true;
+  s.onload=function(){
+   try{if(typeof lbEnsureChannel==='function')lbEnsureChannel();}catch(e){}
+   try{if(typeof initUserPeer==='function'&&typeof myName==='function'&&myName())initUserPeer();}catch(e){}
+  };
+  document.head.appendChild(s);
+ }
+ function go(){LIBS.forEach(load);}
+ function schedule(){ (window.requestIdleCallback||function(f){setTimeout(f,200);})(go,{timeout:1200}); }
+ if(document.readyState==='complete')schedule();
+ else window.addEventListener('load',schedule);
+})();
+</script>
 <style>
 /* ===== شاشة تحميل أولية: تمنع الضغط على أزرار قبل ما اللعبة تجهز ===== */
 #bootGate{position:fixed;inset:0;z-index:99999;background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease}
@@ -761,24 +781,17 @@ input[type=range]{accent-color:var(--acc)}
 </div>
 <script>
 (function(){
- var start=Date.now(),done=false,MAXWAIT=900;
- /* لا نستنى مكتبة PeerJS هنا: هي بتتحمّل من CDN خارجي وممكن تتأخر، وكل الأماكن اللي بتستخدمها
-    (initUserPeer / ensureVoicePeer) عندها إعادة محاولة تلقائية لو لسه ماتحمّلتش. استنائها هنا
-    كان هو سبب تجمّد الموقع أول ما يتفتح (كان بيوصل لـ 8 ثواني كل مرة على النت الضعيف). */
- function ready(){return !!(window.supabase||window.Supabase);}
+ var done=false;
+ /* الشاشة دي بقت مجرد لمسة بصرية سريعة: بتختفي أول ما الـDOM يجهز (وبحد أقصى 350ms)
+    ومش بتستنى أي مكتبة خارجية، فمفيش لاق ولا منع للضغط في أول ثواني. */
  function hide(){
   if(done)return;done=true;
   var g=document.getElementById('bootGate');
-  if(g){g.classList.add('out');setTimeout(function(){g.remove();},400);}
+  if(g){g.classList.add('out');setTimeout(function(){if(g.parentNode)g.remove();},300);}
  }
- (function tick(){
-  if(done)return;
-  if(ready()){hide();return;}
-  if(Date.now()-start>MAXWAIT){hide();return;} /* أقصى انتظار 8 ثواني حتى لو فشل تحميل مكتبة، عشان مايفضلش المستخدم واقف للأبد */
-  var sub=document.getElementById('bootGateSub');
-  if(sub && Date.now()-start>600)sub.textContent='بياخد وقت أطول من المعتاد… لسه بنحاول';
-  setTimeout(tick,60);
- })();
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);
+ else hide();
+ setTimeout(hide,350);
 })();
 </script>
 <div class="salawat">🌙 صلِّ على النبي ﷺ <span class="s2">اللهم صلِّ وسلم عليه</span></div>
