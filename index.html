@@ -2950,7 +2950,10 @@ function makeNetConn(code,host,opts){
   }
  };
  var outSeq=0,outBuf={},inSeen={},inOrder=0,resendInt=null;
- function rawSend(o){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,d:o}});}catch(e){}}
+ function rawSend(o){
+  try{if(directConn&&directConn.open)directConn.send({f:role,c:myCid,d:o});}catch(e){}
+  try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,d:o}});}catch(e){}
+ }
  function trimOutBuf(){
   var ks=Object.keys(outBuf);
   if(ks.length<=60)return;
@@ -3080,39 +3083,81 @@ function makeNetConn(code,host,opts){
    resubscribe(status);
   }
  }
- function bindCh(){
-  ch.on('broadcast',{event:'m'},function(m){
-   var p=m&&m.payload;if(!p||dead||busy)return;
-   if(p.c===myCid)return;
-   if(p.f===role)return;
-   /* الغرفة لاعبين بس: لو المضيف مربوط بضيف، أي ضيف تالت يتم رفضه فورًا */
-   if(p.d&&p.d.type==='__full'&&!host){
-    if(!busy&&(!p.to||p.to===myCid)){busy=true;try{ch.untrack();}catch(e){}if(opts.onBusy)opts.onBusy();}
+ function onPayload(p){
+  if(!p||dead||busy)return;
+  if(p.c===myCid)return;
+  if(p.f===role)return;
+  /* الغرفة لاعبين بس: لو المضيف مربوط بضيف، أي ضيف تالت يتم رفضه فورًا */
+  if(p.d&&p.d.type==='__full'&&!host){
+   if(!busy&&(!p.to||p.to===myCid)){busy=true;try{ch.untrack();}catch(e){}if(opts.onBusy)opts.onBusy();}
+   return;
+  }
+  if(bound&&p.c&&p.c!==bound){
+   var lockedRoom=true;
+   try{lockedRoom=host?((typeof roomFull!=='undefined'&&roomFull)||(typeof started!=='undefined'&&started)):true;}catch(_e){lockedRoom=true;}
+   var boundFresh=(Date.now()-(shim._lastFromBound||0))<12000;
+   if(lockedRoom&&boundFresh){
+    if(host){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,to:p.c,d:{type:'__full'}}});}catch(_e2){}}
     return;
    }
-   if(bound&&p.c&&p.c!==bound){
-    var lockedRoom=true;
-    try{lockedRoom=host?((typeof roomFull!=='undefined'&&roomFull)||(typeof started!=='undefined'&&started)):true;}catch(_e){lockedRoom=true;}
-    var boundFresh=(Date.now()-(shim._lastFromBound||0))<12000;
-    if(lockedRoom&&boundFresh){
-     if(host){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,to:p.c,d:{type:'__full'}}});}catch(_e2){}}
-     return;
-    }
-    bound=p.c;opened=false;shim.open=false;
+   bound=p.c;opened=false;shim.open=false;
+  }
+  if(p.c===bound)shim._lastFromBound=Date.now();
+  markOpen(p.c);lastRx=Date.now();
+  if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
+  if(p.d&&p.d.type==='__ack'){delete outBuf[p.d.s];return;}
+  if(p.d&&p.d.__sq){
+   var sq=p.d.__sq;ackIn(sq);
+   if(inSeen[sq])return;                 /* رسالة مكررة — نتجاهلها (بتحصل عادي لما نبعت على القناتين مع بعض) */
+   inSeen[sq]=Date.now();
+   var kk=Object.keys(inSeen);
+   if(kk.length>400){kk.sort(function(a,b){return a-b;});for(var z=0;z<200;z++)delete inSeen[kk[z]];}
+  }
+  fire('data',p.d);
+ }
+ /* ========= ترقية اختيارية للسرعة: اتصال مباشر (P2P) جنب سيرفر الـ Relay =========
+    سيرفر الـ Relay (Supabase) فاضل شغال زي ما هو بالظبط — ده مصدر الثبات
+    الأساسي ومفيش أي تغيير في سلوكه. لو الشبكة سمحت، بنفتح كمان اتصال مباشر
+    (WebRTC عن طريق PeerJS) بين الجهازين، وأي رسالة بتتبعت على القناتين مع
+    بعض. اللي بيوصل الأول (غالبًا المباشر، لأنه من غير أي محطة وسيطة) هو اللي
+    بيتنفذ، والتاني بيتجاهل تلقائيًا (نفس نظام منع التكرار الموجود أصلاً).
+    لو الاتصال المباشر فشل أو الشبكة مانعاه، مفيش أي تأثير — الـ Relay بيكمّل
+    لوحده زي ما كان يعمل قبل كده بالظبط. */
+ var dpPeerMgr=null,directConn=null,directTried=false;
+ function dpID(){return 'mzrd-'+code;}
+ function wireDirectConn(c){
+  try{
+   c.on('open',function(){if(!dead)directConn=c;});
+   c.on('data',function(d){onPayload(d);});
+   c.on('close',function(){if(directConn===c)directConn=null;});
+   c.on('error',function(){if(directConn===c)directConn=null;});
+  }catch(e){}
+ }
+ function tryDirectP2P(){
+  if(directTried||dead)return;directTried=true;
+  if(typeof peerReady!=='function'||!peerReady())return;
+  try{
+   if(host){
+    dpPeerMgr=makePeer(dpID(),{onConn:function(c){wireDirectConn(c);},onFail:function(){},onError:function(){},onUnavailableId:function(){}});
+   }else{
+    dpPeerMgr=makePeer(null,{
+     onOpen:function(pr){
+      var tries=0;
+      function attempt(){
+       if(dead||directConn)return;
+       tries++;
+       try{var c=pr.connect(dpID(),{reliable:true,serialization:'json'});if(c)wireDirectConn(c);}catch(e){}
+       if(tries<3)setTimeout(attempt,1500);
+      }
+      attempt();
+     },
+     onFail:function(){},onError:function(){},onPeerUnavailable:function(){}
+    });
    }
-   if(p.c===bound)shim._lastFromBound=Date.now();
-   markOpen(p.c);lastRx=Date.now();
-   if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
-   if(p.d&&p.d.type==='__ack'){delete outBuf[p.d.s];return;}
-   if(p.d&&p.d.__sq){
-    var sq=p.d.__sq;ackIn(sq);
-    if(inSeen[sq])return;                 /* رسالة مكررة — نتجاهلها */
-    inSeen[sq]=Date.now();
-    var kk=Object.keys(inSeen);
-    if(kk.length>400){kk.sort(function(a,b){return a-b;});for(var z=0;z<200;z++)delete inSeen[kk[z]];}
-   }
-   fire('data',p.d);
-  });
+  }catch(e){}
+ }
+ function bindCh(){
+  ch.on('broadcast',{event:'m'},function(m){onPayload(m&&m.payload);});
   ch.on('presence',{event:'sync'},checkPresence);
   ch.on('presence',{event:'join'},checkPresence);
   ch.on('presence',{event:'leave'},checkPresence);
@@ -3133,6 +3178,7 @@ function makeNetConn(code,host,opts){
  bindCh();
  subTimer=setTimeout(function(){if(!dead&&!shim._sub)resubscribe('slow');},3500);
  ch.subscribe(onStatus);
+ tryDirectP2P();
  /* رجوع تلقائي فوري بعد انقطاع النت أو رجوع التطبيق من الخلفية */
  function wake(){
   if(dead||busy)return;
@@ -3143,7 +3189,7 @@ function makeNetConn(code,host,opts){
  }
  var wakeVis=function(){if(document.visibilityState==='visible')wake();};
  try{window.addEventListener('online',wake);document.addEventListener('visibilitychange',wakeVis);}catch(e){}
- shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearCloseGrace();clearInterval(hbInt);try{window.removeEventListener('online',wake);document.removeEventListener('visibilitychange',wakeVis);}catch(e){}try{ch.untrack();}catch(e){}};
+ shim._kill=function(){dead=true;clearTimeout(waitTimer);clearTimeout(subTimer);clearCloseGrace();clearInterval(hbInt);try{window.removeEventListener('online',wake);document.removeEventListener('visibilitychange',wakeVis);}catch(e){}try{ch.untrack();}catch(e){}try{if(dpPeerMgr)dpPeerMgr.stop();}catch(e){}try{if(directConn)directConn.close();}catch(e){}directConn=null;};
  return shim;
 }
 
