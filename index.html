@@ -803,19 +803,19 @@ input[type=range]{accent-color:var(--acc)}
 </div>
 <div class="hm-title">اختر لعبتك</div>
 <div class="hero-card" onclick="pickTile('auction')">
- <img src="img/hero.webp" width="760" height="428" alt="مزاد النجوم" fetchpriority="high" decoding="async">
+ <img src="img/hero.webp" width="760" height="428" alt="مزاد النجوم" fetchpriority="high" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='hero.webp'}">
  <div class="hero-shade"></div>
  <div class="hero-play">▶</div>
  <div class="hero-nm">مزاد النجوم</div>
  <div class="hero-sub">⚡ الأشهر</div>
 </div>
 <div class="gsel-grid">
- <button class="gtile on" id="tile-auction" onclick="pickTile('auction')"><span class="gt-bolt">⚡</span><img src="img/g-auction.webp" width="360" height="360" alt="مزاد النجوم" loading="lazy" decoding="async"><span class="gt-lbl">مزاد النجوم</span></button>
- <button class="gtile" id="tile-auction5" onclick="pickTile('auction5')"><span class="gt-bolt">⚡</span><img src="img/g-auction5.webp" width="360" height="360" alt="المزاد الخماسي" loading="lazy" decoding="async"><span class="gt-lbl">المزاد الخماسي</span></button>
- <button class="gtile" id="tile-boxes" onclick="pickTile('boxes')"><span class="gt-bolt">⚡</span><img src="img/g-boxes.webp" width="360" height="360" alt="صناديق الحظ" loading="lazy" decoding="async"><span class="gt-lbl">صناديق الحظ</span></button>
- <button class="gtile" id="tile-transferprice" onclick="pickTile('transferprice')"><span class="gt-bolt">⚡</span><img src="img/g-price.webp" width="360" height="360" alt="راجع سعرك" loading="lazy" decoding="async"><span class="gt-lbl">راجع سعرك</span></button>
- <button class="gtile" id="tile-blind" onclick="pickTile('blind')"><span class="gt-bolt">⚡</span><img src="img/g-blind.webp" width="360" height="360" alt="المزاد الأعمى" loading="lazy" decoding="async"><span class="gt-lbl">المزاد الأعمى</span></button>
- <button class="gtile" id="tile-tour" onclick="openTournaments()"><span class="gt-bolt">⚡</span><img src="img/g-tour.webp" width="360" height="360" alt="البطولات" loading="lazy" decoding="async"><span class="gt-lbl">البطولات</span></button>
+ <button class="gtile on" id="tile-auction" onclick="pickTile('auction')"><span class="gt-bolt">⚡</span><img src="img/g-auction.webp" width="360" height="360" alt="مزاد النجوم" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-auction.webp'}"><span class="gt-lbl">مزاد النجوم</span></button>
+ <button class="gtile" id="tile-auction5" onclick="pickTile('auction5')"><span class="gt-bolt">⚡</span><img src="img/g-auction5.webp" width="360" height="360" alt="المزاد الخماسي" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-auction5.webp'}"><span class="gt-lbl">المزاد الخماسي</span></button>
+ <button class="gtile" id="tile-boxes" onclick="pickTile('boxes')"><span class="gt-bolt">⚡</span><img src="img/g-boxes.webp" width="360" height="360" alt="صناديق الحظ" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-boxes.webp'}"><span class="gt-lbl">صناديق الحظ</span></button>
+ <button class="gtile" id="tile-transferprice" onclick="pickTile('transferprice')"><span class="gt-bolt">⚡</span><img src="img/g-price.webp" width="360" height="360" alt="راجع سعرك" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-price.webp'}"><span class="gt-lbl">راجع سعرك</span></button>
+ <button class="gtile" id="tile-blind" onclick="pickTile('blind')"><span class="gt-bolt">⚡</span><img src="img/g-blind.webp" width="360" height="360" alt="المزاد الأعمى" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-blind.webp'}"><span class="gt-lbl">المزاد الأعمى</span></button>
+ <button class="gtile" id="tile-tour" onclick="openTournaments()"><span class="gt-bolt">⚡</span><img src="img/g-tour.webp" width="360" height="360" alt="البطولات" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-tour.webp'}"><span class="gt-lbl">البطولات</span></button>
 </div>
 <div class="hm-dots"><i></i><i></i><i class="on"></i></div>
 <div class="card tour-cta hidden" onclick="openTournaments()">
@@ -9105,6 +9105,27 @@ img{max-width:100%}
 #home>.hdr{display:none!important}
 .hm-top-side{display:flex;gap:8px;align-items:center}
 .hm-top-side #sfxBtn,.hm-top-side #pwaInstallBtn{border-radius:14px!important;padding:9px 12px!important;font-size:14px}
+
+/* ===== تصغير حجم الصفحة الرئيسية (موبايل + كمبيوتر) ===== */
+.screen{max-width:640px!important;margin:0 auto!important}
+#home{max-width:480px!important}
+#home .hm-title{font-size:21px;margin:4px 0 10px}
+#home .hero-card{border-width:2px;border-radius:16px;margin-bottom:10px}
+#home .hero-nm{font-size:18px;bottom:9px;right:11px}
+#home .hero-sub{font-size:10.5px;padding:4px 9px;bottom:10px;left:11px}
+#home .hero-play{width:40px;height:40px;font-size:15px;border-width:2px}
+#home .gsel-grid{gap:9px}
+#home .gtile{border-width:2px;border-radius:13px}
+#home .gtile .gt-lbl{font-size:10px;padding:11px 3px 5px}
+#home .gtile .gt-bolt{font-size:10px}
+#home .hm-dots{margin:10px 0 2px}
+@media(max-width:480px){
+ #home{max-width:100%!important}
+ #home .hm-title{font-size:19px}
+ #home .gsel-grid{gap:7px}
+ #home .gtile .gt-lbl{font-size:9.5px}
+ #home .hero-nm{font-size:16px}
+}
 </style>
 </body>
 </html>
