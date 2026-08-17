@@ -828,6 +828,7 @@ input[type=range]{accent-color:var(--acc)}
  <button class="gtile" id="tile-boxes" onclick="pickTile('boxes')"><span class="gt-bolt">⚡</span><img src="img/g-boxes.webp" width="360" height="360" alt="صناديق الحظ" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-boxes.webp'}"><span class="gt-lbl">صناديق الحظ</span></button>
  <button class="gtile" id="tile-transferprice" onclick="pickTile('transferprice')"><span class="gt-bolt">⚡</span><img src="img/g-price.webp" width="360" height="360" alt="راجع سعرك" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-price.webp'}"><span class="gt-lbl">راجع سعرك</span></button>
  <button class="gtile" id="tile-blind" onclick="pickTile('blind')"><span class="gt-bolt">⚡</span><img src="img/g-blind.webp" width="360" height="360" alt="المزاد الأعمى" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-blind.webp'}"><span class="gt-lbl">المزاد الأعمى</span></button>
+ <button class="gtile gtile-emoji" id="tile-guessplayer" onclick="pickTile('guessplayer')"><span class="gt-bolt">⚡</span><span class="gt-emo">🕵️</span><span class="gt-lbl">تخمين اللاعب</span></button>
  <button class="gtile" id="tile-tour" onclick="openTournaments()"><span class="gt-bolt">⚡</span><img src="img/g-tour.webp" width="360" height="360" alt="البطولات" loading="lazy" decoding="async" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='g-tour.webp'}"><span class="gt-lbl">البطولات</span></button>
 </div>
 <div class="hm-dots"><i></i><i></i><i class="on"></i></div>
@@ -977,7 +978,7 @@ input[type=range]{accent-color:var(--acc)}
 <div class="card" id="tourInfoCard"></div>
 <div id="tourBody"></div>
 </div>
-<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">✅ تم الانضمام للغرفة.<br>بنتأكد إن المضيف موجود في إعدادات الغرفة…</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
+<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">✅ دخلت الغرفة بنجاح.<br>المضيف بيظبط إعدادات اللعبة… هتبدأ خلال ثواني.</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
@@ -2356,9 +2357,9 @@ document.addEventListener('DOMContentLoaded',function(){
 function pickTile(t){
  try{
   pickGameType(t);
-  var ids=['auction','auction5','boxes','transferprice','blind'];
+  var ids=['auction','auction5','boxes','transferprice','blind','guessplayer'];
   ids.forEach(function(k){var el=$('tile-'+k);if(el)el.classList.toggle('on',k===t);});
-  var nm=t==='auction'?'⚽ مزاد النجوم':(t==='auction5'?'🖐️ المزاد الخماسي':(t==='boxes'?'🎁 صناديق الحظ':(t==='blind'?'🕶️ المزاد الأعمى':'💰 راجع سعرك')));
+  var nm=t==='auction'?'⚽ مزاد النجوم':(t==='auction5'?'🖐️ المزاد الخماسي':(t==='boxes'?'🎁 صناديق الحظ':(t==='blind'?'🕶️ المزاد الأعمى':(t==='guessplayer'?'🕵️ تخمين اللاعب':'💰 راجع سعرك'))));
   var lb=$('pickedGameNm');if(lb)lb.textContent=nm;
   var box=$('name1');
   if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});
@@ -3176,7 +3177,7 @@ function createRoom(){
    setStatus(roomPass?'✅ الغرفة جاهزة ومحمية بكلمة سر — بانتظار انضمام لاعب معاه الكلمة… (1/2)':'✅ الغرفة جاهزة ومعروضة في قائمة الغرف — بانتظار انضمام أي لاعب… (1/2)');
    lobbyAnnounce();
   },
-  onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
+  onPeer:function(){roomFull=true;try{if(!started){var rm=document.getElementById('room');if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب بيدخل الغرفة — ظبط الإعدادات وابدأ');}if(conn&&conn.open){conn.send({type:'who'});conn.send({type:'hostready',name:myName()});}}}catch(e){}if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
  if(conn){wireConn();setTimeout(ensureVoicePeer,4000);}
@@ -3205,7 +3206,7 @@ function joinRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
  var code=$('joinCode').value.trim().toUpperCase();
  if(code.length<4)return setStatus('أدخل رمزًا من 4 أحرف');
- isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('⚡ بندخلك الغرفة…');
+ isHost=false;mySeat=1;savedCode=code;roomPass=(($('joinPass')&&$('joinPass').value)||'').trim();setStatus('⚡ بندخلك الغرفة…');window.mzFromLobby=false;
  joinAttemptTries=0;
  connectToHost(code,false);
 }
@@ -3219,10 +3220,12 @@ function connectToHost(code,silent){
   if(conn&&conn.open)return;
   netClose();conn=null;
   try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
-  setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
+  setStatus('❌ الغرفة دي مش موجودة — اتشالت من القائمة، اختر غرفة تانية');
   toast('❌ الغرفة مش متاحة');
-  show('room');
- },4500);}
+  try{refreshLobbyList();}catch(e){}
+  show(window.mzFromLobby?'lobby':'room');
+  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,2500);}catch(e){}}
+ },3200);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3256,7 +3259,7 @@ function connectToHost(code,silent){
    "غرف اللاعبين المفتوحة" بيقرأ القناة دي ويشوف الغرف المتاحة لحظيًا.
    الغرفة بتختفي تلقائيًا من القائمة لو اتملت (2/2) أو المضيف قفل الصفحة. */
 var LOBBY_TOPIC='mzaida-lobby-v1';
-var ROOM_TTL_MS=30000;
+var ROOM_TTL_MS=14000;
 var lobbyDead={};
 function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
 var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
@@ -3331,7 +3334,7 @@ function lobbyAnnounce(){
   if(!online||!isHost||started||roomFull||!roomCode||!lobbyMine){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyMine.ts=Date.now();lobbyMine.name=myName();lobbyMine.gameType=gameType;lobbyMine.locked=!!roomPass;
   if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}
- },5000);
+ },2500);
 }
 function lobbyStopAnnounce(){
  clearInterval(lobbyHbInt);lobbyHbInt=null;lobbyMine=null;
@@ -3347,7 +3350,7 @@ function openLobbyBrowser(){
  lobbyJoinCh();
  setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,5000);
+ lobbyRefreshInt=setInterval(refreshLobbyList,2500);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;
@@ -3385,6 +3388,7 @@ function joinFoundRoom(code,locked){
  var passIn=$('joinPass');if(passIn)passIn.value=pw;
  isHost=false;mySeat=1;savedCode=code;roomPass=pw;setStatus('جارٍ الانضمام لغرفة '+code+'…');
  joinAttemptTries=0;
+ window.mzFromLobby=true;
  show('room');
  connectToHost(code,false);
 }
@@ -3413,7 +3417,7 @@ function wireConn(){
      helloTries++;
      if(!conn||!conn.open||started||isHost||helloTries>60){clearInterval(helloRetryInt);return;}
      try{conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid});}catch(e){}
-    },1200);
+    },600);
    }else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}
   }
   $('connLbl').textContent='🟢 متصل • 2/2';$('reconn').classList.add('hidden');
@@ -9140,5 +9144,195 @@ img{max-width:100%}
  #home .hero-nm{font-size:16px}
 }
 </style>
+
+<!-- ===== تحسينات: وضوح الكلام + زرار الرجوع + ذكاء الكمبيوتر + ثبات الاتصال ===== -->
+<style>
+/* وضوح الكلام: تباين أعلى وأحجام أكبر شوية للنصوص الصغيرة */
+:root{--dim:#a9b7c9}
+.dark,body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.desc,.status,.gt-sub,.lobby-row-sub,.box-sub,.tp-hint,.diff-sub,.mrow,.mhalf,.log,.evts,.lb-sub{color:#b9c6d8}
+.desc{font-size:13.5px;line-height:1.9}
+.status{font-size:13.5px}
+.gt-sub{font-size:11px;line-height:1.5}
+.lobby-row-sub{font-size:12.5px}
+.log{font-size:12.5px;color:#b3c0d1}
+.back{color:#dbe5f0}
+.hm-title{text-shadow:2px 2px 0 #000}
+.gt-lbl,.hero-nm{text-shadow:0 2px 4px rgba(0,0,0,.9)}
+/* بلاطة لعبة بإيموجي (من غير صورة) */
+.gtile-emoji{display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;
+ background:linear-gradient(160deg,#191922,#0c0c11)!important}
+.gtile-emoji .gt-emo{font-size:34px;line-height:1;filter:drop-shadow(0 2px 0 #000)}
+@media(max-width:480px){.gtile-emoji .gt-emo{font-size:27px}}
+</style>
+<script>
+/* ========== 1) زرار الرجوع (زرار الموبايل + المتصفح) ========== */
+(function(){
+ var SCREENS=['home','settings','room','lobby','wait','game','tourHome','tourRoom'];
+ function cur(){
+  for(var i=0;i<SCREENS.length;i++){var e=document.getElementById(SCREENS[i]);
+   if(e&&!e.classList.contains('hidden'))return SCREENS[i];}
+  return 'home';
+ }
+ /* أي نافذة منبثقة مفتوحة نقفلها الأول */
+ function closeTopOverlay(){
+  var ids=['lbOv','frOv','ovHelp','overlay'];
+  for(var i=0;i<ids.length;i++){
+   var e=document.getElementById(ids[i]);
+   if(e&&!e.classList.contains('hidden')&&ids[i]!=='overlay'){e.classList.add('hidden');return true;}
+  }
+  var any=document.querySelectorAll('.ov:not(.hidden),.modal:not(.hidden)');
+  if(any.length){any[any.length-1].classList.add('hidden');return true;}
+  return false;
+ }
+ function safe(fn){try{fn();}catch(e){try{show('home');}catch(_){}}}
+ window.mzBack=function(){
+  if(closeTopOverlay())return;
+  var c=cur();
+  if(c==='settings')safe(function(){settingsBack();});
+  else if(c==='lobby')safe(function(){closeLobbyBrowser();});
+  else if(c==='room')safe(function(){leaveHome();});
+  else if(c==='wait')safe(function(){leaveRoom();});
+  else if(c==='game')safe(function(){exitGame();});
+  else if(c==='tourRoom')safe(function(){tourGoBackground();});
+  else if(c==='tourHome')safe(function(){tourExitHome();});
+  else safe(function(){show('home');});
+ };
+ var _show=window.show;
+ window.show=function(id){
+  var before=cur();
+  _show(id);
+  try{
+   if(id!==before){
+    if(!history.state||history.state.mz!==id)history.pushState({mz:id},'');
+   }
+  }catch(e){}
+ };
+ try{if(!history.state||!history.state.mz)history.replaceState({mz:'home'},'');}catch(e){}
+ window.addEventListener('popstate',function(){
+  var c=cur();
+  window.mzBack();
+  /* نحافظ على وجود خطوة في التاريخ عشان الرجوع يفضل شغال ومايقفلش الموقع فجأة */
+  try{if(cur()!=='home'||c!=='home')history.pushState({mz:cur()},'');}catch(e){}
+ });
+})();
+
+/* ========== 2) ذكاء الكمبيوتر — نسخة أقوى ========== */
+(function(){
+ if(typeof P==='undefined')return;
+ function grpOf(x){try{return posGroup(x);}catch(e){return 'MID';}}
+ window.aiValue=function(s){
+  var me=P[1],opp=P[0];
+  var blind=(typeof gameType!=='undefined'&&gameType==='blind');
+  var starsLeft=Math.max(1,stars.length-round);
+  var needs=squadNeeds(1),nAll=needCount(1);
+  var g=grpOf(s);
+  var slotsLeft=Math.max(1,Math.min(starsLeft,nAll||1));
+  var perSlot=me.budget/slotsLeft;
+
+  /* جودة اللاعب مقارنة بالمتبقي فعلاً في نفس المركز (بديل واقعي مش متوسط عام) */
+  var remain=stars.slice(round+1);
+  var sameGrp=remain.filter(function(x){return grpOf(x)===g;});
+  var replacement=0;
+  if(sameGrp.length){
+   var rs=sameGrp.map(function(x){return x.r;}).sort(function(a,b){return b-a;});
+   replacement=rs[Math.min(rs.length-1,Math.max(0,Math.floor(rs.length/2)))];
+  }else replacement=Math.max(70,s.r-8);
+  var edge=s.r-replacement;                    /* الفرق الحقيقي اللي هيكسبه */
+
+  var q=(s.r-74)/12; if(q<-0.5)q=-0.5; if(q>2.1)q=2.1;
+  var val=perSlot*(0.5+0.9*q);
+
+  if(needs[g]>0){
+   val*=(needs[g]>=2?1.22:1.12);
+   if(nAll>=starsLeft)val=Math.max(val,me.budget-(starsLeft-1)); /* مضطر ياخده */
+  }else{
+   /* مش محتاج المركز: يزايد بس لو اللاعب استثنائي (عشان يحرم الخصم) */
+   val*=(s.r>=88?0.75:0.45);
+  }
+
+  /* ندرة: مفيش أحسن منه فاضل في نفس المركز = فرصة أخيرة */
+  var better=sameGrp.filter(function(x){return x.r>s.r;}).length;
+  if(needs[g]>0){
+   if(better===0)val*=1.28;
+   else if(better===1)val*=1.14;
+   if(sameGrp.length<needs[g])val*=1.2;       /* المعروض أقل من احتياجه */
+  }
+  val*= edge>=6?1.18:(edge>=3?1.08:(edge<=-4?0.8:1));
+
+  /* الموقف في الماتش */
+  var diff=teamPower(1)-teamPower(0);
+  val*= diff<-8?1.2:(diff<-3?1.1:(diff>8?0.88:1));
+
+  /* قراءة الخصم (مش مسموحة في المزاد الأعمى) */
+  if(!blind){
+   if(opp.budget<=2)val=Math.min(val,Math.max(1,bid+2));   /* الخصم مفلس: مايغاليش */
+   else if(opp.budget<me.budget*0.5)val*=0.9;
+   else if(opp.budget>me.budget*1.4)val*=1.06;
+  }
+
+  /* آخر الجولات: التوفير مالوش لازمة */
+  if(starsLeft<=2&&needs[g]>0)val=Math.max(val,me.budget-Math.max(0,nAll-1));
+
+  val*=(0.97+Math.random()*0.06);              /* عشوائية أقل = قرارات أثبت */
+  /* سقف ديناميكي حسب الميزانية الحقيقية (السقف الثابت القديم كان بيخلي الكمبيوتر
+     يقفل اللعبة وفلوسه في إيده ويخسر النجوم الكبيرة) */
+  var base=(CFG&&CFG.budget?CFG.budget:500)/Math.max(1,ROUNDS);
+  var mul=s.r>=95?3.6:(s.r>=92?2.9:(s.r>=89?2.3:(s.r>=87?1.85:(s.r>=85?1.5:(s.r>=82?1.05:(s.r>=79?0.7:0.4))))));
+  var hardCap=base*mul*(needs[g]>0?1.1:0.75);
+  val=Math.min(val,hardCap);
+  var reserve=Math.max(0,nAll-1);              /* يسيب مليون لكل مركز ناقص */
+  val=Math.floor(Math.min(val,me.budget-reserve));
+  return Math.max(0,val);
+ };
+ window.aiMove=function(){
+  if(phase!=='bid')return; var s=curStar; if(!s)return;
+  var v=aiValue(s),me=P[1];
+  var starsLeft=Math.max(1,stars.length-round),nAll=needCount(1);
+  var mustTake=(nAll>=starsLeft);
+  if(!firstBidDone){
+   if(bid+1<=me.budget&&(v>=1||mustTake))doRaise();
+   else resolveRound(1-turn,turn);
+   return;
+  }
+  var next=bid+1;
+  if(next<=me.budget&&(next<=v||(mustTake&&next<=me.budget-Math.max(0,nAll-1)))){
+   var jump=1;
+   if(v>=8&&bid<v*0.45)jump=2;
+   if(v>=20&&bid<v*0.40)jump=3;
+   if(v>=35&&bid<v*0.35)jump=5;
+   if(mustTake)jump=1;                          /* لو مضطر، يمشي بهدوء ويوفر */
+   var target=Math.min(bid+jump,v,me.budget);
+   if(target<next)target=next;
+   doRaise(target);
+   return;
+  }
+  resolveRound(1-turn,turn);
+ };
+})();
+
+/* ========== 3) ثبات الاتصال: الضيف ما يفضلش مستني من غير سبب ========== */
+setInterval(function(){
+ try{
+  if(typeof online==='undefined'||!online||isHost||started)return;
+  if(!conn||!conn.open)return;
+  var w=document.getElementById('wait');
+  if(!w||w.classList.contains('hidden'))return;
+  conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid});
+  conn.send({type:'who'});
+ }catch(e){}
+},1500);
+/* المضيف: أي ضيف متصل والشاشة لسه على قائمة الانتظار → يدخل الإعدادات فورًا */
+setInterval(function(){
+ try{
+  if(typeof online==='undefined'||!online||!isHost||started)return;
+  if(!conn||!conn.open)return;
+  var rm=document.getElementById('room');
+  if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب متصل — ابدأ اللعبة');}
+  conn.send({type:'hostready',name:myName()});
+ }catch(e){}
+},1200);
+</script>
+
 </body>
 </html>
