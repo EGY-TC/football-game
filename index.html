@@ -720,6 +720,35 @@ input[type=range]{accent-color:var(--acc)}
  .big-btn{padding:13px;font-size:15.5px}
  .desc{font-size:12px}
 }
+
+/* ===== واجهة اختيار اللعبة (تصميم كوميكس أسود) ===== */
+.hm-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px}
+.hm-ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:19px;background:var(--card2);border:2px solid var(--line);color:var(--txt);cursor:pointer}
+.hm-ic:active{transform:scale(.94)}
+.hm-title{text-align:center;font-weight:900;font-size:30px;line-height:1.25;margin:6px 0 14px;color:#fff;
+ text-shadow:3px 3px 0 #000,-2px -2px 0 var(--acc),0 0 26px rgba(225,29,72,.35)}
+.hero-card{position:relative;border-radius:22px;overflow:hidden;border:3px solid #000;
+ box-shadow:0 0 0 3px rgba(255,255,255,.08),0 18px 34px -20px rgba(0,0,0,.95);cursor:pointer;margin-bottom:14px;background:#000}
+.hero-card:active{transform:scale(.99)}
+.hero-card img{width:100%;height:auto;display:block;aspect-ratio:16/9;object-fit:cover}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.05) 60%)}
+.hero-nm{position:absolute;bottom:12px;right:14px;font-weight:900;font-size:26px;color:#fff;text-shadow:3px 3px 0 #000}
+.hero-sub{position:absolute;bottom:14px;left:14px;font-weight:900;font-size:12px;color:#0b0b0f;background:var(--gold);border:2px solid #000;border-radius:999px;padding:6px 12px}
+.hero-play{position:absolute;top:50%;left:14px;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000}
+.gsel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gtile{position:relative;border:3px solid #000;border-radius:18px;overflow:hidden;background:var(--card2);cursor:pointer;padding:0;
+ box-shadow:0 0 0 2px rgba(255,255,255,.06),0 12px 22px -16px #000;transition:.14s}
+.gtile:active{transform:scale(.96)}
+.gtile.on{box-shadow:0 0 0 3px var(--acc),0 12px 22px -14px rgba(225,29,72,.8)}
+.gtile img{width:100%;height:auto;display:block;aspect-ratio:1/1;object-fit:cover}
+.gtile .gt-lbl{position:absolute;inset:auto 0 0 0;background:linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,0));
+ color:#fff;font-weight:900;font-size:11.5px;padding:16px 4px 6px;text-align:center;line-height:1.3}
+.gtile .gt-bolt{position:absolute;top:5px;left:6px;font-size:12px;filter:drop-shadow(0 1px 0 #000)}
+.hm-dots{display:flex;gap:6px;justify-content:center;margin:14px 0 4px}
+.hm-dots i{width:9px;height:9px;border-radius:50%;background:#31313d;display:block}
+.hm-dots i.on{width:26px;border-radius:99px;background:var(--acc)}
+@media (max-width:400px){.gsel-grid{gap:9px}.hm-title{font-size:26px}.hero-nm{font-size:22px}}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -732,7 +761,7 @@ input[type=range]{accent-color:var(--acc)}
 </div>
 <script>
 (function(){
- var start=Date.now(),done=false,MAXWAIT=2500;
+ var start=Date.now(),done=false,MAXWAIT=900;
  /* لا نستنى مكتبة PeerJS هنا: هي بتتحمّل من CDN خارجي وممكن تتأخر، وكل الأماكن اللي بتستخدمها
     (initUserPeer / ensureVoicePeer) عندها إعادة محاولة تلقائية لو لسه ماتحمّلتش. استنائها هنا
     كان هو سبب تجمّد الموقع أول ما يتفتح (كان بيوصل لـ 8 ثواني كل مرة على النت الضعيف). */
@@ -747,8 +776,8 @@ input[type=range]{accent-color:var(--acc)}
   if(ready()){hide();return;}
   if(Date.now()-start>MAXWAIT){hide();return;} /* أقصى انتظار 8 ثواني حتى لو فشل تحميل مكتبة، عشان مايفضلش المستخدم واقف للأبد */
   var sub=document.getElementById('bootGateSub');
-  if(sub && Date.now()-start>3000)sub.textContent='بياخد وقت أطول من المعتاد… لسه بنحاول';
-  setTimeout(tick,150);
+  if(sub && Date.now()-start>600)sub.textContent='بياخد وقت أطول من المعتاد… لسه بنحاول';
+  setTimeout(tick,60);
  })();
 })();
 </script>
@@ -767,8 +796,29 @@ input[type=range]{accent-color:var(--acc)}
 </div>
 <div id="home" class="screen">
 <div class="hdr"><button class="back" onclick="openFriends()">👥 أصدقاء</button><h1 id="mainTitle">⚽ مزاد النجوم</h1><button class="back" onclick="openLeaderboard()">🏆 المتصدرين</button><button class="back tour-navbtn" onclick="openTournaments()">🥇 البطولات</button><button id="pwaInstallBtn" class="back show" title="أضف التطبيق للشاشة الرئيسية">📲 أضف للشاشة</button><button id="sfxBtn" onclick="toggleSfx()">🔊</button></div>
-<p class="desc" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
-<div class="card tour-cta" onclick="openTournaments()">
+<p class="desc hidden" id="gameDesc">مزاد تنافسي لتكوين تشكيلة من 11 لاعبًا.<br>الصامد يضمّ النجم بعرضه، والمنسحب يحصل على لاعب من نفس المركز.<br>بعد المزاد: تفتح واجهة كروت خاصة (تبديل، حماية، وايلد كارد مجاني وغيرها)، ثم يختار كل فريق الكابتن، وأخيرًا مباراة تحسم اللقب.</p>
+<div class="hm-top">
+ <button class="hm-ic" onclick="openFriends()" title="أصدقاء">☰</button>
+ <div class="hm-top-side" id="hmTopSide"><button class="hm-ic" onclick="openLeaderboard()" title="المتصدرين">🏆</button></div>
+</div>
+<div class="hm-title">اختر لعبتك</div>
+<div class="hero-card" onclick="pickTile('auction')">
+ <img src="img/hero.webp" width="760" height="428" alt="مزاد النجوم" fetchpriority="high" decoding="async">
+ <div class="hero-shade"></div>
+ <div class="hero-play">▶</div>
+ <div class="hero-nm">مزاد النجوم</div>
+ <div class="hero-sub">⚡ الأشهر</div>
+</div>
+<div class="gsel-grid">
+ <button class="gtile on" id="tile-auction" onclick="pickTile('auction')"><span class="gt-bolt">⚡</span><img src="img/g-auction.webp" width="360" height="360" alt="مزاد النجوم" loading="lazy" decoding="async"><span class="gt-lbl">مزاد النجوم</span></button>
+ <button class="gtile" id="tile-auction5" onclick="pickTile('auction5')"><span class="gt-bolt">⚡</span><img src="img/g-auction5.webp" width="360" height="360" alt="المزاد الخماسي" loading="lazy" decoding="async"><span class="gt-lbl">المزاد الخماسي</span></button>
+ <button class="gtile" id="tile-boxes" onclick="pickTile('boxes')"><span class="gt-bolt">⚡</span><img src="img/g-boxes.webp" width="360" height="360" alt="صناديق الحظ" loading="lazy" decoding="async"><span class="gt-lbl">صناديق الحظ</span></button>
+ <button class="gtile" id="tile-transferprice" onclick="pickTile('transferprice')"><span class="gt-bolt">⚡</span><img src="img/g-price.webp" width="360" height="360" alt="راجع سعرك" loading="lazy" decoding="async"><span class="gt-lbl">راجع سعرك</span></button>
+ <button class="gtile" id="tile-blind" onclick="pickTile('blind')"><span class="gt-bolt">⚡</span><img src="img/g-blind.webp" width="360" height="360" alt="المزاد الأعمى" loading="lazy" decoding="async"><span class="gt-lbl">المزاد الأعمى</span></button>
+ <button class="gtile" id="tile-tour" onclick="openTournaments()"><span class="gt-bolt">⚡</span><img src="img/g-tour.webp" width="360" height="360" alt="البطولات" loading="lazy" decoding="async"><span class="gt-lbl">البطولات</span></button>
+</div>
+<div class="hm-dots"><i></i><i></i><i class="on"></i></div>
+<div class="card tour-cta hidden" onclick="openTournaments()">
   <div class="tour-cta-ic">🥇</div>
   <div class="tour-cta-tx">
     <div class="tour-cta-t">البطولات — كأس العالم</div>
@@ -792,8 +842,8 @@ input[type=range]{accent-color:var(--acc)}
 </div>
 <div class="card mz-card" id="metaCard"></div>
 <div class="card">
-<div class="opt-lbl" style="margin-top:0">🎮 اختر نوع اللعبة</div>
-<div class="gt-grid3">
+<div class="opt-lbl" style="margin-top:0">🎮 اللعبة المختارة: <span id="pickedGameNm">مزاد النجوم</span></div>
+<div class="gt-grid3 hidden">
 <button class="gt-btn sel" id="gt0" onclick="pickGameType('auction')"><span class="gt-ic">⚽</span><span class="gt-nm">مزاد النجوم</span><span class="gt-sub">مزاد على 11 لاعبًا</span></button>
 <button class="gt-btn" id="gt4" onclick="pickGameType('auction5')"><span class="gt-ic">🖐️</span><span class="gt-nm">المزاد الخماسي</span><span class="gt-sub">جديد — مزاد سريع على 5 لاعبين</span></button>
 <button class="gt-btn" id="gt1" onclick="pickGameType('boxes')"><span class="gt-ic">🎁</span><span class="gt-nm">صناديق الحظ</span><span class="gt-sub">اختر لاعبك من 4 صناديق لكل مركز</span></button>
@@ -914,7 +964,7 @@ input[type=range]{accent-color:var(--acc)}
 <div class="card" id="tourInfoCard"></div>
 <div id="tourBody"></div>
 </div>
-<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">تم الانضمام.<br>بانتظار بدء المضيف…</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
+<div id="wait" class="screen hidden"><div class="hdr"><button class="back" onclick="leaveRoom()">↩ رجوع</button><h1>اتصال</h1></div><div class="card" style="text-align:center"><p id="waitTxt">✅ تم الانضمام للغرفة.<br>بنتأكد إن المضيف موجود في إعدادات الغرفة…</p><button class="big-btn" style="margin-top:12px;background:var(--red,#e0245e);color:#fff" onclick="leaveRoom()">🚪 خروج من الغرفة</button></div></div>
 <div id="game" class="screen hidden">
 <div class="hdr"><button class="back" onclick="exitGame()">↩ خروج</button><h1 id="gameTitle">⚽ مزاد النجوم</h1></div>
 <div class="top-bar"><span id="roundLbl"></span><span id="connLbl"></span></div>
@@ -1988,12 +2038,12 @@ function makePeer(id,opts){
   if(tries>=MAX){dead=true;if(opts.onFail)opts.onFail(reason);return;}
   bumpPeerServer();
   if(opts.onRetry)opts.onRetry(tries,peerSrvIdx);
-  setTimeout(spawn,400+tries*300);
+  setTimeout(spawn,200+tries*150);
  }
  function spawn(){
   if(dead)return;
   try{pr=id?new Peer(id,PEERCFG):new Peer(PEERCFG);}catch(e){return fail('exception');}
-  openTimer=setTimeout(function(){fail('timeout');},7000);
+  openTimer=setTimeout(function(){fail('timeout');},3500);
   pr.on('open',function(){clearTimeout(openTimer);if(opts.onOpen)opts.onOpen(pr);});
   pr.on('connection',function(c){if(opts.onConn)opts.onConn(c);});
   pr.on('disconnected',function(){if(!dead){try{pr.reconnect();}catch(e){}}});
@@ -2282,6 +2332,25 @@ function settingsBack(){
 function updateTime(v){CFG.timer=+v;$('timeVal').textContent=(+v===0?'بدون تايمر':v+' ث');}
 function updateBud(v){CFG.budget=+v;$('budVal').textContent=fmt(+v);}
 function setErr(t){var e=$('homeErr');e.textContent=t;e.className='status'+(t?' err':'');}
+
+/* ===== واجهة اختيار اللعبة الجديدة ===== */
+document.addEventListener('DOMContentLoaded',function(){
+ try{
+  var side=document.getElementById('hmTopSide');if(!side)return;
+  ['pwaInstallBtn','sfxBtn'].forEach(function(id){var b=document.getElementById(id);if(b)side.appendChild(b);});
+ }catch(e){}
+});
+function pickTile(t){
+ try{
+  pickGameType(t);
+  var ids=['auction','auction5','boxes','transferprice','blind'];
+  ids.forEach(function(k){var el=$('tile-'+k);if(el)el.classList.toggle('on',k===t);});
+  var nm=t==='auction'?'⚽ مزاد النجوم':(t==='auction5'?'🖐️ المزاد الخماسي':(t==='boxes'?'🎁 صناديق الحظ':(t==='blind'?'🕶️ المزاد الأعمى':'💰 راجع سعرك')));
+  var lb=$('pickedGameNm');if(lb)lb.textContent=nm;
+  var box=$('name1');
+  if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});
+ }catch(e){}
+}
 function pickGameType(t){
  gameType=t;
  $('gt0').classList.toggle('sel',t==='auction');
@@ -2923,7 +2992,8 @@ function makeNetConn(code,host,opts){
    }
   });
   mine.sort(function(a,b){return (a.t||0)-(b.t||0);});
-  theirs.sort(function(a,b){return (a.t||0)-(b.t||0);});
+  /* الأحدث الأول: أثر قديم (شبح) في السيرفر كان بيخطف الاتصال */
+  theirs.sort(function(a,b){return (b.t||0)-(a.t||0);});
   return {mine:mine,theirs:theirs};
  }
  var closeGraceTimer=null;
@@ -3008,9 +3078,16 @@ function makeNetConn(code,host,opts){
     return;
    }
    if(bound&&p.c&&p.c!==bound){
-    if(host){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,to:p.c,d:{type:'__full'}}});}catch(e){}}
-    return;
+    var lockedRoom=true;
+    try{lockedRoom=host?((typeof roomFull!=='undefined'&&roomFull)||(typeof started!=='undefined'&&started)):true;}catch(_e){lockedRoom=true;}
+    var boundFresh=(Date.now()-(shim._lastFromBound||0))<12000;
+    if(lockedRoom&&boundFresh){
+     if(host){try{ch.send({type:'broadcast',event:'m',payload:{f:role,c:myCid,to:p.c,d:{type:'__full'}}});}catch(_e2){}}
+     return;
+    }
+    bound=p.c;opened=false;shim.open=false;
    }
+   if(p.c===bound)shim._lastFromBound=Date.now();
    markOpen(p.c);lastRx=Date.now();
    if(p.d&&p.d.type==='__hs'){try{shim.send({type:'__hs',r:role});}catch(e){}return;}
    if(p.d&&p.d.type==='__ack'){delete outBuf[p.d.s];return;}
@@ -3089,7 +3166,7 @@ function createRoom(){
   onPeer:function(){roomFull=true;if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,4000);}
 }
 /* كل الغرف مفتوحة: أي اتصال جديد يتم توصيله مباشرة */
 function wireIncomingConn(c){conn=c;wireConn();}
@@ -3132,7 +3209,7 @@ function connectToHost(code,silent){
   setStatus('❌ مفيش رد من الغرفة — يمكن اتحذفت أو اتملت. جرّب غرفة تانية');
   toast('❌ الغرفة مش متاحة');
   show('room');
- },7000);}
+ },4500);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3147,7 +3224,7 @@ function connectToHost(code,silent){
   onChecking:function(){if(!silent)setStatus('جارٍ التحقق من المقعد في الغرفة…');},
   onNoHost:function(){
    if(started){scheduleRejoin();return;}
-   if(joinAttemptTries<1){joinAttemptTries++;setStatus('جارٍ المحاولة مرة تانية…');setTimeout(function(){connectToHost(code,true);},500);return;}
+   if(joinAttemptTries<2){joinAttemptTries++;setStatus('جارٍ المحاولة مرة تانية…');setTimeout(function(){connectToHost(code,true);},250);return;}
    try{lobbyMarkDead(code);lobbyDropRoom(code);}catch(e){}
    clearTimeout(joinHardTimer);
    setStatus('❌ الغرفة دي اتقفلت أو اتحذفت — اختر غرفة تانية أو اتأكد من الرمز');toast('❌ الغرفة مش موجودة');show('room');
@@ -3303,10 +3380,10 @@ function scheduleRejoin(){
  clearTimeout(autoRejoin);
  clearTimeout(openWatch);
  rejoinTries++;
- if(rejoinTries===2)escalateRelay();
+ if(rejoinTries===1)escalateRelay();
  if(rejoinTries>8){$('reconn').classList.remove('hidden');$('connLbl').textContent='🔴 انقطع الاتصال';return;}
  $('connLbl').textContent='🟡 إعادة الاتصال… ('+rejoinTries+')';
- autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(250*rejoinTries,1200));
+ autoRejoin=setTimeout(function(){connectToHost(savedCode,true);},Math.min(150*rejoinTries,800));
 }
 function wireConn(){
  conn.on('open',function(){
@@ -3321,7 +3398,7 @@ function wireConn(){
     clearInterval(helloRetryInt);var helloTries=0;
     helloRetryInt=setInterval(function(){
      helloTries++;
-     if(!conn||!conn.open||started||isHost||helloTries>8){clearInterval(helloRetryInt);return;}
+     if(!conn||!conn.open||started||isHost||helloTries>60){clearInterval(helloRetryInt);return;}
      try{conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid});}catch(e){}
     },1200);
    }else{conn.send({type:'sync'});setTimeout(function(){if(conn&&conn.open)try{conn.send({type:'sync'});}catch(e){}},400);}
@@ -3398,6 +3475,20 @@ document.addEventListener('visibilitychange',function(){
  else scheduleRejoin();
 });
 window.addEventListener('online',function(){if(online&&!isHost&&(!conn||!conn.open)){rejoinTries=0;scheduleRejoin();}});
+setInterval(function(){
+ /* شبكة أمان: المضيف اتصل بيه ضيف بس الشاشة ما اتنقلتش للإعدادات */
+ try{
+  if(online&&isHost&&roomFull&&!started&&conn&&conn.open){
+   var rm=document.getElementById('room');
+   if(rm&&!rm.classList.contains('hidden'))show('settings');
+   /* نطمّن الضيف إن المضيف فعلاً واقف في إعدادات الغرفة */
+   try{
+    var st=document.getElementById('settings');
+    if(st&&!st.classList.contains('hidden'))conn.send({type:'hostready',name:myName()});
+   }catch(e){}
+  }
+ }catch(e){}
+},600);
 function retryConn(){
  $('reconn').classList.add('hidden');toast('جارٍ إعادة الاتصال…');
  rejoinTries=0;connectToHost(savedCode,false);
@@ -3406,6 +3497,18 @@ function giveUp(){$('reconn').classList.add('hidden');leaveHome();}
 
 function handleData(d){
  if(!d||!d.type)return;
+ if(d.type==='who'&&!isHost){try{conn.send({type:'hello',name:myName(),pass:roomPass,cid:myCid});}catch(e){}return;}
+ if(isHost&&!started&&!roomFull&&d.type!=='hello'){
+  /* وصلتنا رسالة من ضيف من غير ما نستلم hello (اتضاعت في الشبكة) — نطلبها منه فورًا */
+  try{conn.send({type:'who'});}catch(e){}
+ }
+ if(d.type==='hostready'&&!isHost){
+  if(!started){
+   var wq=$('waitTxt');
+   if(wq)wq.innerHTML='✅ اتصلت بالمضيف <b>'+((d.name||'المضيف')+'')+'</b><br>المضيف دخل قايمة إعدادات الغرفة وبيظبط الوقت والميزانية…<br><span style="color:var(--dim);font-size:12px">هيبدأ خلال لحظات</span>';
+  }
+  return;
+ }
  if(d.type==='ping')return;
  if(d.type==='sys'){clearInterval(helloRetryInt);toast(d.t);return;}
  if(d.type==='bye'){
@@ -3440,7 +3543,7 @@ function handleData(d){
    /* نفس الضيف بعت hello تاني (لأن رسالته الأولى اتأخرت) — نرد بتأكيد بس من غير ما نكرر التوست أو نصفّر الشاشة */
    try{conn.send({type:'sys',t:'✅ متصل بالفعل'});}catch(e){}
   }
-  else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;if(typeof TOURMATCH!=='undefined'&&TOURMATCH){setTimeout(function(){try{startFromSettings();}catch(e){}},700);}}
+  else{guestName=d.name;guestCid=d.cid||'';roomFull=true;lobbyStopAnnounce();toast('✅ انضم '+d.name+' — اللاعبون 2/2');setStatus('✅ اكتمل الاتصال (2/2) — ابدأ اللعبة');conn.send({type:'sys',t:'✅ تم الاتصال بالمضيف بنجاح — اللاعبون 2/2'});show('settings');try{conn.send({type:'hostready',name:myName()});}catch(e){}$('startBtn').textContent=(gameType==='boxes'?'بدء اللعبة مع ':'بدء المزاد مع ')+guestName;if(typeof TOURMATCH!=='undefined'&&TOURMATCH){setTimeout(function(){try{startFromSettings();}catch(e){}},700);}}
  }
  else if(d.type==='reject'&&!isHost){
   rejectedAuth=true;netClose();
@@ -8257,6 +8360,7 @@ function gpFetchWikidata(){
    والقاعدة بتكبر مع الوقت من غير أي انتظار من اللاعب */
 var gpFetching=false;
 function gpRefreshLivePool(force){
+ if(true)return;
  var c=gpCacheLoad();
  var stale=!c||(Date.now()-c.t>7*24*3600*1000)||c.players.length<40;
  if(!force&&!stale)return;
@@ -8271,10 +8375,13 @@ function gpRefreshLivePool(force){
   }
  }).catch(function(){gpFetching=false;});
 }
-function gpLivePool(){var c=gpCacheLoad();return c?c.players:[];}
+function gpLivePool(){return [];}
 /* بناء ديك 11 جولة: أولوية للقاعدة الموثّقة + توسعة من Wikidata، ومن غير تكرار للاعبين اللي جم قبل كده */
 function gpBuildDeck(){
- gpRefreshLivePool(false);
+ /* اتلغى مصدر Wikidata تمامًا — كان بيجيب مسيرات ناقصة/غلط (زي تشابي ألونسو)
+    وبيحسب مدربين زي بيب جوارديولا كلاعبين حاليين. دلوقتي كل اللاعبين من
+    القاعدة الموثّقة المكتوبة بإيدينا. */
+ try{localStorage.removeItem('gp_wd_cache');}catch(e){}
  var used={};gpUsedLoad().forEach(function(k){used[k]=1;});
  var base=GP_BASE.map(gpFromBase);
  var freshBase=shuffle(base.filter(function(p){return !used[p.key];}));
@@ -8839,5 +8946,165 @@ window.tourReady=tourReady=function(mid){
 
 }catch(err){try{console.error('v12 patch',err);}catch(e){}}})();
 </script>
+
+
+<style id="comicDarkTheme">
+/* ============ COMIC DARK v8 — ثيم كرتوني أسود بحواف عريضة وظلال صلبة ============ */
+html,body{overflow-x:hidden;max-width:100%}
+.screen,.card,.obox,.top-bar,.pcard{max-width:100%}
+:root{
+  --bg:#0a0a0d; --card:#17171f; --card2:#20202a; --line:#000;
+  --txt:#fdfdf7; --dim:#a8a8ba;
+  --acc:#b8ff2e; --blue:#3b6bff; --gold:#ffc400; --red:#ff2e6a; --purple:#a35bff;
+  --halo:rgba(255,255,255,.13);
+}
+body{
+  background:
+    radial-gradient(circle at 12% 6%, rgba(59,107,255,.20), transparent 42%),
+    radial-gradient(circle at 88% 10%, rgba(255,46,106,.16), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(184,255,46,.12), transparent 45%),
+    #0a0a0d;
+  background-attachment:fixed;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.30;
+  background-image:radial-gradient(rgba(255,255,255,.10) 1px,transparent 1px);
+  background-size:9px 9px;
+}
+.screen{position:relative;z-index:1}
+
+h1{font-weight:900;letter-spacing:.5px;color:#fff;
+   text-shadow:3px 3px 0 #000,-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000;
+   transform:rotate(-1.2deg)}
+h2{color:var(--acc);text-shadow:2px 2px 0 #000}
+h3,.tour-cta-t,.tour-hero-t{text-shadow:2px 2px 0 #000}
+
+/* الكروت: حدود سودة عريضة + ظل صلب فاتح عشان يبان على الخلفية الغامقة */
+.card,.obox,.log,.chat,.top-bar,.bid-panel,.tp-guessbox{
+  border:3px solid #000!important;border-radius:20px!important;
+  background:linear-gradient(180deg,#1b1b24,#141419)!important;
+  box-shadow:5px 5px 0 var(--halo), 0 0 0 1px rgba(255,255,255,.06);
+}
+.obox{border-width:4px!important;box-shadow:7px 7px 0 var(--halo)}
+.card{padding:16px}
+
+.mode-btn,.lobby-row,.team,.pcard,.tour-you{
+  border:3px solid #000!important;border-radius:18px!important;
+  background:linear-gradient(180deg,#23232e,#191921)!important;
+  box-shadow:4px 4px 0 var(--halo);
+  transition:transform .08s ease,box-shadow .08s ease;
+}
+.mode-btn{font-weight:900}
+.mode-btn:active,.lobby-row:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--halo)}
+.mode-btn .ic{font-size:24px;filter:drop-shadow(2px 2px 0 #000)}
+.chip{border:2px solid #000!important;border-radius:999px!important;box-shadow:2px 2px 0 var(--halo);font-weight:800;background:#23232e}
+
+/* الأزرار: بلوكات كرتونية بظل صلب بلون أغمق من نفس اللون */
+.big-btn,.controls button,.custom button,.chat-in button,.back,.lobby-join-btn,.tabs button,.mic-btn,.tour-edit{
+  border:3px solid #000!important;border-radius:16px!important;font-weight:900!important;
+  transition:transform .08s ease,box-shadow .08s ease;
+}
+.big-btn{padding:16px;font-size:17px}
+.big-btn:active,.controls button:active,.custom button:active,.back:active,.tabs button:active{transform:translate(4px,4px)!important;box-shadow:0 0 0 #000!important}
+.green,#raiseBtn{background:var(--acc)!important;color:#0d1a00!important;box-shadow:4px 4px 0 #6f9c14}
+.blue,.custom button,.chat-in button{background:var(--blue)!important;color:#fff!important;box-shadow:4px 4px 0 #1c3699}
+.red,#passBtn{background:var(--red)!important;color:#fff!important;box-shadow:4px 4px 0 #99123f}
+.purple,#raise10Btn{background:var(--purple)!important;color:#12002e!important;box-shadow:4px 4px 0 #5f2d9e}
+.goldb,#raise5Btn,.back{background:var(--gold)!important;color:#241a00!important;box-shadow:4px 4px 0 #9c7800}
+.back{padding:9px 14px;box-shadow:3px 3px 0 #9c7800}
+.lobby-join-btn{background:var(--acc)!important;color:#0d1a00!important;box-shadow:3px 3px 0 #6f9c14}
+.controls button{min-height:60px}
+.controls button:disabled{opacity:.32;box-shadow:2px 2px 0 rgba(255,255,255,.08)!important}
+.tabs button{background:#23232e;color:var(--dim);box-shadow:3px 3px 0 var(--halo)}
+.tabs button.sel{background:var(--blue);color:#fff}
+.mic-btn,.tour-edit{background:#23232e;box-shadow:3px 3px 0 var(--halo)}
+.mic-btn.on{background:var(--acc);color:#0d1a00}
+
+input,select,textarea{
+  border:3px solid #000!important;border-radius:14px!important;
+  background:#0e0e13!important;color:var(--txt);font-weight:800;
+  box-shadow:inset 3px 3px 0 rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.08);
+}
+input:focus{outline:none;box-shadow:0 0 0 3px var(--acc),inset 3px 3px 0 rgba(0,0,0,.75)}
+label{color:var(--dim);font-weight:800}
+
+#codeShow{border:4px dashed var(--gold)!important;border-radius:20px!important;background:#0e0e13;
+  box-shadow:5px 5px 0 var(--halo);color:var(--gold);text-shadow:2px 2px 0 #000}
+.top-bar{font-weight:900}
+.team.turn{border-color:var(--acc)!important;box-shadow:0 0 0 3px var(--acc),5px 5px 0 var(--halo)}
+.team h3{color:var(--acc)}
+#turnLbl{border:3px solid #000;border-radius:16px;box-shadow:4px 4px 0 var(--halo);background:#23232e;font-weight:900}
+.tbar{border:2px solid #000;height:11px;border-radius:999px;background:#0e0e13}
+#tfill{background:var(--acc)}#tfill.low{background:var(--red)}
+.bid-num{color:var(--gold);text-shadow:3px 3px 0 #000;font-size:34px}
+.pcard img{border:3px solid #000;border-radius:16px}
+.pcard .rt{border:3px solid #000!important;border-radius:14px;box-shadow:2px 2px 0 var(--halo)}
+.pitch{border:3px solid #000!important;border-radius:20px!important;box-shadow:5px 5px 0 var(--halo)}
+#toast{background:var(--gold);color:#241a00;border:3px solid #000;border-radius:16px;box-shadow:5px 5px 0 rgba(255,255,255,.18);font-weight:900}
+.overlay{background:rgba(0,0,0,.93)}
+.tour-cta,.tour-hero{border:3px solid #000!important;border-radius:20px!important;
+  background:linear-gradient(135deg,rgba(255,196,0,.22),rgba(255,46,106,.12))!important;
+  box-shadow:5px 5px 0 var(--halo)}
+.desc{color:var(--dim);font-weight:700}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#000;border-radius:9px;border:2px solid #23232e}
+
+/* بلاطات ملونة زي التصميم الكرتوني */
+.gt-btn{border:3px solid #000!important;border-radius:18px!important;font-weight:900!important;
+  box-shadow:4px 4px 0 rgba(0,0,0,.55);color:#0d0d0d!important;transition:transform .08s ease,box-shadow .08s ease}
+.gt-btn:active{transform:translate(4px,4px);box-shadow:0 0 0 #000}
+.gt-btn .gt-nm{color:#0d0d0d!important;font-weight:900}
+.gt-btn .gt-sub{color:rgba(0,0,0,.68)!important;font-weight:700}
+.gt-btn .gt-ic{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.35))}
+.gt-btn:nth-of-type(1){background:#ffc400!important}
+.gt-btn:nth-of-type(2){background:#3b6bff!important;color:#fff!important}
+.gt-btn:nth-of-type(2) .gt-nm{color:#fff!important}.gt-btn:nth-of-type(2) .gt-sub{color:rgba(255,255,255,.8)!important}
+.gt-btn:nth-of-type(3){background:#b8ff2e!important}
+.gt-btn:nth-of-type(4){background:#ff2e6a!important;color:#fff!important}
+.gt-btn:nth-of-type(4) .gt-nm{color:#fff!important}.gt-btn:nth-of-type(4) .gt-sub{color:rgba(255,255,255,.82)!important}
+.gt-btn:nth-of-type(5){background:#a35bff!important;color:#fff!important}
+.gt-btn:nth-of-type(5) .gt-nm{color:#fff!important}.gt-btn:nth-of-type(5) .gt-sub{color:rgba(255,255,255,.82)!important}
+.gt-btn:nth-of-type(6){background:#2ee6c5!important}
+.gt-btn.sel{outline:4px solid #fff;outline-offset:2px}
+#mb1{background:var(--blue)!important;color:#fff!important;box-shadow:4px 4px 0 #1c3699}
+#mb2{background:var(--gold)!important;color:#241a00!important;box-shadow:4px 4px 0 #9c7800}
+#mb3{background:var(--acc)!important;color:#0d1a00!important;box-shadow:4px 4px 0 #6f9c14}
+#mb1.sel,#mb2.sel,#mb3.sel{outline:4px solid #fff;outline-offset:2px}
+
+/* ===== أولوية تصميم واجهة اختيار اللعبة ===== */
+/* ===== واجهة اختيار اللعبة (تصميم كوميكس أسود) ===== */
+.hm-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px}
+.hm-ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:19px;background:var(--card2);border:2px solid var(--line);color:var(--txt);cursor:pointer}
+.hm-ic:active{transform:scale(.94)}
+.hm-title{text-align:center;font-weight:900;font-size:30px;line-height:1.25;margin:6px 0 14px;color:#fff;
+ text-shadow:3px 3px 0 #000,-2px -2px 0 var(--acc),0 0 26px rgba(225,29,72,.35)}
+.hero-card{position:relative;border-radius:22px;overflow:hidden;border:3px solid #000;
+ box-shadow:0 0 0 3px rgba(255,255,255,.08),0 18px 34px -20px rgba(0,0,0,.95);cursor:pointer;margin-bottom:14px;background:#000}
+.hero-card:active{transform:scale(.99)}
+.hero-card img{width:100%;height:auto;display:block;aspect-ratio:16/9;object-fit:cover}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.05) 60%)}
+.hero-nm{position:absolute;bottom:12px;right:14px;font-weight:900;font-size:26px;color:#fff;text-shadow:3px 3px 0 #000}
+.hero-sub{position:absolute;bottom:14px;left:14px;font-weight:900;font-size:12px;color:#0b0b0f;background:var(--gold);border:2px solid #000;border-radius:999px;padding:6px 12px}
+.hero-play{position:absolute;top:50%;left:14px;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000}
+.gsel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gtile{position:relative;border:3px solid #000;border-radius:18px;overflow:hidden;background:var(--card2);cursor:pointer;padding:0;
+ box-shadow:0 0 0 2px rgba(255,255,255,.06),0 12px 22px -16px #000;transition:.14s}
+.gtile:active{transform:scale(.96)}
+.gtile.on{box-shadow:0 0 0 3px var(--acc),0 12px 22px -14px rgba(225,29,72,.8)}
+.gtile img{width:100%;height:auto;display:block;aspect-ratio:1/1;object-fit:cover}
+.gtile .gt-lbl{position:absolute;inset:auto 0 0 0;background:linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,0));
+ color:#fff;font-weight:900;font-size:11.5px;padding:16px 4px 6px;text-align:center;line-height:1.3}
+.gtile .gt-bolt{position:absolute;top:5px;left:6px;font-size:12px;filter:drop-shadow(0 1px 0 #000)}
+.hm-dots{display:flex;gap:6px;justify-content:center;margin:14px 0 4px}
+.hm-dots i{width:9px;height:9px;border-radius:50%;background:#31313d;display:block}
+.hm-dots i.on{width:26px;border-radius:99px;background:var(--acc)}
+@media (max-width:400px){.gsel-grid{gap:9px}.hm-title{font-size:26px}.hero-nm{font-size:22px}}
+.gtile,.hero-card{background:#000!important}
+.card,.obox{content-visibility:auto;contain-intrinsic-size:auto 260px}
+img{max-width:100%}
+#home>.hdr{display:none!important}
+.hm-top-side{display:flex;gap:8px;align-items:center}
+.hm-top-side #sfxBtn,.hm-top-side #pwaInstallBtn{border-radius:14px!important;padding:9px 12px!important;font-size:14px}
+</style>
 </body>
 </html>
