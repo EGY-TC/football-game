@@ -42,13 +42,14 @@ window.addEventListener('load',function(){setTimeout(function(){
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مزاد النجوم">
-<link rel="preconnect" href="https://itdtszwmjiwcalhruric.supabase.co" crossorigin>
+<link rel="preconnect" href="https://phffgzkiwwjgndjbfqqy.supabase.co" crossorigin>
 <link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://unpkg.com">
-<!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل بعد ما الصفحة تشتغل خالص،
-     عشان الشاشة تبقى قابلة للضغط فورًا من غير أي لاق في أول 5 ثواني. -->
+<!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل فورًا من أول ما الصفحة تفتح
+     (async، من غير ما توقف رسم الصفحة) عشان الاتصال يبقى جاهز بأسرع وقت
+     ولا يفضل الزرار عالق مستني تحميل المكتبة لما اللاعب يدوس عليه. -->
 <script>
 (function(){
  var LIBS=[
@@ -60,13 +61,11 @@ window.addEventListener('load',function(){setTimeout(function(){
   s.onload=function(){
    try{if(typeof lbEnsureChannel==='function')lbEnsureChannel();}catch(e){}
    try{if(typeof initUserPeer==='function'&&typeof myName==='function'&&myName())initUserPeer();}catch(e){}
+   try{if(typeof sbWarm==='function')sbWarm();}catch(e){}
   };
   document.head.appendChild(s);
  }
- function go(){LIBS.forEach(load);}
- function schedule(){ (window.requestIdleCallback||function(f){setTimeout(f,200);})(go,{timeout:1200}); }
- if(document.readyState==='complete')schedule();
- else window.addEventListener('load',schedule);
+ LIBS.forEach(load);
 })();
 </script>
 <style>
@@ -2547,8 +2546,8 @@ function setView(v){
    بدل الاتصال المباشر بين الجهازين (P2P) اللي بيفشل على شبكات كتير،
    كل الرسائل بتمر عبر سيرفر ويب-سوكِت ثابت. يعني الاتصال بيشتغل
    مهما كانت المسافة أو نوع الشبكة أو الجوال، وبيرجع لوحده لو النت قطع. */
-var SB_URL='https://itdtszwmjiwcalhruric.supabase.co';
-var SB_KEY='sb_publishable_kNTkcktZDOcm36anGPz4wA_FHIFXp7k';
+var SB_URL='https://phffgzkiwwjgndjbfqqy.supabase.co';
+var SB_KEY='sb_publishable_IaLCuVm8KkyqW2TYoxcH2w_p-lSQjGl';
 var sbc=null;
 function sbLib(){return (typeof window!=='undefined'&&window.supabase&&window.supabase.createClient)?window.supabase:null;}
 function sbReady(){return !!sbLib();}
@@ -3224,7 +3223,7 @@ function connectToHost(code,silent){
   toast('❌ الغرفة مش متاحة');
   try{refreshLobbyList();}catch(e){}
   show(window.mzFromLobby?'lobby':'room');
-  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,2500);}catch(e){}}
+  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,1800);}catch(e){}}
  },3200);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
@@ -3259,7 +3258,7 @@ function connectToHost(code,silent){
    "غرف اللاعبين المفتوحة" بيقرأ القناة دي ويشوف الغرف المتاحة لحظيًا.
    الغرفة بتختفي تلقائيًا من القائمة لو اتملت (2/2) أو المضيف قفل الصفحة. */
 var LOBBY_TOPIC='mzaida-lobby-v1';
-var ROOM_TTL_MS=14000;
+var ROOM_TTL_MS=8000;
 var lobbyDead={};
 function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
 var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
@@ -3334,7 +3333,7 @@ function lobbyAnnounce(){
   if(!online||!isHost||started||roomFull||!roomCode||!lobbyMine){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyMine.ts=Date.now();lobbyMine.name=myName();lobbyMine.gameType=gameType;lobbyMine.locked=!!roomPass;
   if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}
- },2500);
+ },1800);
 }
 function lobbyStopAnnounce(){
  clearInterval(lobbyHbInt);lobbyHbInt=null;lobbyMine=null;
@@ -3350,7 +3349,7 @@ function openLobbyBrowser(){
  lobbyJoinCh();
  setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,2500);
+ lobbyRefreshInt=setInterval(refreshLobbyList,1800);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;
