@@ -44,10 +44,7 @@
      ولا يفضل الزرار عالق مستني تحميل المكتبة لما اللاعب يدوس عليه. -->
 <script>
 (function(){
- var LIBS=[
-  'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js'
- ];
+ var LIBS=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js'];
  function load(src){
   var s=document.createElement('script');s.src=src;s.async=true;
   s.onload=function(){
@@ -1038,7 +1035,7 @@ function hypeFx(title,sub){
   c.innerHTML='<div class="hy-t">'+title+'</div>'+(sub?'<div class="hy-s">'+sub+'</div>':'');
   w.appendChild(c);
   var ic=['✨','⭐','🔥','🏆','💫','🎉'];
-  for(var i=0;i<26;i++){
+  for(var i=0;i<(window.innerWidth<600?8:16);i++){
    var sp=document.createElement('span');sp.className='hype-spark';
    sp.textContent=ic[Math.floor(Math.random()*ic.length)];
    sp.style.left=(Math.random()*100)+'%';
@@ -2133,7 +2130,7 @@ function imgCacheSave(){
  imgSaveT=setTimeout(function(){
   try{
    var keys=Object.keys(IMG);
-   if(keys.length>600){var o={};keys.slice(-600).forEach(function(k){o[k]=IMG[k];});IMG=o;}
+   if(keys.length>120){var o={};keys.slice(-120).forEach(function(k){o[k]=IMG[k];});IMG=o;}
    localStorage.setItem('mz_img_cache_v1',JSON.stringify(IMG));
   }catch(e){}
  },800);
@@ -2449,16 +2446,9 @@ function pickMode(m){
    setErr('⚠️ الاسم ده محجوز لحد تاني — اختر اسم مختلف');
    $('name1').classList.add('err-input');$('name1').focus();return;
   }
-  setErr('⏳ بنتأكد إن الاسم ده مش محجوز…');
-  verifyNameFree(n1,function(free){
-   if(!free){
-    setErr('⚠️ الاسم ده محجوز لحد تاني — اختر اسم مختلف');
-    try{$('name1').classList.add('err-input');$('name1').focus();}catch(e){}
-    return;
-   }
-   setErr('');
-   try{pickModeGo(m,n1);}catch(e){toast('خطأ: '+e.message);}
-  });
+  /* الدخول فوري على الموبايل؛ فحص الاسم الشبكي البطيء لا يمنع فتح شاشة الغرف. */
+  setErr('');$('name1').classList.remove('err-input');
+  try{pickModeGo(m,n1);}catch(e){toast('خطأ: '+e.message);}
  }catch(e){toast('خطأ: '+e.message);}
 }
 function pickModeGo(m,n1){
@@ -2538,8 +2528,8 @@ function setView(v){
    بدل الاتصال المباشر بين الجهازين (P2P) اللي بيفشل على شبكات كتير،
    كل الرسائل بتمر عبر سيرفر ويب-سوكِت ثابت. يعني الاتصال بيشتغل
    مهما كانت المسافة أو نوع الشبكة أو الجوال، وبيرجع لوحده لو النت قطع. */
-var SB_URL='https://phffgzkiwwjgndjbfqqy.supabase.co';
-var SB_KEY='sb_publishable_IaLCuVm8KkyqW2TYoxcH2w_p-lSQjGl';
+var SB_URL='https://gciptxlobymtikzvtikc.supabase.co';
+var SB_KEY='sb_publishable_IdbeyL6daw9ZklGxCTlx8w_OfF_5PHz';
 var sbc=null;
 function sbLib(){return (typeof window!=='undefined'&&window.supabase&&window.supabase.createClient)?window.supabase:null;}
 function sbReady(){return !!sbLib();}
@@ -3214,7 +3204,7 @@ function createRoom(){
    setStatus(roomPass?'✅ الغرفة جاهزة ومحمية بكلمة سر — بانتظار انضمام لاعب معاه الكلمة… (1/2)':'✅ الغرفة جاهزة ومعروضة في قائمة الغرف — بانتظار انضمام أي لاعب… (1/2)');
    lobbyAnnounce();
   },
-  onPeer:function(){roomFull=true;try{if(!started){var rm=document.getElementById('room');if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب بيدخل الغرفة — ظبط الإعدادات وابدأ');}if(conn&&conn.open){conn.send({type:'who'});conn.send({type:'hostready',name:myName()});}}}catch(e){}if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}}lobbyStopAnnounce();},
+  onPeer:function(){roomFull=true;try{if(!started){var rm=document.getElementById('room');if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب بيدخل الغرفة — ظبط الإعدادات وابدأ');}if(conn&&conn.open){conn.send({type:'who'});conn.send({type:'hostready',name:myName()});}}}catch(e){}if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}lobbyDbUpsert();}setTimeout(lobbyStopAnnounce,150);},
   onFail:function(){setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');}
  });
  if(conn){wireConn();setTimeout(ensureVoicePeer,4000);}
@@ -3299,7 +3289,7 @@ var LOBBY_TOPIC='mzaida-lobby-v1';
 var ROOM_TTL_MS=8000;
 var lobbyDead={};
 function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
-var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[];
+var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[],lobbyDbCh=null,lobbyHostToken='';
 function apiFetch(url,opts,ms){
  opts=opts||{};
  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
@@ -3361,20 +3351,23 @@ function lobbyDropRoom(code){
  lobbyLastRooms=lobbyLastRooms.filter(function(r){return r.code!==code;});
  if(lobbyVisible())renderLobbyList(null,false,lobbyLastRooms);
 }
+function lobbyToken(){if(lobbyHostToken)return lobbyHostToken;var a=new Uint8Array(24);crypto.getRandomValues(a);lobbyHostToken=Array.from(a,function(x){return x.toString(16).padStart(2,'0');}).join('');return lobbyHostToken;}
+function lobbyDbUpsert(){var c=sbClient();if(!c||!lobbyMine)return;try{c.rpc('upsert_game_room',{p_code:lobbyMine.code,p_host_name:lobbyMine.name||'لاعب',p_game_type:lobbyMine.gameType||'auction',p_is_locked:!!lobbyMine.locked,p_is_full:!!lobbyMine.full,p_host_token:lobbyToken()});}catch(e){}}
+function lobbyDbClose(){var c=sbClient();if(!c||!roomCode||!lobbyHostToken)return;try{c.rpc('close_game_room',{p_code:roomCode,p_host_token:lobbyHostToken});}catch(e){}}
 function lobbyAnnounce(){
  if(!roomCode)return;
- lobbyMine={code:roomCode,name:myName(),gameType:gameType,locked:!!roomPass,full:false,ts:Date.now()};
+ lobbyMine={code:roomCode,name:myName(),gameType:gameType,locked:!!roomPass,full:false,ts:Date.now()};lobbyDbUpsert();
  var ch=lobbyJoinCh();
  if(ch&&lobbyChSub){try{ch.track(lobbyMine);}catch(e){}}
  clearInterval(lobbyHbInt);
  lobbyHbInt=setInterval(function(){
   if(!online||!isHost||started||roomFull||!roomCode||!lobbyMine){clearInterval(lobbyHbInt);lobbyHbInt=null;return;}
   lobbyMine.ts=Date.now();lobbyMine.name=myName();lobbyMine.gameType=gameType;lobbyMine.locked=!!roomPass;
-  if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}
- },1800);
+  if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}lobbyDbUpsert();
+ },5000);
 }
 function lobbyStopAnnounce(){
- clearInterval(lobbyHbInt);lobbyHbInt=null;lobbyMine=null;
+ lobbyDbClose();lobbyHostToken='';clearInterval(lobbyHbInt);lobbyHbInt=null;lobbyMine=null;
  if(lobbyCh){try{lobbyCh.untrack();}catch(e){}}
  lobbyMaybeLeave();
 }
@@ -3390,15 +3383,21 @@ function openLobbyBrowser(){
  lobbyRefreshInt=setInterval(refreshLobbyList,1800);
 }
 function closeLobbyBrowser(){
- clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;
+ clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;if(lobbyDbCh){try{var cc=sbClient();if(cc)cc.removeChannel(lobbyDbCh);}catch(e){}lobbyDbCh=null;}
  show('room');
  lobbyMaybeLeave();
 }
 function refreshLobbyList(){
  if(!sbReady()){renderLobbyList('جارٍ تحميل السيرفر… ثانية واحدة وجرّب تاني',true);return;}
- lobbyJoinCh();
- lobbyCollect();
- if(lobbyVisible()&&!lobbyLastRooms.length)renderLobbyList('مفيش غرف مفتوحة دلوقتي — أنشئ غرفة وهي هتظهر لباقي اللاعبين فورًا، أو استنى ثانية ودوس "تحديث القائمة"',false);
+ lobbyJoinCh();lobbyCollect();
+ var c=sbClient();if(!c)return;
+ c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').eq('is_full',false).order('updated_at',{ascending:false}).limit(30).then(function(res){
+  if(res.error)return;
+  var now=Date.now(),seen={},rooms=[];
+  (res.data||[]).forEach(function(r){if(!r.code||seen[r.code]||now-new Date(r.updated_at).getTime()>25000)return;seen[r.code]=1;rooms.push({code:r.code,name:r.host_name,gameType:r.game_type,locked:r.is_locked,full:r.is_full,ts:new Date(r.updated_at).getTime()});});
+  lobbyLastRooms=rooms;if(lobbyVisible())renderLobbyList(null,false,rooms);
+ });
+ if(!lobbyDbCh){lobbyDbCh=c.channel('game-rooms-list').on('postgres_changes',{event:'*',schema:'public',table:'game_rooms'},function(){if(lobbyVisible())setTimeout(refreshLobbyList,60);}).subscribe();}
 }
 function renderLobbyList(msg,loading,rooms){
  var el=$('lobbyList');if(!el)return;
@@ -9179,6 +9178,12 @@ img{max-width:100%}
  #home .gsel-grid{gap:7px}
  #home .gtile .gt-lbl{font-size:9.5px}
  #home .hero-nm{font-size:16px}
+}
+@media(max-width:768px){
+ *{scroll-behavior:auto!important}
+ .card,.obox,.team,.gtile,.hero-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+ .card,.team,.gtile{box-shadow:none!important}
+ .hype-flash{display:none!important}
 }
 </style>
 
