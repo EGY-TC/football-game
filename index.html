@@ -2461,24 +2461,11 @@ function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(functi
    الحل: مراقب عام بيربط أي <img data-en> يظهر في الصفحة تلقائيًا + إعادة محاولة لو الصورة وقعت. */
 function imgIsUrl(u){return typeof u==='string'&&/^https?:\/\//.test(u);}
 (function(){try{var ch=false;Object.keys(IMG).forEach(function(k){if(!imgIsUrl(IMG[k])){delete IMG[k];ch=true;}});if(ch)imgCacheSave();}catch(e){}})();
-var wikiIO=null;
-try{
- if(typeof IntersectionObserver!=='undefined'){
-  wikiIO=new IntersectionObserver(function(ents){
-   ents.forEach(function(e){
-    if(!e.isIntersecting)return;
-    var im=e.target;try{wikiIO.unobserve(im);}catch(_){ }
-    wikiImg(im.dataset?im.dataset.en:null,im);
-   });
-  },{rootMargin:'250px'});
- }
-}catch(e){wikiIO=null;}
 function wikiBindEl(im){
  if(!im||im._wikiBound)return;
  var en=im.dataset?im.dataset.en:null;
  if(!en)return;
  im._wikiBound=true;
- try{im.loading='lazy';im.decoding='async';}catch(e){}
  im.addEventListener('error',function(){
   try{
    var e2=im.dataset.en;
@@ -2488,12 +2475,9 @@ function wikiBindEl(im){
    setTimeout(function(){wikiImg(e2,im);},400);
   }catch(e){}
  });
- /* تحميل كسول: الصورة بتتجاب بس لما تقرب تظهر على الشاشة — ده بيمنع
-    عشرات طلبات الشبكة وقت فتح الموقع وبيخلي الدخول سريع */
- if(wikiIO&&!IMG[en]){try{wikiIO.observe(im);return;}catch(e){}}
  wikiImg(en,im);
 }
-function bindWikiAll(){try{document.querySelectorAll('img[data-en]:not([data-wb])').forEach(function(im){im.setAttribute('data-wb','1');wikiBindEl(im);});}catch(e){}}
+function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wikiBindEl);}catch(e){}}
 (function(){
  function start(){
   bindWikiAll();
@@ -2503,9 +2487,7 @@ function bindWikiAll(){try{document.querySelectorAll('img[data-en]:not([data-wb]
     window._wikiT=setTimeout(bindWikiAll,80);
    }).observe(document.body,{childList:true,subtree:true});
   }catch(e){}
-  /* بدل فحص كل 1.5 ثانية (اللي كان بيتقّل الجهاز)، بنفحص كل 6 ثواني
-     وبس لما التبويب يكون ظاهر قدام المستخدم */
-  setInterval(function(){if(document.visibilityState==='visible')bindWikiAll();},6000);
+  setInterval(bindWikiAll,1500);
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
@@ -3611,23 +3593,17 @@ function openLobbyBrowser(){
  if(lobbyLastRooms.length)renderLobbyList(null,false,lobbyLastRooms);
  else renderLobbyList('جارٍ البحث عن غرف مفتوحة…',true);
  lobbyJoinCh();
- refreshLobbyList();
+ setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(function(){if(lobbyVisible())refreshLobbyList();},2000);
+ lobbyRefreshInt=setInterval(refreshLobbyList,2500);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;if(lobbyDbCh){try{var cc=sbClient();if(cc)cc.removeChannel(lobbyDbCh);}catch(e){}lobbyDbCh=null;}
  show('room');
  lobbyMaybeLeave();
 }
-var lobbyWaitT=null;
 function refreshLobbyList(){
- if(!sbReady()){
-  if(!lobbyLastRooms.length)renderLobbyList('جارٍ البحث عن غرف مفتوحة…',true);
-  clearTimeout(lobbyWaitT);
-  lobbyWaitT=setTimeout(function(){if(lobbyVisible())refreshLobbyList();},200);
-  return;
- }
+ if(!sbReady()){renderLobbyList('جارٍ تحميل السيرفر… ثانية واحدة وجرّب تاني',true);return;}
  lobbyJoinCh();lobbyCollect();
  var c=sbClient();if(!c)return;
  c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').order('updated_at',{ascending:false}).limit(40).then(function(res){
