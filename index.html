@@ -2370,6 +2370,15 @@ function wdPickImage(ents,order){
  }
  return loose;
 }
+/* upload.wikimedia.org أحيانًا محجوب عند بعض مزودي الإنترنت — بنحوّل اللينك
+   لصيغة commons.wikimedia.org/Special:FilePath اللي بتشتغل في كل الحالات */
+function thumbToCommons(u){
+ try{
+  var m=u.match(/\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^\/]+)/);
+  if(m&&m[1])return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+m[1]+'?width=800';
+ }catch(e){}
+ return u;
+}
 function wikiPageImage(title,cb){
  apiGet('https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages%7Cdescription&piprop=thumbnail&pithumbsize=800&redirects=1&titles='+encodeURIComponent(title),function(j){
   var u='';
@@ -2379,7 +2388,8 @@ function wikiPageImage(title,cb){
     var p=pages[k];if(u||!p||!p.thumbnail||!p.thumbnail.source)return;
     var d=(p.description||'')+' '+(p.title||'');
     if(/football|soccer/i.test(p.description||'')||!p.description){
-     if(imgFileOk(p.thumbnail.source))u=p.thumbnail.source.replace(/^http:/,'https:');
+     var src=p.thumbnail.source.replace(/^http:/,'https:');
+     if(imgFileOk(src))u=thumbToCommons(src);
     }
    });
   }catch(e){}
@@ -2398,6 +2408,7 @@ function verifyImage(u,cb){
 }
 function wikiImg(en,el){
  if(!en||!el)return;
+ if(typeof IMG==='undefined'||!IMG)window.IMG=IMG={};
  try{el.referrerPolicy='no-referrer';}catch(e){}
  if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
  if(el._wikiBusy)return;el._wikiBusy=true;
