@@ -2297,52 +2297,152 @@ var WIKI_TITLE_OVERRIDE={
  "Ferenc Puskás":"Ferenc Puskás",
  "Alfredo Di Stéfano":"Alfredo Di Stéfano"
 };
+/* ========= مصدر صور اللاعبين: Wikidata (تحقق إن الشخص لاعب كرة قدم فعلًا) =========
+   المشكلة القديمة: بحث ويكيبيديا بالاسم كان بيرجّع أحيانًا صورة شخص تاني أو شعار نادي.
+   الحل: بنسأل Wikidata عن الاسم، وبنقبل بس العنصر اللي مهنته "لاعب كرة قدم" (P106)
+   وعنده صورة شخصية (P18)، وبنرفض أي ملف شكله شعار/علم/ملعب/رسم. */
+var WD_PLAYER_JOBS={Q937857:1,Q628099:1,Q13365117:1,Q15117302:1};
+var IMG_BAD=/(logo|crest|badge|escudo|flag|stadium|arena|kit|jersey|shirt|trophy|cup|ball|map|coat[_ ]of[_ ]arms|icon|emblem|signature)/i;
+function imgFileOk(f){
+ if(!f)return false;
+ if(/\.(svg|gif)$/i.test(f))return false;
+ if(IMG_BAD.test(f))return false;
+ return true;
+}
+function commonsUrl(file){
+ return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(file.replace(/ /g,'_'))+'?width=800';
+}
+function jsonpGet(url,cb){
+ var id='_wkp'+Date.now()+Math.floor(Math.random()*99999),sc=document.createElement('script'),tm;
+ window[id]=function(j){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(j);};
+ sc.src=url+(url.indexOf('?')<0?'?':'&')+'callback='+id;sc.async=true;
+ sc.onerror=function(){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(null);};
+ tm=setTimeout(sc.onerror,7000);document.head.appendChild(sc);
+}
+/* بنجرب fetch الأول (أسرع) وبنرجع لـ JSONP لو الشبكة/الـCORS منعت */
+function apiGet(url,cb){
+ var done=false;
+ function fin(j){if(done)return;done=true;cb(j);}
+ try{
+  var ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  var tm=setTimeout(function(){if(ctl)ctl.abort();},5500);
+  fetch(url+'&origin=*',{referrerPolicy:'no-referrer',signal:ctl?ctl.signal:undefined})
+   .then(function(r){if(!r.ok)throw Error('http');return r.json();})
+   .then(function(j){clearTimeout(tm);fin(j);})
+   .catch(function(){clearTimeout(tm);if(!done)jsonpGet(url,fin);});
+ }catch(e){jsonpGet(url,fin);}
+}
+/* عنوان صفحة ويكيبيديا -> رقم العنصر في Wikidata (أدق طريقة، بدون لخبطة أسماء) */
+function wikiToQid(title,cb){
+ apiGet('https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageprops&ppprop=wikibase_item&redirects=1&titles='+encodeURIComponent(title),function(j){
+  var q='';
+  try{var pg=j&&j.query&&j.query.pages||{};Object.keys(pg).forEach(function(k){var p=pg[k];if(!q&&p&&p.pageprops&&p.pageprops.wikibase_item)q=p.pageprops.wikibase_item;});}catch(e){}
+  cb(q);
+ });
+}
+function wdSearch(name,cb){
+ name=String(name).replace(/\s*\([^)]*\)/g,'').trim();
+ apiGet('https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&uselang=en&type=item&limit=7&search='+encodeURIComponent(name),function(j){
+  var out=[];try{(j&&j.search||[]).forEach(function(s){if(s&&s.id)out.push({id:s.id,desc:(s.description||'')});});}catch(e){}
+  cb(out);
+ });
+}
+function wdEntities(ids,cb){
+ if(!ids.length)return cb(null);
+ apiGet('https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims%7Cdescriptions&languages=en&ids='+ids.join('%7C'),function(j){cb(j&&j.entities?j.entities:null);});
+}
+function wdPickImage(ents,order){
+ if(!ents)return '';
+ var loose='';
+ for(var i=0;i<order.length;i++){
+  var e=ents[order[i]];
+  if(!e||!e.claims)continue;
+  var c=e.claims;
+  var jobs=(c.P106||[]).map(function(s){try{return s.mainsnak.datavalue.value.id;}catch(_){return '';}});
+  var isPlayer=jobs.some(function(q){return WD_PLAYER_JOBS[q];});
+  var desc='';try{desc=(e.descriptions&&e.descriptions.en&&e.descriptions.en.value)||'';}catch(_){}
+  var descPlayer=/football|soccer/i.test(desc);
+  var file='';
+  try{if(c.P18&&c.P18.length)file=c.P18[0].mainsnak.datavalue.value;}catch(_){}
+  if(!imgFileOk(file))continue;
+  if(isPlayer)return commonsUrl(file);
+  if(descPlayer&&!loose)loose=commonsUrl(file);
+ }
+ return loose;
+}
+function wikiPageImage(title,cb){
+ apiGet('https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages%7Cdescription&piprop=thumbnail&pithumbsize=800&redirects=1&titles='+encodeURIComponent(title),function(j){
+  var u='';
+  try{
+   var pages=j&&j.query&&j.query.pages||{};
+   Object.keys(pages).forEach(function(k){
+    var p=pages[k];if(u||!p||!p.thumbnail||!p.thumbnail.source)return;
+    var d=(p.description||'')+' '+(p.title||'');
+    if(/football|soccer/i.test(p.description||'')||!p.description){
+     if(imgFileOk(p.thumbnail.source))u=p.thumbnail.source.replace(/^http:/,'https:');
+    }
+   });
+  }catch(e){}
+  cb(u);
+ });
+}
+/* بنتأكد إن اللينك بيفتح صورة حقيقية قبل ما نخزّنه */
+function verifyImage(u,cb){
+ if(!u)return cb(false);
+ var im=new Image(),t;
+ im.referrerPolicy='no-referrer';
+ im.onload=function(){clearTimeout(t);cb(im.naturalWidth>=80&&im.naturalHeight>=80);};
+ im.onerror=function(){clearTimeout(t);cb(false);};
+ t=setTimeout(function(){im.onload=im.onerror=null;cb(false);},9000);
+ im.src=u;
+}
 function wikiImg(en,el){
  if(!en||!el)return;
- /* Wikimedia أحيانًا يمنع الصورة بسبب الـ referrer أو يمنع fetch حسب الاستضافة.
-    نضبط الصورة بدون referrer، ونستخدم JSONP كمسار احتياطي لا يعتمد على CORS. */
- try{el.referrerPolicy='no-referrer';el.crossOrigin='anonymous';}catch(e){}
+ try{el.referrerPolicy='no-referrer';}catch(e){}
  if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
  if(el._wikiBusy)return;el._wikiBusy=true;
  var title=WIKI_TITLE_OVERRIDE[en]||en;
  var settled=false;
- function fromPages(j){
-  var pages=j&&j.query&&j.query.pages;if(!pages)return'';
-  var keys=Object.keys(pages);if(!keys.length)return'';
-  for(var i=0;i<keys.length;i++){
-   var p=pages[keys[i]];
-   if(p&&p.thumbnail&&p.thumbnail.source)return p.thumbnail.source.replace(/^http:/,'https:');
-  }
-  return'';
- }
  function done(u){
   if(settled)return;
   if(!u){el._wikiBusy=false;IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
-  settled=true;el._wikiBusy=false;IMG_FAILS[en]=0;
-  u=u.replace(/^http:/,'https:');IMG[en]=u;imgCacheSave();
-  try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en){im.referrerPolicy='no-referrer';im.crossOrigin='anonymous';im.src=u;}});}catch(e){}
-  imgShare(en,u);
+  verifyImage(u,function(ok){
+   if(!ok){el._wikiBusy=false;IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
+   settled=true;el._wikiBusy=false;IMG_FAILS[en]=0;
+   IMG[en]=u;imgCacheSave();
+   try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en){im.referrerPolicy='no-referrer';im.src=u;}});}catch(e){}
+   imgShare(en,u);
+  });
  }
- function jsonp(url,cb){
-  var id='_wkp'+Date.now()+Math.floor(Math.random()*99999),sc=document.createElement('script'),tm;
-  window[id]=function(j){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(j);};
-  sc.src=url+'&callback='+id;sc.async=true;
-  sc.onerror=function(){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(null);};
-  tm=setTimeout(sc.onerror,7000);document.head.appendChild(sc);
+ /* 1) صفحة ويكيبيديا الدقيقة -> عنصر Wikidata -> صورته الرسمية */
+ wikiToQid(title,function(qid){
+  if(!qid)return step2();
+  wdEntities([qid],function(ents){
+   var u0=wdPickImage(ents,[qid]);
+   if(u0)return done(u0);
+   step2();
+  });
+ });
+ function step2(){
+ /* 2) بحث Wikidata بالاسم مع فلترة "لاعب كرة قدم" */
+ wdSearch(title,function(res){
+  var ids=res.map(function(r){return r.id;});
+  wdEntities(ids,function(ents){
+   var u=wdPickImage(ents,ids);
+   if(u)return done(u);
+   /* 2) Wikidata مع كلمة footballer لتضييق البحث */
+   wdSearch(title+' footballer',function(res2){
+    var ids2=res2.map(function(r){return r.id;});
+    wdEntities(ids2,function(ents2){
+     var u2=wdPickImage(ents2,ids2);
+     if(u2)return done(u2);
+     /* 3) آخر حل: صورة صفحة ويكيبيديا نفسها */
+     wikiPageImage(title,function(u3){done(u3);});
+    });
+   });
+  });
+ });
  }
- var api='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&titles='+encodeURIComponent(title);
- var search='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json';
- function jsonpFallback(){
-  jsonp(api,function(j){var u=fromPages(j);if(u)return done(u);jsonp(search,function(j2){done(fromPages(j2));});});
- }
- try{
-  var ctl=typeof AbortController!=='undefined'?new AbortController():null;
-  var tm=setTimeout(function(){if(ctl)ctl.abort();},5500);
-  fetch(api+'&origin=*',{signal:ctl?ctl.signal:undefined,referrerPolicy:'no-referrer'}).then(function(r){if(!r.ok)throw Error('wiki');return r.json();}).then(function(j){
-   clearTimeout(tm);var u=fromPages(j);if(u)return done(u);
-   return fetch(search+'&origin=*',{referrerPolicy:'no-referrer'}).then(function(r){return r.json();}).then(function(j2){var u2=fromPages(j2);if(u2)done(u2);else jsonpFallback();});
-  }).catch(function(){clearTimeout(tm);jsonpFallback();});
- }catch(e){jsonpFallback();}
 }
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
 /* ===== إصلاح ظهور صور اللاعبين =====
