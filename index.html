@@ -46,6 +46,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
 <!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل فورًا من أول ما الصفحة تفتح
      (async، من غير ما توقف رسم الصفحة) عشان الاتصال يبقى جاهز بأسرع وقت
      ولا يفضل الزرار عالق مستني تحميل المكتبة لما اللاعب يدوس عليه. -->
@@ -111,6 +112,11 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .big-btn:active{transform:scale(.97)}
 .green{background:var(--acc);color:#04180a}.blue{background:var(--blue);color:#04101c}.red{background:var(--red);color:#1c0407}.purple{background:var(--purple);color:#1a0426}.goldb{background:var(--gold);color:#231303}
 .or{text-align:center;color:var(--dim);margin:12px 0;font-weight:700}
+.privacy-pick{display:flex;gap:8px;margin-bottom:8px}
+.priv-btn{flex:1;padding:11px 6px;border-radius:12px;border:2px solid var(--line);background:var(--card2);color:var(--dim);font-weight:900;font-size:14px;cursor:pointer;transition:.15s}
+.priv-btn.on{border-color:var(--acc);color:var(--txt);background:rgba(63,185,80,.14)}
+.priv-hint{font-size:11px;color:var(--dim);font-weight:700;text-align:center;margin-bottom:8px}
+#passShow{margin-top:6px;font-weight:900;color:var(--gold);font-size:14px}
 .tour-cta{display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(255,196,0,.16),rgba(255,196,0,.04));transition:.15s}
 .tour-cta:active{transform:scale(.985)}
 .tour-cta-ic{font-size:30px;line-height:1}
@@ -900,16 +906,21 @@ input[type=range]{accent-color:var(--acc)}
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>غرفة أونلاين</h1></div>
 <div class="card">
 <div class="pc-ready" id="roomGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
-<input id="createPass" placeholder="🔒 كلمة سر للغرفة (اختياري)" maxlength="20" style="text-align:center;margin-bottom:8px">
+<div class="privacy-pick">
+ <button type="button" class="priv-btn on" id="privPublicBtn" onclick="setRoomPrivacy(true)">🌍 غرفة عامة</button>
+ <button type="button" class="priv-btn" id="privPrivateBtn" onclick="setRoomPrivacy(false)">🔒 غرفة خاصة</button>
+</div>
+<div id="privHint" class="priv-hint">أي لاعب يقدر يدخل من قائمة الغرف المفتوحة من غير كود.</div>
+<input id="createPass" class="hidden" placeholder="🔒 كود الدخول للغرفة الخاصة" maxlength="20" style="text-align:center;margin-bottom:8px">
 <button class="big-btn green" onclick="createRoom()">➕ إنشاء غرفة جديدة</button>
-<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
+<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><div id="passShow" class="hidden"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
 <button class="big-btn purple" style="margin-top:8px" onclick="openLobbyBrowser()">🔀 غرف اللاعبين المفتوحة</button>
 <div class="or">— أو ادخل برمز صاحبك —</div>
 <input id="joinCode" placeholder="رمز الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
-<input id="joinPass" placeholder="🔒 كلمة السر (لو الغرفة مقفولة)" maxlength="20" style="text-align:center;margin-top:8px">
+<input id="joinPass" placeholder="🔒 كود الدخول (للغرف الخاصة بس)" maxlength="20" style="text-align:center;margin-top:8px">
 <button class="big-btn blue" style="margin-top:8px" onclick="joinRoom()">انضمام ➜</button>
 <div id="roomStatus" class="status"></div>
-<div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.8">حط كلمة سر لغرفتك عشان محدش يدخل عشوائي غير اللي معاه الكلمة — سيبها فاضية لو مش محتاج. لو الاتصال بيفشل معاك كتير، اللعبة بتحوّل تلقائيًا لوضع الاتصال المضمون (Relay).</div>
+<div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.8">الغرفة <b>العامة</b> بتظهر في قائمة الغرف المفتوحة وأي لاعب يدخلها من غير كود. الغرفة <b>الخاصة</b> لازم اللاعب يكتب كود الدخول اللي انت حاططه. لو الاتصال بيفشل معاك كتير، اللعبة بتحوّل تلقائيًا لوضع الاتصال المضمون (Relay).</div>
 </div>
 </div>
 <div id="lobby" class="screen hidden">
@@ -2129,7 +2140,7 @@ function stopVoice(){
  updateMicBtn();
  var ob=$('oppMicLbl');if(ob)ob.classList.add('hidden');
 }
-var IMG=(function(){try{return JSON.parse(localStorage.getItem('mz_img_cache_v1')||'{}')||{};}catch(e){return {};}})();
+var IMG=(function(){try{return JSON.parse(localStorage.getItem('mz_img_cache_v2')||'{}')||{};}catch(e){return {};}})();
 var IMG_FAILS={};
 var imgSaveT=null;
 function imgCacheSave(){
@@ -2138,7 +2149,7 @@ function imgCacheSave(){
   try{
    var keys=Object.keys(IMG);
    if(keys.length>120){var o={};keys.slice(-120).forEach(function(k){o[k]=IMG[k];});IMG=o;}
-   localStorage.setItem('mz_img_cache_v1',JSON.stringify(IMG));
+   localStorage.setItem('mz_img_cache_v2',JSON.stringify(IMG));
   }catch(e){}
  },800);
 }
@@ -2286,6 +2297,116 @@ var WIKI_TITLE_OVERRIDE={
  "Ferenc Puskás":"Ferenc Puskás",
  "Alfredo Di Stéfano":"Alfredo Di Stéfano"
 };
+/* ========= مصدر صور اللاعبين: Wikidata (تحقق إن الشخص لاعب كرة قدم فعلًا) =========
+   المشكلة القديمة: بحث ويكيبيديا بالاسم كان بيرجّع أحيانًا صورة شخص تاني أو شعار نادي.
+   الحل: بنسأل Wikidata عن الاسم، وبنقبل بس العنصر اللي مهنته "لاعب كرة قدم" (P106)
+   وعنده صورة شخصية (P18)، وبنرفض أي ملف شكله شعار/علم/ملعب/رسم. */
+var WD_PLAYER_JOBS={Q937857:1,Q628099:1,Q13365117:1,Q15117302:1};
+var IMG_BAD=/(logo|crest|badge|escudo|flag|stadium|arena|kit|jersey|shirt|trophy|cup|ball|map|coat[_ ]of[_ ]arms|icon|emblem|signature)/i;
+function imgFileOk(f){
+ if(!f)return false;
+ if(/\.(svg|gif)$/i.test(f))return false;
+ if(IMG_BAD.test(f))return false;
+ return true;
+}
+function commonsUrl(file){
+ return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(file.replace(/ /g,'_'))+'?width=800';
+}
+function jsonpGet(url,cb){
+ var id='_wkp'+Date.now()+Math.floor(Math.random()*99999),sc=document.createElement('script'),tm;
+ window[id]=function(j){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(j);};
+ sc.src=url+(url.indexOf('?')<0?'?':'&')+'callback='+id;sc.async=true;
+ sc.onerror=function(){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(null);};
+ tm=setTimeout(sc.onerror,7000);document.head.appendChild(sc);
+}
+/* بنجرب fetch الأول (أسرع) وبنرجع لـ JSONP لو الشبكة/الـCORS منعت */
+function apiGet(url,cb){
+ var done=false;
+ function fin(j){if(done)return;done=true;cb(j);}
+ try{
+  var ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  var tm=setTimeout(function(){if(ctl)ctl.abort();},5500);
+  fetch(url+'&origin=*',{referrerPolicy:'no-referrer',signal:ctl?ctl.signal:undefined})
+   .then(function(r){if(!r.ok)throw Error('http');return r.json();})
+   .then(function(j){clearTimeout(tm);fin(j);})
+   .catch(function(){clearTimeout(tm);if(!done)jsonpGet(url,fin);});
+ }catch(e){jsonpGet(url,fin);}
+}
+/* عنوان صفحة ويكيبيديا -> رقم العنصر في Wikidata (أدق طريقة، بدون لخبطة أسماء) */
+function wikiToQid(title,cb){
+ apiGet('https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageprops&ppprop=wikibase_item&redirects=1&titles='+encodeURIComponent(title),function(j){
+  var q='';
+  try{var pg=j&&j.query&&j.query.pages||{};Object.keys(pg).forEach(function(k){var p=pg[k];if(!q&&p&&p.pageprops&&p.pageprops.wikibase_item)q=p.pageprops.wikibase_item;});}catch(e){}
+  cb(q);
+ });
+}
+function wdSearch(name,cb){
+ name=String(name).replace(/\s*\([^)]*\)/g,'').trim();
+ apiGet('https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&uselang=en&type=item&limit=7&search='+encodeURIComponent(name),function(j){
+  var out=[];try{(j&&j.search||[]).forEach(function(s){if(s&&s.id)out.push({id:s.id,desc:(s.description||'')});});}catch(e){}
+  cb(out);
+ });
+}
+function wdEntities(ids,cb){
+ if(!ids.length)return cb(null);
+ apiGet('https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims%7Cdescriptions&languages=en&ids='+ids.join('%7C'),function(j){cb(j&&j.entities?j.entities:null);});
+}
+function wdPickImage(ents,order){
+ if(!ents)return '';
+ var loose='';
+ for(var i=0;i<order.length;i++){
+  var e=ents[order[i]];
+  if(!e||!e.claims)continue;
+  var c=e.claims;
+  var jobs=(c.P106||[]).map(function(s){try{return s.mainsnak.datavalue.value.id;}catch(_){return '';}});
+  var isPlayer=jobs.some(function(q){return WD_PLAYER_JOBS[q];});
+  var desc='';try{desc=(e.descriptions&&e.descriptions.en&&e.descriptions.en.value)||'';}catch(_){}
+  var descPlayer=/football|soccer/i.test(desc);
+  var file='';
+  try{if(c.P18&&c.P18.length)file=c.P18[0].mainsnak.datavalue.value;}catch(_){}
+  if(!imgFileOk(file))continue;
+  if(isPlayer)return commonsUrl(file);
+  if(descPlayer&&!loose)loose=commonsUrl(file);
+ }
+ return loose;
+}
+/* upload.wikimedia.org أحيانًا محجوب عند بعض مزودي الإنترنت — بنحوّل اللينك
+   لصيغة commons.wikimedia.org/Special:FilePath اللي بتشتغل في كل الحالات */
+function thumbToCommons(u){
+ try{
+  var m=u.match(/\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^\/]+)/);
+  if(m&&m[1])return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+m[1]+'?width=800';
+ }catch(e){}
+ return u;
+}
+function wikiPageImage(title,cb){
+ apiGet('https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages%7Cdescription&piprop=thumbnail&pithumbsize=800&redirects=1&titles='+encodeURIComponent(title),function(j){
+  var u='';
+  try{
+   var pages=j&&j.query&&j.query.pages||{};
+   Object.keys(pages).forEach(function(k){
+    var p=pages[k];if(u||!p||!p.thumbnail||!p.thumbnail.source)return;
+    var d=(p.description||'')+' '+(p.title||'');
+    if(/football|soccer/i.test(p.description||'')||!p.description){
+     var src=p.thumbnail.source.replace(/^http:/,'https:');
+     if(imgFileOk(src))u=thumbToCommons(src);
+    }
+   });
+  }catch(e){}
+  cb(u);
+ });
+}
+/* بنتأكد إن اللينك بيفتح صورة حقيقية قبل ما نخزّنه */
+function verifyImage(u,cb){
+ if(!u)return cb(false);
+ var im=new Image(),t;
+ im.referrerPolicy='no-referrer';
+ im.onload=function(){clearTimeout(t);cb(im.naturalWidth>=80&&im.naturalHeight>=80);};
+ im.onerror=function(){clearTimeout(t);cb(false);};
+ t=setTimeout(function(){im.onload=im.onerror=null;cb(false);},9000);
+ im.src=u;
+}
+/* ===== نظام صور اللاعبين المستعاد من النسخة الاحتياطية (الشغّالة) ===== */
 function wikiImg(en,el){
  if(!en)return;
  if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
@@ -2324,6 +2445,41 @@ function wikiImg(en,el){
  }catch(e){}
 }
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
+/* ===== إصلاح ظهور صور اللاعبين =====
+   المشكلة: مش كل شاشة بتنادي bindWiki بعد ما ترسم، فصور اللاعبين كانت بتفضل حروف بس.
+   الحل: مراقب عام بيربط أي <img data-en> يظهر في الصفحة تلقائيًا + إعادة محاولة لو الصورة وقعت. */
+function imgIsUrl(u){return typeof u==='string'&&/^https?:\/\//.test(u);}
+(function(){try{var ch=false;Object.keys(IMG).forEach(function(k){if(!imgIsUrl(IMG[k])){delete IMG[k];ch=true;}});if(ch)imgCacheSave();}catch(e){}})();
+function wikiBindEl(im){
+ if(!im||im._wikiBound)return;
+ var en=im.dataset?im.dataset.en:null;
+ if(!en)return;
+ im._wikiBound=true;
+ im.addEventListener('error',function(){
+  try{
+   var e2=im.dataset.en;
+   if(e2&&IMG[e2]){delete IMG[e2];imgCacheSave();}
+   im._wikiBusy=false;
+   IMG_FAILS[e2]=0;
+   setTimeout(function(){wikiImg(e2,im);},400);
+  }catch(e){}
+ });
+ wikiImg(en,im);
+}
+function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wikiBindEl);}catch(e){}}
+(function(){
+ function start(){
+  bindWikiAll();
+  try{
+   new MutationObserver(function(){
+    clearTimeout(window._wikiT);
+    window._wikiT=setTimeout(bindWikiAll,80);
+   }).observe(document.body,{childList:true,subtree:true});
+  }catch(e){}
+  setInterval(bindWikiAll,1500);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
 function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function fmt(n){if(n>=1000){var v=n/1000;return (v%1===0?v:v.toFixed(1))+' مليار';}return n+' مليون';}
@@ -3187,7 +3343,7 @@ var peerMgr=null,autoRejoin=null,rejoinTries=0,lastRx=0,watchdog=null;
 function stopPeerMgr(){try{if(peerMgr)peerMgr.stop();}catch(e){}peerMgr=null;}
 function shareRoomCode(){
  if(!roomCode)return;
- var msg='🎮 يلا العب معايا "مزاد النجوم"!\nرمز الغرفة: '+roomCode+'\nافتح اللعبة ودوس "انضمام" واكتب الرمز ده 👆';
+ var msg='🎮 يلا العب معايا "مزاد النجوم"!\nرمز الغرفة: '+roomCode+(roomPass?'\n🔒 كود الدخول: '+roomPass:'\n🌍 الغرفة عامة — مش محتاج كود')+'\nافتح اللعبة ودوس "انضمام" واكتب الرمز ده 👆';
  if(navigator.share){
   navigator.share({title:'مزاد النجوم',text:msg}).catch(function(){});
   return;
@@ -3200,15 +3356,32 @@ function shareRoomCode(){
   }else{toast('الرمز: '+roomCode);}
  }
 }
+/* ===== نوع الغرفة: عامة (أي حد يدخل من غير كود) أو خاصة (لازم كود دخول) ===== */
+var roomIsPublic=true;
+function setRoomPrivacy(pub){
+ roomIsPublic=!!pub;
+ var pb=$('privPublicBtn'),vb=$('privPrivateBtn'),inp=$('createPass'),hint=$('privHint');
+ if(pb)pb.classList.toggle('on',roomIsPublic);
+ if(vb)vb.classList.toggle('on',!roomIsPublic);
+ if(inp){inp.classList.toggle('hidden',roomIsPublic);if(roomIsPublic)inp.value='';}
+ if(hint)hint.textContent=roomIsPublic?'أي لاعب يقدر يدخل من قائمة الغرف المفتوحة من غير كود.':'محدش يدخل غير اللي معاه كود الدخول — اكتب الكود تحت وشاركه مع صاحبك.';
+}
 function createRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
- roomPass=(($('createPass')&&$('createPass').value)||'').trim();isPublicRoom=true;
+ isPublicRoom=true;
+ if(roomIsPublic){roomPass='';}
+ else{
+  roomPass=(($('createPass')&&$('createPass').value)||'').trim();
+  if(!roomPass){roomPass=String(Math.floor(1000+Math.random()*9000));if($('createPass'))$('createPass').value=roomPass;}
+ }
  setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomFull=false;guestCid='';roomCode=makeCode();savedCode=roomCode;
  netClose();stopPeerMgr();
  conn=netCh=makeNetConn(roomCode,true,{
   onReady:function(){
    $('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');
-   setStatus(roomPass?'✅ الغرفة جاهزة ومحمية بكلمة سر — بانتظار انضمام لاعب معاه الكلمة… (1/2)':'✅ الغرفة جاهزة ومعروضة في قائمة الغرف — بانتظار انضمام أي لاعب… (1/2)');
+   var ps=$('passShow');
+   if(ps){if(roomPass){ps.textContent='🔒 كود الدخول: '+roomPass;ps.classList.remove('hidden');}else{ps.textContent='';ps.classList.add('hidden');}}
+   setStatus(roomPass?'✅ الغرفة الخاصة جاهزة — شارك رمز الغرفة وكود الدخول مع صاحبك… (1/2)':'✅ الغرفة العامة جاهزة ومعروضة في قائمة الغرف — أي لاعب يقدر يدخل… (1/2)');
    lobbyAnnounce();
   },
   onPeer:function(){roomFull=true;try{if(!started){var rm=document.getElementById('room');if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب بيدخل الغرفة — ظبط الإعدادات وابدأ');}if(conn&&conn.open){conn.send({type:'who'});conn.send({type:'hostready',name:myName()});}}}catch(e){}if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}lobbyDbUpsert();}setTimeout(lobbyStopAnnounce,150);},
@@ -3258,8 +3431,8 @@ function connectToHost(code,silent){
   toast('❌ الغرفة مش متاحة');
   try{refreshLobbyList();}catch(e){}
   show(window.mzFromLobby?'lobby':'room');
-  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,1800);}catch(e){}}
- },3200);}
+  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,2500);}catch(e){}}
+ },2600);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3284,7 +3457,7 @@ function connectToHost(code,silent){
    else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2000);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3295,7 +3468,7 @@ function connectToHost(code,silent){
 var LOBBY_TOPIC='mzaida-lobby-v1';
 var ROOM_TTL_MS=8000;
 var lobbyDead={};
-function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
+function lobbyMarkDead(code){if(code){lobbyDead[code]=Date.now();try{delete lobbyCache[code];lobbySig='';}catch(e){}}}
 var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[],lobbyDbCh=null,lobbyHostToken='';
 function apiFetch(url,opts,ms){
  opts=opts||{};
@@ -3332,31 +3505,55 @@ function lobbyLeaveCh(){
  lobbyCh=null;lobbyChSub=false;
 }
 function lobbyMaybeLeave(){if(!lobbyMine&&!lobbyVisible())lobbyLeaveCh();}
+/* ===== كاش موحّد للغرف =====
+   قبل كده القائمة كانت بتتبني مرتين من مصدرين (Presence + قاعدة البيانات) وكل
+   مصدر بيمسح نتيجة التاني، فالغرف كانت بتظهر وتختفي كل ثانية. دلوقتي كل
+   المصادر بتصب في كاش واحد، والغرفة بتفضل ظاهرة لحد ما يعدي وقت السماح
+   (LOBBY_GRACE_MS) من غير أي إشارة منها، وبنعيد الرسم بس لما القائمة تتغيّر فعلاً. */
+var LOBBY_GRACE_MS=22000;
+var lobbyCache={},lobbySig='';
+function lobbyFeed(list){
+ var now=Date.now();
+ (list||[]).forEach(function(r){
+  if(!r||!r.code)return;
+  var prev=lobbyCache[r.code]||{};
+  var ts=r.ts||now;
+  if(prev.ts&&prev.ts>ts)ts=prev.ts;
+  lobbyCache[r.code]={code:r.code,name:r.name||prev.name,gameType:r.gameType||prev.gameType,locked:!!r.locked,full:!!r.full,ts:ts,seen:now};
+ });
+ lobbyBuild();
+}
+function lobbyBuild(){
+ var now=Date.now(),rooms=[];
+ Object.keys(lobbyCache).forEach(function(code){
+  var r=lobbyCache[code];
+  if(now-(r.seen||0)>LOBBY_GRACE_MS){delete lobbyCache[code];return;}
+  if(r.full)return;/* غرفة ممتلئة (2/2) متتعرضش */
+  if(lobbyDead[code]&&now-lobbyDead[code]<60000)return;/* غرفة اتقفلت */
+  if(roomCode&&code===roomCode)return;/* غرفتك انت */
+  rooms.push(r);
+ });
+ rooms.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+ lobbyLastRooms=rooms;
+ var sig=rooms.map(function(r){return r.code+'|'+(r.name||'')+'|'+(r.locked?1:0)+'|'+(r.gameType||'');}).join(',');
+ if(sig===lobbySig)return;/* مفيش تغيير حقيقي — منعيدش الرسم عشان القائمة متهزّش */
+ lobbySig=sig;
+ if(lobbyVisible())renderLobbyList(null,false,rooms);
+}
 function lobbyCollect(){
- var rooms=[],seen={},now=Date.now();
+ var out=[];
  if(lobbyCh){
   var st={};try{st=lobbyCh.presenceState()||{};}catch(e){st={};}
   Object.keys(st).forEach(function(k){
    var arr=st[k]||[];
-   for(var i=0;i<arr.length;i++){
-    var r=arr[i];
-    if(!r||!r.code)continue;
-    if(r.full)continue;/* غرفة ممتلئة (2/2) متتعرضش */
-    if(lobbyDead[r.code]&&now-lobbyDead[r.code]<60000)continue;/* غرفة اتقفلت أو اتملت */
-    if(roomCode&&r.code===roomCode)continue;/* متستبعدش غرفتك من نفسك */
-    if(r.ts&&now-r.ts>ROOM_TTL_MS)continue;
-    if(seen[r.code])continue;
-    seen[r.code]=1;rooms.push(r);
-   }
+   for(var i=0;i<arr.length;i++){var r=arr[i];if(r&&r.code)out.push(r);}
   });
  }
- rooms.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
- lobbyLastRooms=rooms;
- if(lobbyVisible())renderLobbyList(null,false,rooms);
+ lobbyFeed(out);
 }
 function lobbyDropRoom(code){
- lobbyLastRooms=lobbyLastRooms.filter(function(r){return r.code!==code;});
- if(lobbyVisible())renderLobbyList(null,false,lobbyLastRooms);
+ if(code){delete lobbyCache[code];lobbySig='';}
+ lobbyBuild();
 }
 function lobbyToken(){if(lobbyHostToken)return lobbyHostToken;var a=new Uint8Array(24);crypto.getRandomValues(a);lobbyHostToken=Array.from(a,function(x){return x.toString(16).padStart(2,'0');}).join('');return lobbyHostToken;}
 function lobbyDbUpsert(){var c=sbClient();if(!c||!lobbyMine)return;try{c.rpc('upsert_game_room',{p_code:lobbyMine.code,p_host_name:lobbyMine.name||'لاعب',p_game_type:lobbyMine.gameType||'auction',p_is_locked:!!lobbyMine.locked,p_is_full:!!lobbyMine.full,p_host_token:lobbyToken()});}catch(e){}}
@@ -3387,7 +3584,7 @@ function openLobbyBrowser(){
  lobbyJoinCh();
  setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,1800);
+ lobbyRefreshInt=setInterval(refreshLobbyList,2500);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;if(lobbyDbCh){try{var cc=sbClient();if(cc)cc.removeChannel(lobbyDbCh);}catch(e){}lobbyDbCh=null;}
@@ -3398,11 +3595,16 @@ function refreshLobbyList(){
  if(!sbReady()){renderLobbyList('جارٍ تحميل السيرفر… ثانية واحدة وجرّب تاني',true);return;}
  lobbyJoinCh();lobbyCollect();
  var c=sbClient();if(!c)return;
- c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').eq('is_full',false).order('updated_at',{ascending:false}).limit(30).then(function(res){
+ c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').order('updated_at',{ascending:false}).limit(40).then(function(res){
   if(res.error)return;
-  var now=Date.now(),seen={},rooms=[];
-  (res.data||[]).forEach(function(r){if(!r.code||seen[r.code]||now-new Date(r.updated_at).getTime()>25000)return;seen[r.code]=1;rooms.push({code:r.code,name:r.host_name,gameType:r.game_type,locked:r.is_locked,full:r.is_full,ts:new Date(r.updated_at).getTime()});});
-  lobbyLastRooms=rooms;if(lobbyVisible())renderLobbyList(null,false,rooms);
+  var now=Date.now(),rooms=[];
+  (res.data||[]).forEach(function(r){
+   if(!r.code)return;
+   var ts=new Date(r.updated_at).getTime();
+   if(now-ts>30000){delete lobbyCache[r.code];return;}
+   rooms.push({code:r.code,name:r.host_name,gameType:r.game_type,locked:r.is_locked,full:r.is_full,ts:ts});
+  });
+  lobbyFeed(rooms);
  });
  if(!lobbyDbCh){lobbyDbCh=c.channel('game-rooms-list').on('postgres_changes',{event:'*',schema:'public',table:'game_rooms'},function(){if(lobbyVisible())setTimeout(refreshLobbyList,60);}).subscribe();}
 }
@@ -3425,7 +3627,7 @@ function joinFoundRoom(code,locked){
  var codeIn=$('joinCode');if(codeIn)codeIn.value=code;
  var pw='';
  if(locked){
-  pw=(prompt('🔒 الغرفة دي محمية بكلمة سر — اكتبها عشان تدخل:')||'').trim();
+  pw=(prompt('🔒 دي غرفة خاصة — اكتب كود الدخول:')||'').trim();
   if(!pw){show('lobby');return;}
  }
  var passIn=$('joinPass');if(passIn)passIn.value=pw;
@@ -3729,15 +3931,15 @@ function startGuestWatch(){
  guestWatchInt=setInterval(function(){
   if(!(online&&!isHost&&started&&conn&&conn.open))return;
   var gap=Date.now()-lastSnapAt;
-  if(gap<2500){guestSyncAsks=0;return;}
+  if(gap<1800){guestSyncAsks=0;return;}
   guestSyncAsks++;
   guestRequestSync();
-  if(guestSyncAsks===3)toast('⏳ بنعيد المزامنة مع المضيف…');
+  /* مزامنة صامتة في الخلفية — من غير أي رسالة تظهر للاعب */
  },1000);
 }
 function stopGuestWatch(){if(guestWatchInt){clearInterval(guestWatchInt);guestWatchInt=null;}}
 /* زرار يدوي في شاشة انتظار المضيف — لو حصل أي تعليق اللاعب يقدر يزامن بنفسه */
-function guestForceSync(){toast('🔄 جاري المزامنة مع المضيف…');guestRequestSync();}
+function guestForceSync(){guestRequestSync();}
 /* تحديث خفيف لشريط/عداد الوقت فقط (من غير إعادة بناء الصفحة كلها) — بيتنفذ كل ثانية
    بدل ما كانت اللعبة بتعيد رسم كل حاجة (الفرق والكروت واللوج) 4 مرات في الثانية،
    وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
@@ -4494,7 +4696,7 @@ function renderTP(){
  }
  html+='</div>';
  html+='<div class="tp-round-pill">الجولة '+(tpRound+1)+' / '+tpDeck.length+'</div>';
- html+='<div class="tp-hero"><img data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
+ html+='<div class="tp-hero"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
  html+='<div class="tp-move">'+tpCur.from+' <span class="arrow">➜</span> '+tpCur.to+' <span class="yr">('+tpCur.year+')</span></div></div>';
  if(tpPhase==='guess'){
   var seatsToShow=(mode===2)?[0,1]:[me];
@@ -4544,7 +4746,7 @@ function renderTPSolo(){
  }
  html+='</div>';
  html+='<div class="tp-round-pill">الجولة '+(tpRound+1)+' / '+tpDeck.length+'</div>';
- html+='<div class="tp-hero"><img data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
+ html+='<div class="tp-hero"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
  html+='<div class="tp-move">'+tpCur.from+' <span class="arrow">➜</span> '+tpCur.to+' <span class="yr">('+tpCur.year+')</span></div></div>';
  if(tpPhase==='guess'){
   var locked=tpLocked[0];
@@ -4810,7 +5012,7 @@ function checkCaptains(){if(captainIdx[0]===-1||captainIdx[1]===-1){render();bro
 /* ========= العرض ========= */
 function pcardHTML(p,enter,big){
  var cls=p.r>=92?'legend':p.r>=85?'gold':p.r>=75?'silver':'bronze';
- return '<div class="pcard'+(big?' big':'')+(enter?' enter':'')+'"><img data-en="'+p.en+'" src="'+initialsImg(p)+'" alt=""><div class="info"><div class="nm">'+p.flag+' '+p.ar+(p.protected?' 🛡️':'')+'</div><div class="cl">'+p.club+' • '+p.pos+'</div></div><div class="rt '+cls+'"><b>'+p.r+'</b><small>'+p.pos+'</small></div></div>';
+ return '<div class="pcard'+(big?' big':'')+(enter?' enter':'')+'"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+p.en+'" src="'+initialsImg(p)+'" alt=""><div class="info"><div class="nm">'+p.flag+' '+p.ar+(p.protected?' 🛡️':'')+'</div><div class="cl">'+p.club+' • '+p.pos+'</div></div><div class="rt '+cls+'"><b>'+p.r+'</b><small>'+p.pos+'</small></div></div>';
 }
 function updateStarCard(){lastCardRound=round;if(!curStar)return;$('futBox').innerHTML=pcardHTML(curStar,true,true);bindWiki($('futBox'));}
 function posGroup(p){if(p.pos==='GK')return 'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return 'DEF';if(p.pos==='CDM'||p.pos==='CM'||p.pos==='CAM')return 'MID';return 'ATT';}
@@ -5014,19 +5216,19 @@ function renderPostCardsOverlay(){
    html+='<div class="phase-title">';
    if(c==='protect'){
     html+='اختار لاعبك للحماية:</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='steal'){
     html+='١) اختار لاعب من عندك هتديه للخصم:</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div><div class="phase-title">٢) اختار لاعب الخصم اللي هتاخده بدله:</div><div class="pick-grid">';
-    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0&&cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">🔁 تأكيد التبديل (مجاني)</button>';
    }else if(c==='wild'||c==='norisk'){
     html+='اختار لاعبك اللي هيتغيّر (هيجيلك بدله لاعب عشوائي من نفس المركز):</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='gift'){
@@ -5065,7 +5267,7 @@ function renderBoxPhase(){
    if(opened&&(mine||boxPicked[seat])){
     var pl=boxSets[seat][i];
     var bonusBadge=pl.bonusCard?('<div class="box-bonus">'+(pl.bonusCard==='steal'?'🔁 تبديل!':'🛡️ حماية!')+'</div>'):'';
-    html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
+    html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img referrerpolicy="no-referrer" crossorigin="anonymous" class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
    }else{
     html+='<div class="box-item pack pk'+(i%4)+(canOpen?'':' locked')+'" '+(canOpen?('onclick="boxClickOpen('+seat+','+i+')"'):'')+'><span class="pack-shine"></span><span class="pack-badge">'+(mine?'👥':'🔒')+'</span><span class="pack-crest"><b>UT</b></span><span class="pack-foot">PACK '+(i+1)+'</span></div>';
    }
@@ -5090,7 +5292,7 @@ function render(){
   var html='<h2>👑 اختار الكابتن</h2><div class="phase-title">الكابتن بياخد +5 تقييم في المباراة</div>';
   if(myTurn){var ti=(mode===2?(captainIdx[0]===-1?0:1):me);
    html+='<p style="color:var(--blue);font-size:13px;font-weight:800;margin-bottom:8px">الدور: '+waitingName+'</p><div class="pick-grid">';
-   orderedSquad(P[ti].squad).forEach(function(o){var p=o.p,idx=o.i;html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+   orderedSquad(P[ti].squad).forEach(function(o){var p=o.p,idx=o.i;html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
    html+='</div>';
   }else if(waiting){html+='<div class="status">بانتظار '+waitingName+' يختار الكابتن…</div>';}
   $('obox').innerHTML=html;bindWiki($('obox'));return;
