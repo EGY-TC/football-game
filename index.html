@@ -46,6 +46,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
 <!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل فورًا من أول ما الصفحة تفتح
      (async، من غير ما توقف رسم الصفحة) عشان الاتصال يبقى جاهز بأسرع وقت
      ولا يفضل الزرار عالق مستني تحميل المكتبة لما اللاعب يدوس عليه. -->
@@ -111,6 +112,11 @@ input[type=range]{padding:0;height:34px;accent-color:var(--acc)}
 .big-btn:active{transform:scale(.97)}
 .green{background:var(--acc);color:#04180a}.blue{background:var(--blue);color:#04101c}.red{background:var(--red);color:#1c0407}.purple{background:var(--purple);color:#1a0426}.goldb{background:var(--gold);color:#231303}
 .or{text-align:center;color:var(--dim);margin:12px 0;font-weight:700}
+.privacy-pick{display:flex;gap:8px;margin-bottom:8px}
+.priv-btn{flex:1;padding:11px 6px;border-radius:12px;border:2px solid var(--line);background:var(--card2);color:var(--dim);font-weight:900;font-size:14px;cursor:pointer;transition:.15s}
+.priv-btn.on{border-color:var(--acc);color:var(--txt);background:rgba(63,185,80,.14)}
+.priv-hint{font-size:11px;color:var(--dim);font-weight:700;text-align:center;margin-bottom:8px}
+#passShow{margin-top:6px;font-weight:900;color:var(--gold);font-size:14px}
 .tour-cta{display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(255,196,0,.16),rgba(255,196,0,.04));transition:.15s}
 .tour-cta:active{transform:scale(.985)}
 .tour-cta-ic{font-size:30px;line-height:1}
@@ -900,16 +906,21 @@ input[type=range]{accent-color:var(--acc)}
 <div class="hdr"><button class="back" onclick="leaveHome()">↩ رجوع</button><h1>غرفة أونلاين</h1></div>
 <div class="card">
 <div class="pc-ready" id="roomGameType">نوع اللعبة: ⚽ مزاد النجوم</div>
-<input id="createPass" placeholder="🔒 كلمة سر للغرفة (اختياري)" maxlength="20" style="text-align:center;margin-bottom:8px">
+<div class="privacy-pick">
+ <button type="button" class="priv-btn on" id="privPublicBtn" onclick="setRoomPrivacy(true)">🌍 غرفة عامة</button>
+ <button type="button" class="priv-btn" id="privPrivateBtn" onclick="setRoomPrivacy(false)">🔒 غرفة خاصة</button>
+</div>
+<div id="privHint" class="priv-hint">أي لاعب يقدر يدخل من قائمة الغرف المفتوحة من غير كود.</div>
+<input id="createPass" class="hidden" placeholder="🔒 كود الدخول للغرفة الخاصة" maxlength="20" style="text-align:center;margin-bottom:8px">
 <button class="big-btn green" onclick="createRoom()">➕ إنشاء غرفة جديدة</button>
-<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
+<div id="codeBox" class="hidden">رمز الغرفة:<div id="codeShow"></div><div id="passShow" class="hidden"></div><button class="big-btn goldb" style="margin-top:6px" onclick="shareRoomCode()">📤 شارك الرمز</button></div>
 <button class="big-btn purple" style="margin-top:8px" onclick="openLobbyBrowser()">🔀 غرف اللاعبين المفتوحة</button>
 <div class="or">— أو ادخل برمز صاحبك —</div>
 <input id="joinCode" placeholder="رمز الغرفة" maxlength="4" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-weight:900">
-<input id="joinPass" placeholder="🔒 كلمة السر (لو الغرفة مقفولة)" maxlength="20" style="text-align:center;margin-top:8px">
+<input id="joinPass" placeholder="🔒 كود الدخول (للغرف الخاصة بس)" maxlength="20" style="text-align:center;margin-top:8px">
 <button class="big-btn blue" style="margin-top:8px" onclick="joinRoom()">انضمام ➜</button>
 <div id="roomStatus" class="status"></div>
-<div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.8">حط كلمة سر لغرفتك عشان محدش يدخل عشوائي غير اللي معاه الكلمة — سيبها فاضية لو مش محتاج. لو الاتصال بيفشل معاك كتير، اللعبة بتحوّل تلقائيًا لوضع الاتصال المضمون (Relay).</div>
+<div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.8">الغرفة <b>العامة</b> بتظهر في قائمة الغرف المفتوحة وأي لاعب يدخلها من غير كود. الغرفة <b>الخاصة</b> لازم اللاعب يكتب كود الدخول اللي انت حاططه. لو الاتصال بيفشل معاك كتير، اللعبة بتحوّل تلقائيًا لوضع الاتصال المضمون (Relay).</div>
 </div>
 </div>
 <div id="lobby" class="screen hidden">
@@ -3187,7 +3198,7 @@ var peerMgr=null,autoRejoin=null,rejoinTries=0,lastRx=0,watchdog=null;
 function stopPeerMgr(){try{if(peerMgr)peerMgr.stop();}catch(e){}peerMgr=null;}
 function shareRoomCode(){
  if(!roomCode)return;
- var msg='🎮 يلا العب معايا "مزاد النجوم"!\nرمز الغرفة: '+roomCode+'\nافتح اللعبة ودوس "انضمام" واكتب الرمز ده 👆';
+ var msg='🎮 يلا العب معايا "مزاد النجوم"!\nرمز الغرفة: '+roomCode+(roomPass?'\n🔒 كود الدخول: '+roomPass:'\n🌍 الغرفة عامة — مش محتاج كود')+'\nافتح اللعبة ودوس "انضمام" واكتب الرمز ده 👆';
  if(navigator.share){
   navigator.share({title:'مزاد النجوم',text:msg}).catch(function(){});
   return;
@@ -3200,15 +3211,32 @@ function shareRoomCode(){
   }else{toast('الرمز: '+roomCode);}
  }
 }
+/* ===== نوع الغرفة: عامة (أي حد يدخل من غير كود) أو خاصة (لازم كود دخول) ===== */
+var roomIsPublic=true;
+function setRoomPrivacy(pub){
+ roomIsPublic=!!pub;
+ var pb=$('privPublicBtn'),vb=$('privPrivateBtn'),inp=$('createPass'),hint=$('privHint');
+ if(pb)pb.classList.toggle('on',roomIsPublic);
+ if(vb)vb.classList.toggle('on',!roomIsPublic);
+ if(inp){inp.classList.toggle('hidden',roomIsPublic);if(roomIsPublic)inp.value='';}
+ if(hint)hint.textContent=roomIsPublic?'أي لاعب يقدر يدخل من قائمة الغرف المفتوحة من غير كود.':'محدش يدخل غير اللي معاه كود الدخول — اكتب الكود تحت وشاركه مع صاحبك.';
+}
 function createRoom(){
  if(!sbReady())return toast('جارٍ تحميل السيرفر… انتظر ثانية وجرّب تاني');
- roomPass=(($('createPass')&&$('createPass').value)||'').trim();isPublicRoom=true;
+ isPublicRoom=true;
+ if(roomIsPublic){roomPass='';}
+ else{
+  roomPass=(($('createPass')&&$('createPass').value)||'').trim();
+  if(!roomPass){roomPass=String(Math.floor(1000+Math.random()*9000));if($('createPass'))$('createPass').value=roomPass;}
+ }
  setStatus('جارٍ إنشاء الغرفة…');isHost=true;mySeat=0;roomFull=false;guestCid='';roomCode=makeCode();savedCode=roomCode;
  netClose();stopPeerMgr();
  conn=netCh=makeNetConn(roomCode,true,{
   onReady:function(){
    $('codeShow').textContent=roomCode;$('codeBox').classList.remove('hidden');
-   setStatus(roomPass?'✅ الغرفة جاهزة ومحمية بكلمة سر — بانتظار انضمام لاعب معاه الكلمة… (1/2)':'✅ الغرفة جاهزة ومعروضة في قائمة الغرف — بانتظار انضمام أي لاعب… (1/2)');
+   var ps=$('passShow');
+   if(ps){if(roomPass){ps.textContent='🔒 كود الدخول: '+roomPass;ps.classList.remove('hidden');}else{ps.textContent='';ps.classList.add('hidden');}}
+   setStatus(roomPass?'✅ الغرفة الخاصة جاهزة — شارك رمز الغرفة وكود الدخول مع صاحبك… (1/2)':'✅ الغرفة العامة جاهزة ومعروضة في قائمة الغرف — أي لاعب يقدر يدخل… (1/2)');
    lobbyAnnounce();
   },
   onPeer:function(){roomFull=true;try{if(!started){var rm=document.getElementById('room');if(rm&&!rm.classList.contains('hidden')){show('settings');setStatus('✅ لاعب بيدخل الغرفة — ظبط الإعدادات وابدأ');}if(conn&&conn.open){conn.send({type:'who'});conn.send({type:'hostready',name:myName()});}}}catch(e){}if(lobbyMine){lobbyMine.full=true;if(lobbyCh&&lobbyChSub){try{lobbyCh.track(lobbyMine);}catch(e){}}lobbyDbUpsert();}setTimeout(lobbyStopAnnounce,150);},
@@ -3258,8 +3286,8 @@ function connectToHost(code,silent){
   toast('❌ الغرفة مش متاحة');
   try{refreshLobbyList();}catch(e){}
   show(window.mzFromLobby?'lobby':'room');
-  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,1800);}catch(e){}}
- },3200);}
+  if(window.mzFromLobby){try{clearInterval(lobbyRefreshInt);lobbyRefreshInt=setInterval(refreshLobbyList,2500);}catch(e){}}
+ },2600);}
  conn=netCh=makeNetConn(code,false,{
   onReady:function(){if(!silent)setStatus('⚡ بندخلك غرفة '+code+'…');},
   onBusy:function(){
@@ -3284,7 +3312,7 @@ function connectToHost(code,silent){
    else{clearTimeout(joinHardTimer);setStatus('⚠️ تعذر الوصول للسيرفر — تأكد من الإنترنت وأعد المحاولة');show('room');}
   }
  });
- if(conn){wireConn();setTimeout(ensureVoicePeer,2500);}
+ if(conn){wireConn();setTimeout(ensureVoicePeer,2000);}
  else{setStatus('⚠️ تعذر الوصول للسيرفر — حدّث الصفحة وجرّب تاني');show('room');}
 }
 
@@ -3295,7 +3323,7 @@ function connectToHost(code,silent){
 var LOBBY_TOPIC='mzaida-lobby-v1';
 var ROOM_TTL_MS=8000;
 var lobbyDead={};
-function lobbyMarkDead(code){if(code)lobbyDead[code]=Date.now();}
+function lobbyMarkDead(code){if(code){lobbyDead[code]=Date.now();try{delete lobbyCache[code];lobbySig='';}catch(e){}}}
 var lobbyCh=null,lobbyChSub=false,lobbyMine=null,lobbyHbInt=null,lobbyRefreshInt=null,lobbyLastRooms=[],lobbyDbCh=null,lobbyHostToken='';
 function apiFetch(url,opts,ms){
  opts=opts||{};
@@ -3332,31 +3360,55 @@ function lobbyLeaveCh(){
  lobbyCh=null;lobbyChSub=false;
 }
 function lobbyMaybeLeave(){if(!lobbyMine&&!lobbyVisible())lobbyLeaveCh();}
+/* ===== كاش موحّد للغرف =====
+   قبل كده القائمة كانت بتتبني مرتين من مصدرين (Presence + قاعدة البيانات) وكل
+   مصدر بيمسح نتيجة التاني، فالغرف كانت بتظهر وتختفي كل ثانية. دلوقتي كل
+   المصادر بتصب في كاش واحد، والغرفة بتفضل ظاهرة لحد ما يعدي وقت السماح
+   (LOBBY_GRACE_MS) من غير أي إشارة منها، وبنعيد الرسم بس لما القائمة تتغيّر فعلاً. */
+var LOBBY_GRACE_MS=22000;
+var lobbyCache={},lobbySig='';
+function lobbyFeed(list){
+ var now=Date.now();
+ (list||[]).forEach(function(r){
+  if(!r||!r.code)return;
+  var prev=lobbyCache[r.code]||{};
+  var ts=r.ts||now;
+  if(prev.ts&&prev.ts>ts)ts=prev.ts;
+  lobbyCache[r.code]={code:r.code,name:r.name||prev.name,gameType:r.gameType||prev.gameType,locked:!!r.locked,full:!!r.full,ts:ts,seen:now};
+ });
+ lobbyBuild();
+}
+function lobbyBuild(){
+ var now=Date.now(),rooms=[];
+ Object.keys(lobbyCache).forEach(function(code){
+  var r=lobbyCache[code];
+  if(now-(r.seen||0)>LOBBY_GRACE_MS){delete lobbyCache[code];return;}
+  if(r.full)return;/* غرفة ممتلئة (2/2) متتعرضش */
+  if(lobbyDead[code]&&now-lobbyDead[code]<60000)return;/* غرفة اتقفلت */
+  if(roomCode&&code===roomCode)return;/* غرفتك انت */
+  rooms.push(r);
+ });
+ rooms.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+ lobbyLastRooms=rooms;
+ var sig=rooms.map(function(r){return r.code+'|'+(r.name||'')+'|'+(r.locked?1:0)+'|'+(r.gameType||'');}).join(',');
+ if(sig===lobbySig)return;/* مفيش تغيير حقيقي — منعيدش الرسم عشان القائمة متهزّش */
+ lobbySig=sig;
+ if(lobbyVisible())renderLobbyList(null,false,rooms);
+}
 function lobbyCollect(){
- var rooms=[],seen={},now=Date.now();
+ var out=[];
  if(lobbyCh){
   var st={};try{st=lobbyCh.presenceState()||{};}catch(e){st={};}
   Object.keys(st).forEach(function(k){
    var arr=st[k]||[];
-   for(var i=0;i<arr.length;i++){
-    var r=arr[i];
-    if(!r||!r.code)continue;
-    if(r.full)continue;/* غرفة ممتلئة (2/2) متتعرضش */
-    if(lobbyDead[r.code]&&now-lobbyDead[r.code]<60000)continue;/* غرفة اتقفلت أو اتملت */
-    if(roomCode&&r.code===roomCode)continue;/* متستبعدش غرفتك من نفسك */
-    if(r.ts&&now-r.ts>ROOM_TTL_MS)continue;
-    if(seen[r.code])continue;
-    seen[r.code]=1;rooms.push(r);
-   }
+   for(var i=0;i<arr.length;i++){var r=arr[i];if(r&&r.code)out.push(r);}
   });
  }
- rooms.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
- lobbyLastRooms=rooms;
- if(lobbyVisible())renderLobbyList(null,false,rooms);
+ lobbyFeed(out);
 }
 function lobbyDropRoom(code){
- lobbyLastRooms=lobbyLastRooms.filter(function(r){return r.code!==code;});
- if(lobbyVisible())renderLobbyList(null,false,lobbyLastRooms);
+ if(code){delete lobbyCache[code];lobbySig='';}
+ lobbyBuild();
 }
 function lobbyToken(){if(lobbyHostToken)return lobbyHostToken;var a=new Uint8Array(24);crypto.getRandomValues(a);lobbyHostToken=Array.from(a,function(x){return x.toString(16).padStart(2,'0');}).join('');return lobbyHostToken;}
 function lobbyDbUpsert(){var c=sbClient();if(!c||!lobbyMine)return;try{c.rpc('upsert_game_room',{p_code:lobbyMine.code,p_host_name:lobbyMine.name||'لاعب',p_game_type:lobbyMine.gameType||'auction',p_is_locked:!!lobbyMine.locked,p_is_full:!!lobbyMine.full,p_host_token:lobbyToken()});}catch(e){}}
@@ -3387,7 +3439,7 @@ function openLobbyBrowser(){
  lobbyJoinCh();
  setTimeout(refreshLobbyList,600);
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,1800);
+ lobbyRefreshInt=setInterval(refreshLobbyList,2500);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;if(lobbyDbCh){try{var cc=sbClient();if(cc)cc.removeChannel(lobbyDbCh);}catch(e){}lobbyDbCh=null;}
@@ -3398,11 +3450,16 @@ function refreshLobbyList(){
  if(!sbReady()){renderLobbyList('جارٍ تحميل السيرفر… ثانية واحدة وجرّب تاني',true);return;}
  lobbyJoinCh();lobbyCollect();
  var c=sbClient();if(!c)return;
- c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').eq('is_full',false).order('updated_at',{ascending:false}).limit(30).then(function(res){
+ c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').order('updated_at',{ascending:false}).limit(40).then(function(res){
   if(res.error)return;
-  var now=Date.now(),seen={},rooms=[];
-  (res.data||[]).forEach(function(r){if(!r.code||seen[r.code]||now-new Date(r.updated_at).getTime()>25000)return;seen[r.code]=1;rooms.push({code:r.code,name:r.host_name,gameType:r.game_type,locked:r.is_locked,full:r.is_full,ts:new Date(r.updated_at).getTime()});});
-  lobbyLastRooms=rooms;if(lobbyVisible())renderLobbyList(null,false,rooms);
+  var now=Date.now(),rooms=[];
+  (res.data||[]).forEach(function(r){
+   if(!r.code)return;
+   var ts=new Date(r.updated_at).getTime();
+   if(now-ts>30000){delete lobbyCache[r.code];return;}
+   rooms.push({code:r.code,name:r.host_name,gameType:r.game_type,locked:r.is_locked,full:r.is_full,ts:ts});
+  });
+  lobbyFeed(rooms);
  });
  if(!lobbyDbCh){lobbyDbCh=c.channel('game-rooms-list').on('postgres_changes',{event:'*',schema:'public',table:'game_rooms'},function(){if(lobbyVisible())setTimeout(refreshLobbyList,60);}).subscribe();}
 }
@@ -3425,7 +3482,7 @@ function joinFoundRoom(code,locked){
  var codeIn=$('joinCode');if(codeIn)codeIn.value=code;
  var pw='';
  if(locked){
-  pw=(prompt('🔒 الغرفة دي محمية بكلمة سر — اكتبها عشان تدخل:')||'').trim();
+  pw=(prompt('🔒 دي غرفة خاصة — اكتب كود الدخول:')||'').trim();
   if(!pw){show('lobby');return;}
  }
  var passIn=$('joinPass');if(passIn)passIn.value=pw;
@@ -3729,15 +3786,15 @@ function startGuestWatch(){
  guestWatchInt=setInterval(function(){
   if(!(online&&!isHost&&started&&conn&&conn.open))return;
   var gap=Date.now()-lastSnapAt;
-  if(gap<2500){guestSyncAsks=0;return;}
+  if(gap<1800){guestSyncAsks=0;return;}
   guestSyncAsks++;
   guestRequestSync();
-  if(guestSyncAsks===3)toast('⏳ بنعيد المزامنة مع المضيف…');
+  /* مزامنة صامتة في الخلفية — من غير أي رسالة تظهر للاعب */
  },1000);
 }
 function stopGuestWatch(){if(guestWatchInt){clearInterval(guestWatchInt);guestWatchInt=null;}}
 /* زرار يدوي في شاشة انتظار المضيف — لو حصل أي تعليق اللاعب يقدر يزامن بنفسه */
-function guestForceSync(){toast('🔄 جاري المزامنة مع المضيف…');guestRequestSync();}
+function guestForceSync(){guestRequestSync();}
 /* تحديث خفيف لشريط/عداد الوقت فقط (من غير إعادة بناء الصفحة كلها) — بيتنفذ كل ثانية
    بدل ما كانت اللعبة بتعيد رسم كل حاجة (الفرق والكروت واللوج) 4 مرات في الثانية،
    وده كان السبب الرئيسي في تقل الموقع على الموبايل وزيادة استهلاك سيرفر المزامنة */
