@@ -2335,6 +2335,41 @@ function wikiImg(en,el){
  }catch(e){}
 }
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
+/* ===== إصلاح ظهور صور اللاعبين =====
+   المشكلة: مش كل شاشة بتنادي bindWiki بعد ما ترسم، فصور اللاعبين كانت بتفضل حروف بس.
+   الحل: مراقب عام بيربط أي <img data-en> يظهر في الصفحة تلقائيًا + إعادة محاولة لو الصورة وقعت. */
+function imgIsUrl(u){return typeof u==='string'&&/^https?:\/\//.test(u);}
+(function(){try{var ch=false;Object.keys(IMG).forEach(function(k){if(!imgIsUrl(IMG[k])){delete IMG[k];ch=true;}});if(ch)imgCacheSave();}catch(e){}})();
+function wikiBindEl(im){
+ if(!im||im._wikiBound)return;
+ var en=im.dataset?im.dataset.en:null;
+ if(!en)return;
+ im._wikiBound=true;
+ im.addEventListener('error',function(){
+  try{
+   var e2=im.dataset.en;
+   if(e2&&IMG[e2]){delete IMG[e2];imgCacheSave();}
+   im._wikiBusy=false;
+   IMG_FAILS[e2]=0;
+   setTimeout(function(){wikiImg(e2,im);},400);
+  }catch(e){}
+ });
+ wikiImg(en,im);
+}
+function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wikiBindEl);}catch(e){}}
+(function(){
+ function start(){
+  bindWikiAll();
+  try{
+   new MutationObserver(function(){
+    clearTimeout(window._wikiT);
+    window._wikiT=setTimeout(bindWikiAll,80);
+   }).observe(document.body,{childList:true,subtree:true});
+  }catch(e){}
+  setInterval(bindWikiAll,1500);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
 function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function fmt(n){if(n>=1000){var v=n/1000;return (v%1===0?v:v.toFixed(1))+' مليار';}return n+' مليون';}
