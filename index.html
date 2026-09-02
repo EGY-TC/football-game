@@ -2140,7 +2140,7 @@ function stopVoice(){
  updateMicBtn();
  var ob=$('oppMicLbl');if(ob)ob.classList.add('hidden');
 }
-var IMG=(function(){try{return JSON.parse(localStorage.getItem('mz_img_cache_v1')||'{}')||{};}catch(e){return {};}})();
+var IMG=(function(){try{return JSON.parse(localStorage.getItem('mz_img_cache_v2')||'{}')||{};}catch(e){return {};}})();
 var IMG_FAILS={};
 var imgSaveT=null;
 function imgCacheSave(){
@@ -2149,7 +2149,7 @@ function imgCacheSave(){
   try{
    var keys=Object.keys(IMG);
    if(keys.length>120){var o={};keys.slice(-120).forEach(function(k){o[k]=IMG[k];});IMG=o;}
-   localStorage.setItem('mz_img_cache_v1',JSON.stringify(IMG));
+   localStorage.setItem('mz_img_cache_v2',JSON.stringify(IMG));
   }catch(e){}
  },800);
 }
