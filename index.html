@@ -2406,54 +2406,43 @@ function verifyImage(u,cb){
  t=setTimeout(function(){im.onload=im.onerror=null;cb(false);},9000);
  im.src=u;
 }
+/* ===== نظام صور اللاعبين المستعاد من النسخة الاحتياطية (الشغّالة) ===== */
 function wikiImg(en,el){
- if(!en||!el)return;
- if(typeof IMG==='undefined'||!IMG)window.IMG=IMG={};
- try{el.referrerPolicy='no-referrer';}catch(e){}
+ if(!en)return;
  if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
+ /* لو المحاولة فشلت قبل كده مش بنقفل الصورة للأبد — بنجرب تاني (لحد 3 مرات) */
+ if((IMG_FAILS[en]||0)>=3)return;
  if(el._wikiBusy)return;el._wikiBusy=true;
+ setTimeout(function(){try{el._wikiBusy=false;}catch(e){}},1500);
  var title=WIKI_TITLE_OVERRIDE[en]||en;
- var settled=false;
- function done(u){
-  if(settled)return;
-  if(!u){el._wikiBusy=false;IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
-  verifyImage(u,function(ok){
-   if(!ok){el._wikiBusy=false;IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
-   settled=true;el._wikiBusy=false;IMG_FAILS[en]=0;
+ var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
+ var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(title);
+ function fromPages(j){
+  var pages=j&&j.query&&j.query.pages;if(!pages)return'';
+  var keys=Object.keys(pages);if(!keys.length)return'';
+  var p=pages[keys[0]];
+  return (p&&p.thumbnail)?p.thumbnail.source:'';
+ }
+ try{
+  /* مهم: بنجرب الاسم المظبوط لصفحة ويكيبيديا (direct) الأول دايمًا، مش البحث العام (search)،
+     لأن البحث العام بيرجع "أقرب نتيجة" حتى لو مش نفس اللاعب خالص (أسامي زي "Fred" أو "Kevin"
+     كانت بترجع صور ناس تانية تمامًا). الأوفررايد لو موجود بيدّينا اسم الصفحة الصح، ولو مش
+     موجود بنجرب بالاسم زي ما هو الأول لأن أغلب صفحات اللاعبين عنوانها اسمهم بالظبط. */
+  function ok(u){
+   if(!u){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
    IMG[en]=u;imgCacheSave();
-   try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en){im.referrerPolicy='no-referrer';im.src=u;}});}catch(e){}
+   try{el.src=u;}catch(e){}
+   try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en)im.src=u;});}catch(e){}
    imgShare(en,u);
+  }
+  fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
+   var u2=fromPages(j2);
+   if(u2){ok(u2);return;}
+   return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));});
+  }).catch(function(){
+   try{fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));}).catch(function(){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;});}catch(e){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;}
   });
- }
- /* 1) صفحة ويكيبيديا الدقيقة -> عنصر Wikidata -> صورته الرسمية */
- wikiToQid(title,function(qid){
-  if(!qid)return step2();
-  wdEntities([qid],function(ents){
-   var u0=wdPickImage(ents,[qid]);
-   if(u0)return done(u0);
-   step2();
-  });
- });
- function step2(){
- /* 2) بحث Wikidata بالاسم مع فلترة "لاعب كرة قدم" */
- wdSearch(title,function(res){
-  var ids=res.map(function(r){return r.id;});
-  wdEntities(ids,function(ents){
-   var u=wdPickImage(ents,ids);
-   if(u)return done(u);
-   /* 2) Wikidata مع كلمة footballer لتضييق البحث */
-   wdSearch(title+' footballer',function(res2){
-    var ids2=res2.map(function(r){return r.id;});
-    wdEntities(ids2,function(ents2){
-     var u2=wdPickImage(ents2,ids2);
-     if(u2)return done(u2);
-     /* 3) آخر حل: صورة صفحة ويكيبيديا نفسها */
-     wikiPageImage(title,function(u3){done(u3);});
-    });
-   });
-  });
- });
- }
+ }catch(e){}
 }
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
 /* ===== إصلاح ظهور صور اللاعبين =====
