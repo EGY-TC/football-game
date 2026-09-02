@@ -2298,41 +2298,51 @@ var WIKI_TITLE_OVERRIDE={
  "Alfredo Di Stéfano":"Alfredo Di Stéfano"
 };
 function wikiImg(en,el){
- if(!en)return;
+ if(!en||!el)return;
+ /* Wikimedia أحيانًا يمنع الصورة بسبب الـ referrer أو يمنع fetch حسب الاستضافة.
+    نضبط الصورة بدون referrer، ونستخدم JSONP كمسار احتياطي لا يعتمد على CORS. */
+ try{el.referrerPolicy='no-referrer';el.crossOrigin='anonymous';}catch(e){}
  if(IMG[en]){el.src=IMG[en];imgShare(en,IMG[en]);return;}
- /* لو المحاولة فشلت قبل كده مش بنقفل الصورة للأبد — بنجرب تاني (لحد 3 مرات) */
- if((IMG_FAILS[en]||0)>=3)return;
  if(el._wikiBusy)return;el._wikiBusy=true;
- setTimeout(function(){try{el._wikiBusy=false;}catch(e){}},1500);
  var title=WIKI_TITLE_OVERRIDE[en]||en;
- var searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*';
- var directUrl='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*&titles='+encodeURIComponent(title);
+ var settled=false;
  function fromPages(j){
   var pages=j&&j.query&&j.query.pages;if(!pages)return'';
   var keys=Object.keys(pages);if(!keys.length)return'';
-  var p=pages[keys[0]];
-  return (p&&p.thumbnail)?p.thumbnail.source:'';
+  for(var i=0;i<keys.length;i++){
+   var p=pages[keys[i]];
+   if(p&&p.thumbnail&&p.thumbnail.source)return p.thumbnail.source.replace(/^http:/,'https:');
+  }
+  return'';
+ }
+ function done(u){
+  if(settled)return;
+  if(!u){el._wikiBusy=false;IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
+  settled=true;el._wikiBusy=false;IMG_FAILS[en]=0;
+  u=u.replace(/^http:/,'https:');IMG[en]=u;imgCacheSave();
+  try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en){im.referrerPolicy='no-referrer';im.crossOrigin='anonymous';im.src=u;}});}catch(e){}
+  imgShare(en,u);
+ }
+ function jsonp(url,cb){
+  var id='_wkp'+Date.now()+Math.floor(Math.random()*99999),sc=document.createElement('script'),tm;
+  window[id]=function(j){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(j);};
+  sc.src=url+'&callback='+id;sc.async=true;
+  sc.onerror=function(){clearTimeout(tm);try{delete window[id];sc.remove();}catch(e){}cb(null);};
+  tm=setTimeout(sc.onerror,7000);document.head.appendChild(sc);
+ }
+ var api='https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=800&redirects=1&titles='+encodeURIComponent(title);
+ var search='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(title+' association football player')+'&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json';
+ function jsonpFallback(){
+  jsonp(api,function(j){var u=fromPages(j);if(u)return done(u);jsonp(search,function(j2){done(fromPages(j2));});});
  }
  try{
-  /* مهم: بنجرب الاسم المظبوط لصفحة ويكيبيديا (direct) الأول دايمًا، مش البحث العام (search)،
-     لأن البحث العام بيرجع "أقرب نتيجة" حتى لو مش نفس اللاعب خالص (أسامي زي "Fred" أو "Kevin"
-     كانت بترجع صور ناس تانية تمامًا). الأوفررايد لو موجود بيدّينا اسم الصفحة الصح، ولو مش
-     موجود بنجرب بالاسم زي ما هو الأول لأن أغلب صفحات اللاعبين عنوانها اسمهم بالظبط. */
-  function ok(u){
-   if(!u){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;return;}
-   IMG[en]=u;imgCacheSave();
-   try{el.src=u;}catch(e){}
-   try{document.querySelectorAll('img[data-en]').forEach(function(im){if(im.dataset.en===en)im.src=u;});}catch(e){}
-   imgShare(en,u);
-  }
-  fetch(directUrl).then(function(r){return r.json();}).then(function(j2){
-   var u2=fromPages(j2);
-   if(u2){ok(u2);return;}
-   return fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));});
-  }).catch(function(){
-   try{fetch(searchUrl).then(function(r){return r.json();}).then(function(j){ok(fromPages(j));}).catch(function(){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;});}catch(e){IMG_FAILS[en]=(IMG_FAILS[en]||0)+1;}
-  });
- }catch(e){}
+  var ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  var tm=setTimeout(function(){if(ctl)ctl.abort();},5500);
+  fetch(api+'&origin=*',{signal:ctl?ctl.signal:undefined,referrerPolicy:'no-referrer'}).then(function(r){if(!r.ok)throw Error('wiki');return r.json();}).then(function(j){
+   clearTimeout(tm);var u=fromPages(j);if(u)return done(u);
+   return fetch(search+'&origin=*',{referrerPolicy:'no-referrer'}).then(function(r){return r.json();}).then(function(j2){var u2=fromPages(j2);if(u2)done(u2);else jsonpFallback();});
+  }).catch(function(){clearTimeout(tm);jsonpFallback();});
+ }catch(e){jsonpFallback();}
 }
 function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(function(im){wikiImg(im.dataset.en,im);});}catch(e){}}
 /* ===== إصلاح ظهور صور اللاعبين =====
@@ -4586,7 +4596,7 @@ function renderTP(){
  }
  html+='</div>';
  html+='<div class="tp-round-pill">الجولة '+(tpRound+1)+' / '+tpDeck.length+'</div>';
- html+='<div class="tp-hero"><img data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
+ html+='<div class="tp-hero"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
  html+='<div class="tp-move">'+tpCur.from+' <span class="arrow">➜</span> '+tpCur.to+' <span class="yr">('+tpCur.year+')</span></div></div>';
  if(tpPhase==='guess'){
   var seatsToShow=(mode===2)?[0,1]:[me];
@@ -4636,7 +4646,7 @@ function renderTPSolo(){
  }
  html+='</div>';
  html+='<div class="tp-round-pill">الجولة '+(tpRound+1)+' / '+tpDeck.length+'</div>';
- html+='<div class="tp-hero"><img data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
+ html+='<div class="tp-hero"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+tpCur.en+'" src="'+initialsImg(tpImgFor(tpCur))+'"><div class="tp-nm">'+tpCur.flag+' '+tpCur.ar+'</div><div class="tp-info">صفقة انتقال حقيقية</div>';
  html+='<div class="tp-move">'+tpCur.from+' <span class="arrow">➜</span> '+tpCur.to+' <span class="yr">('+tpCur.year+')</span></div></div>';
  if(tpPhase==='guess'){
   var locked=tpLocked[0];
@@ -4902,7 +4912,7 @@ function checkCaptains(){if(captainIdx[0]===-1||captainIdx[1]===-1){render();bro
 /* ========= العرض ========= */
 function pcardHTML(p,enter,big){
  var cls=p.r>=92?'legend':p.r>=85?'gold':p.r>=75?'silver':'bronze';
- return '<div class="pcard'+(big?' big':'')+(enter?' enter':'')+'"><img data-en="'+p.en+'" src="'+initialsImg(p)+'" alt=""><div class="info"><div class="nm">'+p.flag+' '+p.ar+(p.protected?' 🛡️':'')+'</div><div class="cl">'+p.club+' • '+p.pos+'</div></div><div class="rt '+cls+'"><b>'+p.r+'</b><small>'+p.pos+'</small></div></div>';
+ return '<div class="pcard'+(big?' big':'')+(enter?' enter':'')+'"><img referrerpolicy="no-referrer" crossorigin="anonymous" data-en="'+p.en+'" src="'+initialsImg(p)+'" alt=""><div class="info"><div class="nm">'+p.flag+' '+p.ar+(p.protected?' 🛡️':'')+'</div><div class="cl">'+p.club+' • '+p.pos+'</div></div><div class="rt '+cls+'"><b>'+p.r+'</b><small>'+p.pos+'</small></div></div>';
 }
 function updateStarCard(){lastCardRound=round;if(!curStar)return;$('futBox').innerHTML=pcardHTML(curStar,true,true);bindWiki($('futBox'));}
 function posGroup(p){if(p.pos==='GK')return 'GK';if(p.pos==='CB'||p.pos==='LB'||p.pos==='RB')return 'DEF';if(p.pos==='CDM'||p.pos==='CM'||p.pos==='CAM')return 'MID';return 'ATT';}
@@ -5106,19 +5116,19 @@ function renderPostCardsOverlay(){
    html+='<div class="phase-title">';
    if(c==='protect'){
     html+='اختار لاعبك للحماية:</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='steal'){
     html+='١) اختار لاعب من عندك هتديه للخصم:</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div><div class="phase-title">٢) اختار لاعب الخصم اللي هتاخده بدله:</div><div class="pick-grid">';
-    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0&&cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">🔁 تأكيد التبديل (مجاني)</button>';
    }else if(c==='wild'||c==='norisk'){
     html+='اختار لاعبك اللي هيتغيّر (هيجيلك بدله لاعب عشوائي من نفس المركز):</div><div class="pick-grid">';
-    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i=o.i;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0)html+='<button class="big-btn green" onclick="confirmCard()">✅ تأكيد (مجاني)</button>';
    }else if(c==='gift'){
@@ -5157,7 +5167,7 @@ function renderBoxPhase(){
    if(opened&&(mine||boxPicked[seat])){
     var pl=boxSets[seat][i];
     var bonusBadge=pl.bonusCard?('<div class="box-bonus">'+(pl.bonusCard==='steal'?'🔁 تبديل!':'🛡️ حماية!')+'</div>'):'';
-    html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
+    html+='<div class="box-item opened'+(isPicked?' picked':'')+(pl.bonusCard?' bonus':'')+'" '+(canPick?('onclick="boxClickPick('+seat+','+i+')"'):'')+'>'+bonusBadge+'<img referrerpolicy="no-referrer" crossorigin="anonymous" class="box-img" data-en="'+pl.en+'" src="'+initialsImg(pl)+'"><div class="bn">'+pl.flag+' '+pl.ar+'</div><div class="br">'+pl.r+'</div>'+(canPick?'<div class="box-pickbtn" onclick="boxClickPick('+seat+','+i+')">✅ قبول (Deal)</div>':'')+'</div>';
    }else{
     html+='<div class="box-item pack pk'+(i%4)+(canOpen?'':' locked')+'" '+(canOpen?('onclick="boxClickOpen('+seat+','+i+')"'):'')+'><span class="pack-shine"></span><span class="pack-badge">'+(mine?'👥':'🔒')+'</span><span class="pack-crest"><b>UT</b></span><span class="pack-foot">PACK '+(i+1)+'</span></div>';
    }
@@ -5182,7 +5192,7 @@ function render(){
   var html='<h2>👑 اختار الكابتن</h2><div class="phase-title">الكابتن بياخد +5 تقييم في المباراة</div>';
   if(myTurn){var ti=(mode===2?(captainIdx[0]===-1?0:1):me);
    html+='<p style="color:var(--blue);font-size:13px;font-weight:800;margin-bottom:8px">الدور: '+waitingName+'</p><div class="pick-grid">';
-   orderedSquad(P[ti].squad).forEach(function(o){var p=o.p,idx=o.i;html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+   orderedSquad(P[ti].squad).forEach(function(o){var p=o.p,idx=o.i;html+='<div class="pick-card" onclick="humanPickCaptain('+idx+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div style="font-size:10px;color:var(--dim)">'+p.pos+'</div><div class="pc-rt">'+p.r+'</div></div>';});
    html+='</div>';
   }else if(waiting){html+='<div class="status">بانتظار '+waitingName+' يختار الكابتن…</div>';}
   $('obox').innerHTML=html;bindWiki($('obox'));return;
