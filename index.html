@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-     <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xzcxp2drrt");
+<script>
+/* التحليلات (Clarity) بقت بتتحمّل بعد ما الموقع يخلّص تحميل بالكامل،
+   عشان ما تأخّرش ظهور اللعبة في أول ثواني الدخول */
+(function(){
+ function loadClarity(){
+  (function(c,l,a,r,i,t,y){
+   c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+   t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+   y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "xzcxp2drrt");
+ }
+ function go(){if(window.requestIdleCallback)requestIdleCallback(loadClarity,{timeout:4000});else setTimeout(loadClarity,2500);}
+ if(document.readyState==='complete')go();else window.addEventListener('load',go);
+})();
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0d">
 <meta name="version" content="v7-dark-red">
-<meta http-equiv="Cache-Control" content="no-store">
+<!-- شيلنا no-store: كان بيخلي المتصفح ينزّل الموقع كامل من أول وأول كل مرة (سبب أساسي للتقل) -->
 <title>⚽ مزاد النجوم</title>
 <meta name="description" content="مزاد النجوم — العب مباريات ومسابقات كورة أونلاين مع أصحابك: مزاد نجوم، صناديق، بطولات، وتحدي تخمين اللاعب.">
 <!-- Open Graph / مشاركة اللينك على واتساب وتليجرام وفيسبوك -->
@@ -46,6 +54,9 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="preconnect" href="https://en.wikipedia.org" crossorigin>
+<link rel="preconnect" href="https://commons.wikimedia.org" crossorigin>
+<link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
 <link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
 <!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل فورًا من أول ما الصفحة تفتح
      (async، من غير ما توقف رسم الصفحة) عشان الاتصال يبقى جاهز بأسرع وقت
@@ -2450,11 +2461,24 @@ function bindWiki(root){try{root.querySelectorAll('img[data-en]').forEach(functi
    الحل: مراقب عام بيربط أي <img data-en> يظهر في الصفحة تلقائيًا + إعادة محاولة لو الصورة وقعت. */
 function imgIsUrl(u){return typeof u==='string'&&/^https?:\/\//.test(u);}
 (function(){try{var ch=false;Object.keys(IMG).forEach(function(k){if(!imgIsUrl(IMG[k])){delete IMG[k];ch=true;}});if(ch)imgCacheSave();}catch(e){}})();
+var wikiIO=null;
+try{
+ if(typeof IntersectionObserver!=='undefined'){
+  wikiIO=new IntersectionObserver(function(ents){
+   ents.forEach(function(e){
+    if(!e.isIntersecting)return;
+    var im=e.target;try{wikiIO.unobserve(im);}catch(_){ }
+    wikiImg(im.dataset?im.dataset.en:null,im);
+   });
+  },{rootMargin:'250px'});
+ }
+}catch(e){wikiIO=null;}
 function wikiBindEl(im){
  if(!im||im._wikiBound)return;
  var en=im.dataset?im.dataset.en:null;
  if(!en)return;
  im._wikiBound=true;
+ try{im.loading='lazy';im.decoding='async';}catch(e){}
  im.addEventListener('error',function(){
   try{
    var e2=im.dataset.en;
@@ -2464,9 +2488,12 @@ function wikiBindEl(im){
    setTimeout(function(){wikiImg(e2,im);},400);
   }catch(e){}
  });
+ /* تحميل كسول: الصورة بتتجاب بس لما تقرب تظهر على الشاشة — ده بيمنع
+    عشرات طلبات الشبكة وقت فتح الموقع وبيخلي الدخول سريع */
+ if(wikiIO&&!IMG[en]){try{wikiIO.observe(im);return;}catch(e){}}
  wikiImg(en,im);
 }
-function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wikiBindEl);}catch(e){}}
+function bindWikiAll(){try{document.querySelectorAll('img[data-en]:not([data-wb])').forEach(function(im){im.setAttribute('data-wb','1');wikiBindEl(im);});}catch(e){}}
 (function(){
  function start(){
   bindWikiAll();
@@ -2476,7 +2503,9 @@ function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wik
     window._wikiT=setTimeout(bindWikiAll,80);
    }).observe(document.body,{childList:true,subtree:true});
   }catch(e){}
-  setInterval(bindWikiAll,1500);
+  /* بدل فحص كل 1.5 ثانية (اللي كان بيتقّل الجهاز)، بنفحص كل 6 ثواني
+     وبس لما التبويب يكون ظاهر قدام المستخدم */
+  setInterval(function(){if(document.visibilityState==='visible')bindWikiAll();},6000);
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
@@ -3582,17 +3611,23 @@ function openLobbyBrowser(){
  if(lobbyLastRooms.length)renderLobbyList(null,false,lobbyLastRooms);
  else renderLobbyList('جارٍ البحث عن غرف مفتوحة…',true);
  lobbyJoinCh();
- setTimeout(refreshLobbyList,600);
+ refreshLobbyList();
  clearInterval(lobbyRefreshInt);
- lobbyRefreshInt=setInterval(refreshLobbyList,2500);
+ lobbyRefreshInt=setInterval(function(){if(lobbyVisible())refreshLobbyList();},2000);
 }
 function closeLobbyBrowser(){
  clearInterval(lobbyRefreshInt);lobbyRefreshInt=null;if(lobbyDbCh){try{var cc=sbClient();if(cc)cc.removeChannel(lobbyDbCh);}catch(e){}lobbyDbCh=null;}
  show('room');
  lobbyMaybeLeave();
 }
+var lobbyWaitT=null;
 function refreshLobbyList(){
- if(!sbReady()){renderLobbyList('جارٍ تحميل السيرفر… ثانية واحدة وجرّب تاني',true);return;}
+ if(!sbReady()){
+  if(!lobbyLastRooms.length)renderLobbyList('جارٍ البحث عن غرف مفتوحة…',true);
+  clearTimeout(lobbyWaitT);
+  lobbyWaitT=setTimeout(function(){if(lobbyVisible())refreshLobbyList();},200);
+  return;
+ }
  lobbyJoinCh();lobbyCollect();
  var c=sbClient();if(!c)return;
  c.from('game_rooms').select('code,host_name,game_type,is_locked,is_full,updated_at').order('updated_at',{ascending:false}).limit(40).then(function(res){
