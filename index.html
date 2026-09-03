@@ -2905,14 +2905,14 @@ var msgSeq=0,lastAppliedSeq=-1;
 /* الكروت بقت مجانية بالكامل — بتتوزع عشوائي على كل لاعب في أول اللعبة */
 var CARD_PRICES={wild:0,gift:0,norisk:0,protect:0,steal:0};
 var CARD_DEFS=[
- ['steal','🔁','كارت التبديل','بدّل لاعب من عندك بلاعب من الخصم'],
+ ['steal','🔁','كارت التبديل','بدّل لاعب من عندك بلاعب من الخصم — نفس المركز'],
  ['protect','🛡️','الحماية','امنع لاعبك من التبديل أو السرقة'],
  ['wild','🔄','وايلد كارد','لاعب عشوائي من الاحتياطي بدل لاعبك — مجاني'],
  ['norisk','🎲','نو ريسك نو فن','لاعب عشوائي بدل لاعبك (مقابل مبلغ)'],
  ['gift','🎁','لبّس صاحبك','ادّي الخصم لاعب ضعيف من الاحتياطي']
 ];
 var BOX_CARD_DEFS=[
- ['steal','🔁','كارت التبديل','بدّل لاعبك بلاعب من الخصم (مرة واحدة)'],
+ ['steal','🔁','كارت التبديل','بدّل لاعبك بلاعب من الخصم من نفس المركز (مرة واحدة)'],
  ['protect','🛡️','الحماية','احمِ لاعبك من التبديل (مرة واحدة)']
 ];
 var CARD_UNLOCK_ROUND=Math.max(0,ROUNDS-4);/*بيتحدث حسب نوع اللعبة*/
@@ -5918,9 +5918,19 @@ function aiTrySteal(tries){
  if(P[1].cards.steal>0&&priceOK(1,'steal')){
   if(oppProtectPending(1)&&tries<40){setTimeout(function(){aiTrySteal(tries+1);},700);return;}
   var behind2=teamPower(0)-teamPower(1);
-  var ti=bestUnprotected(0),mj=weakestUnprotected(1);
+  /* لازم التبديل يكون لاعب بلاعب من نفس المركز — ندوّر على أحسن مكسب ممكن */
+  var ti=-1,mj=-1,best=-999;
+  P[0].squad.forEach(function(tp,a){
+   if(tp.protected)return;
+   P[1].squad.forEach(function(mp,b){
+    if(mp.protected)return;
+    if(posGroup(mp)!==posGroup(tp))return;
+    var g2=tp.r-mp.r;
+    if(g2>best){best=g2;ti=a;mj=b;}
+   });
+  });
   if(ti>=0&&mj>=0){
-   var gain=P[0].squad[ti].r-P[1].squad[mj].r;
+   var gain=best;
    var worth=gameType==='boxes'?1:(behind2>0?2:5);
    if(gain>=worth)applyPostCard(1,'steal',ti,mj);
   }
@@ -5945,7 +5955,16 @@ function selectCard(c){
  cardFlow.card=c;cardFlow.sel=-1;cardFlow.sel2=-1;render();
 }
 function cardSel(i){if(!cardFlow)return;cardFlow.sel=i;render();}
-function cardSel2(i){if(!cardFlow)return;cardFlow.sel2=i;render();}
+function cardSel2(i){
+ if(!cardFlow)return;
+ cardFlow.sel2=i;
+ /* لو اللاعب المختار من الخصم مركزه مختلف، نلغي الاختيار */
+ if(cardFlow.card==='steal'&&cardFlow.sel>=0){
+  var me2=P[cardFlow.actor].squad[i],th=P[1-cardFlow.actor].squad[cardFlow.sel];
+  if(me2&&th&&posGroup(me2)!==posGroup(th))cardFlow.sel=-1;
+ }
+ render();
+}
 function cancelCard(){if(cardFlow){cardFlow.card=null;cardFlow.sel=-1;cardFlow.sel2=-1;render();}}
 function pickRandom(g){
  if(!pool.length)return null;
@@ -5957,7 +5976,7 @@ function pickRandom(g){
 function confirmCard(){
  if(!cardFlow||!cardFlow.card)return;
  var c=cardFlow.card,i=cardFlow.sel,j=cardFlow.sel2,actor=cardFlow.actor;
- if(c==='steal'&&(i<0||j<0))return toast('اختار لاعب من عندك ولاعب من الخصم');
+ if(c==='steal'&&(i<0||j<0))return toast('اختار لاعب من عندك ولاعب من الخصم من نفس المركز');
  sfxCard();
  if(online&&!isHost){sendActReliable({type:'act',a:'card',c:c,i:i,j:j});cardFlow=null;render();return;}
  applyPostCard(actor,c,i,j);cardFlow=null;render();
@@ -5983,6 +6002,13 @@ function applyCard(actor,c,i,j){
   var mineP=P[actor].squad[j];
   if(!mineP||mineP.protected)return false;
   var theirP=P[other].squad[i];
+  /* ⚖️ لازم التبديل يكون لاعب بلاعب من نفس المركز */
+  if(posGroup(mineP)!==posGroup(theirP)){
+   var msgSP='🔁 التبديل لازم يكون من نفس المركز — '+mineP.ar+' ('+GLBL[posGroup(mineP)]+') مش ينفع يتبدل بـ '+theirP.ar+' ('+GLBL[posGroup(theirP)]+')';
+   if(online&&isHost&&actor===1){try{conn&&conn.open&&conn.send({type:'sys',t:msgSP});}catch(e){}}
+   else toast(msgSP);
+   return false;
+  }
   P[other].squad[i]=mineP;P[actor].squad[j]=theirP;
   P[actor].cards.steal=0;P[actor].budget-=price;P[actor].spent+=price;
   log('🔁 '+P[actor].name+' بدّل '+mineP.ar+' ('+mineP.r+') بـ '+theirP.ar+' ('+theirP.r+') من '+P[other].name+(price?' (مقابل '+fmt(price)+')':'')+'!');
@@ -6238,8 +6264,10 @@ function renderPostCardsOverlay(){
    }else if(c==='steal'){
     html+='١) اختار لاعب من عندك هتديه للخصم:</div><div class="pick-grid">';
     orderedSquad(P[seat].squad).forEach(function(o){var p=o.p,i2=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel2===i2?' sel':'')+'" onclick="cardSel2('+i2+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
-    html+='</div><div class="phase-title">٢) اختار لاعب الخصم اللي هتاخده بدله:</div><div class="pick-grid">';
-    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
+    var mySel=(cardFlow.sel2>=0?P[seat].squad[cardFlow.sel2]:null);
+    var myG=mySel?posGroup(mySel):null;
+    html+='</div><div class="phase-title">٢) اختار لاعب الخصم من نفس المركز'+(myG?(' ('+GLBL[myG]+')'):'')+':</div>'+(mySel?'':'<div class="prot-warn">اختار لاعبك الأول — بعدها هتظهر لاعبين الخصم اللي في نفس مركزه بس.</div>')+'<div class="pick-grid">';
+    orderedSquad(P[other].squad).forEach(function(o){var p=o.p,i=o.i;if(p.protected)return;if(myG&&posGroup(p)!==myG)return;html+='<div class="pick-card'+(cardFlow.sel===i?' sel':'')+'" onclick="cardSel('+i+')"><img referrerpolicy="no-referrer" crossorigin="anonymous" class="pc-img" src="'+initialsImg(p)+'" data-en="'+p.en+'"><div class="pc-nm">'+p.flag+' '+p.ar+'</div><div class="pc-rt">'+p.r+'</div></div>';});
     html+='</div>';
     if(cardFlow.sel>=0&&cardFlow.sel2>=0)html+='<button class="big-btn green" onclick="confirmCard()">🔁 تأكيد التبديل (مجاني)</button>';
    }else if(c==='wild'||c==='norisk'){
@@ -10484,97 +10512,146 @@ img{max-width:100%}
  });
 })();
 
-/* ========== 2) ذكاء الكمبيوتر — نسخة أقوى ========== */
+/* ========== 2) ذكاء الكمبيوتر — نسخة واقعية (يزايد بعقل حسب الميزانية) ========== */
 (function(){
  if(typeof P==='undefined')return;
  function grpOf(x){try{return posGroup(x);}catch(e){return 'MID';}}
+ function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+
+ /* شخصية الكمبيوتر: تتغير كل لعبة (بخيل / متوازن / مقامر) زي البشر */
+ function persona(){
+  var key=(typeof stars!=='undefined'&&stars&&stars.length?stars.length:0)+'|'+(CFG&&CFG.budget?CFG.budget:0);
+  if(!window.__aiPersona||window.__aiPersonaKey!==key||(typeof round!=='undefined'&&round===0&&P[1].squad.length===0&&window.__aiPersonaRound!==0)){
+   var r=Math.random();
+   window.__aiPersona=r<0.3?{n:'saver',m:0.88,bluff:0.05}:(r<0.75?{n:'balanced',m:1,bluff:0.12}:{n:'gambler',m:1.12,bluff:0.22});
+   window.__aiPersonaKey=key;
+  }
+  window.__aiPersonaRound=(typeof round!=='undefined')?round:0;
+  return window.__aiPersona;
+ }
+
+ /* أقصى سعر منطقي يدفعه الكمبيوتر في لاعب — كله نسبة من الميزانية الحقيقية */
  window.aiValue=function(s){
+  if(!s)return 0;
   var me=P[1],opp=P[0];
   var blind=(typeof gameType!=='undefined'&&gameType==='blind');
-  var starsLeft=Math.max(1,stars.length-round);
-  var needs=squadNeeds(1),nAll=needCount(1);
+  var total=Math.max(1,(CFG&&CFG.budget?CFG.budget:500));
+  var pers=persona();
   var g=grpOf(s);
-  var slotsLeft=Math.max(1,Math.min(starsLeft,nAll||1));
-  var perSlot=me.budget/slotsLeft;
+  var starsLeft=Math.max(1,stars.length-round);            /* شامل اللاعب الحالي */
+  var needs=squadNeeds(1),nAll=needCount(1);
+  var slotsLeft=Math.max(1,Math.min(starsLeft,Math.max(1,ROUNDS-me.squad.length)));
 
-  /* جودة اللاعب مقارنة بالمتبقي فعلاً في نفس المركز (بديل واقعي مش متوسط عام) */
+  /* احتياطي: لازم يفضل معاه فلوس يكمّل بيها باقي المراكز الناقصة */
+  var minPer=Math.max(1,Math.round(total*0.012));
+  var reserve=minPer*Math.max(0,Math.min(nAll,starsLeft)-1);
+  var spendable=Math.max(0,me.budget-reserve);
+  if(spendable<=0)return 0;
+
+  /* جودة اللاعب: نسبته وسط النجوم اللي لسه فاضلة (مش رقم مطلق) */
+  var pool=stars.slice(round).map(function(x){return x.r;});
+  var better=0,i;
+  for(i=0;i<pool.length;i++)if(pool[i]>s.r)better++;
+  var pct=1-(better/Math.max(1,pool.length));              /* 1 = أحسن الموجود */
+  var q=clamp((s.r-72)/24,0,1);                            /* 72 → 96 */
+  var quality=clamp(0.55*q+0.45*pct,0,1);
+
+  /* نسبة الميزانية المنطقية لهذا اللاعب: من ~5% لأقصى ~30% */
+  var share=0.05+0.25*Math.pow(quality,1.7);
+
+  /* هل محتاج المركز؟ */
+  if(needs[g]>0){
+   share*=(needs[g]>=2?1.14:1.07);
+  }else{
+   /* مش محتاجه: بس يشيله من إيد الخصم لو استثنائي فعلاً */
+   share*=(s.r>=90?0.5:(s.r>=87?0.32:0.15));
+  }
+
+  /* ندرة المركز في اللي فاضل */
   var remain=stars.slice(round+1);
   var sameGrp=remain.filter(function(x){return grpOf(x)===g;});
-  var replacement=0;
-  if(sameGrp.length){
-   var rs=sameGrp.map(function(x){return x.r;}).sort(function(a,b){return b-a;});
-   replacement=rs[Math.min(rs.length-1,Math.max(0,Math.floor(rs.length/2)))];
-  }else replacement=Math.max(70,s.r-8);
-  var edge=s.r-replacement;                    /* الفرق الحقيقي اللي هيكسبه */
-
-  var q=(s.r-74)/12; if(q<-0.5)q=-0.5; if(q>2.1)q=2.1;
-  var val=perSlot*(0.5+0.9*q);
-
+  var betterSame=sameGrp.filter(function(x){return x.r>s.r;}).length;
   if(needs[g]>0){
-   val*=(needs[g]>=2?1.22:1.12);
-   if(nAll>=starsLeft)val=Math.max(val,me.budget-(starsLeft-1)); /* مضطر ياخده */
-  }else{
-   /* مش محتاج المركز: يزايد بس لو اللاعب استثنائي (عشان يحرم الخصم) */
-   val*=(s.r>=88?0.75:0.45);
+   if(sameGrp.length<needs[g])share*=1.25;                 /* المعروض أقل من احتياجه */
+   else if(betterSame===0)share*=1.15;                     /* مفيش أحسن منه فاضل */
+   else if(betterSame===1)share*=1.06;
   }
 
-  /* ندرة: مفيش أحسن منه فاضل في نفس المركز = فرصة أخيرة */
-  var better=sameGrp.filter(function(x){return x.r>s.r;}).length;
-  if(needs[g]>0){
-   if(better===0)val*=1.28;
-   else if(better===1)val*=1.14;
-   if(sameGrp.length<needs[g])val*=1.2;       /* المعروض أقل من احتياجه */
-  }
-  val*= edge>=6?1.18:(edge>=3?1.08:(edge<=-4?0.8:1));
+  /* الفرق الحقيقي بينه وبين البديل المتاح في نفس المركز */
+  var repl=sameGrp.length?Math.max.apply(null,sameGrp.map(function(x){return x.r;})):Math.max(70,s.r-7);
+  var edge=s.r-repl;
+  share*= edge>=6?1.12:(edge>=3?1.05:(edge<=-4?0.82:1));
 
-  /* الموقف في الماتش */
+  /* موقفه في الماتش */
   var diff=teamPower(1)-teamPower(0);
-  val*= diff<-8?1.2:(diff<-3?1.1:(diff>8?0.88:1));
+  share*= diff<-8?1.12:(diff<-3?1.05:(diff>8?0.9:1));
 
-  /* قراءة الخصم (مش مسموحة في المزاد الأعمى) */
+  /* قراءة الخصم — ممنوعة في المزاد الأعمى */
   if(!blind){
-   if(opp.budget<=2)val=Math.min(val,Math.max(1,bid+2));   /* الخصم مفلس: مايغاليش */
-   else if(opp.budget<me.budget*0.5)val*=0.9;
-   else if(opp.budget>me.budget*1.4)val*=1.06;
+   if(opp.budget<=minPer)share=Math.min(share,0.08);
+   else if(opp.budget<me.budget*0.5)share*=0.92;
+   else if(opp.budget>me.budget*1.4)share*=1.05;
   }
 
-  /* آخر الجولات: التوفير مالوش لازمة */
-  if(starsLeft<=2&&needs[g]>0)val=Math.max(val,me.budget-Math.max(0,nAll-1));
+  share*=pers.m;
+  share*=(0.94+Math.random()*0.12);                        /* لمسة بشرية بسيطة */
 
-  val*=(0.97+Math.random()*0.06);              /* عشوائية أقل = قرارات أثبت */
-  /* سقف ديناميكي حسب الميزانية الحقيقية (السقف الثابت القديم كان بيخلي الكمبيوتر
-     يقفل اللعبة وفلوسه في إيده ويخسر النجوم الكبيرة) */
-  var base=(CFG&&CFG.budget?CFG.budget:500)/Math.max(1,ROUNDS);
-  var mul=s.r>=95?3.6:(s.r>=92?2.9:(s.r>=89?2.3:(s.r>=87?1.85:(s.r>=85?1.5:(s.r>=82?1.05:(s.r>=79?0.7:0.4))))));
-  var hardCap=base*mul*(needs[g]>0?1.1:0.75);
-  val=Math.min(val,hardCap);
-  var reserve=Math.max(0,nAll-1);              /* يسيب مليون لكل مركز ناقص */
-  val=Math.floor(Math.min(val,me.budget-reserve));
+  var val=total*share;
+
+  /* مايفوتش نصيبه العادل من الفلوس المتبقية إلا لو اللاعب استثنائي */
+  var perSlot=me.budget/slotsLeft;
+  var maxMult=needs[g]>0?(quality>0.85?2.3:(quality>0.6?1.8:1.35)):1;
+  val=Math.min(val,perSlot*maxMult);
+
+  /* آخر الجولات أو مضطر يكمّل مراكز: التوفير مالوش لازمة */
+  if(needs[g]>0&&(nAll>=starsLeft||starsLeft<=2))val=Math.max(val,Math.min(spendable,perSlot*1.6));
+  if(needs[g]>0&&nAll>=starsLeft&&starsLeft<=1)val=spendable;
+
+  val=Math.floor(Math.min(val,spendable));
   return Math.max(0,val);
  };
+
  window.aiMove=function(){
   if(phase!=='bid')return; var s=curStar; if(!s)return;
-  var v=aiValue(s),me=P[1];
+  var me=P[1],pers=persona();
+  var v=aiValue(s);
   var starsLeft=Math.max(1,stars.length-round),nAll=needCount(1);
   var mustTake=(nAll>=starsLeft);
+  var needs=squadNeeds(1),g=grpOf(s);
+
   if(!firstBidDone){
-   if(bid+1<=me.budget&&(v>=1||mustTake))doRaise();
+   /* بشري: مش بيفتح مزاد على لاعب مش عاجبه */
+   var wantOpen=(v>=1)&&(mustTake||needs[g]>0||s.r>=87||Math.random()<0.35);
+   if(bid+1<=me.budget&&wantOpen)doRaise();
    else resolveRound(1-turn,turn);
    return;
   }
+
   var next=bid+1;
-  if(next<=me.budget&&(next<=v||(mustTake&&next<=me.budget-Math.max(0,nAll-1)))){
+  var ceiling=v;
+  /* مزايدة عاطفية بسيطة على لاعب كبير محتاجه (زي البشر بالظبط) */
+  if(needs[g]>0&&s.r>=88&&Math.random()<pers.bluff)ceiling=Math.floor(v*1.08);
+  ceiling=Math.min(ceiling,me.budget);
+
+  if(next<=ceiling){
    var jump=1;
    if(v>=8&&bid<v*0.45)jump=2;
-   if(v>=20&&bid<v*0.40)jump=3;
-   if(v>=35&&bid<v*0.35)jump=5;
-   if(mustTake)jump=1;                          /* لو مضطر، يمشي بهدوء ويوفر */
-   var target=Math.min(bid+jump,v,me.budget);
+   if(bid<v*0.35&&v>=20)jump=3;
+   if(mustTake)jump=1;
+   var target=Math.min(bid+jump,ceiling,me.budget);
    if(target<next)target=next;
    doRaise(target);
    return;
   }
   resolveRound(1-turn,turn);
+ };
+
+ /* المزاد الأعمى: يكتب رقم قريب من تقييمه مع تفاوت بشري */
+ window.aiBlind=function(){
+  if(phase!=='blind'||blindLocked[1])return;
+  var v=aiValue(curStar);
+  v=Math.round(v*(0.82+Math.random()*0.22));
+  submitBlind(1,Math.max(0,Math.min(v,P[1].budget)));
  };
 })();
 
