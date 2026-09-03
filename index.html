@@ -6126,8 +6126,9 @@ function simulateMatch(){
  var def=function(x,cap){return lineAvg(x,'DEF')*0.6+lineAvg(x,'GK')*0.28+lineAvg(x,'MID')*0.12+(cap?1:0);};
  var mid=function(x,cap){return lineAvg(x,'MID')*0.8+lineAvg(x,'ATT')*0.2+(cap?1:0);};
  var atkA=atk(a,capA),atkB=atk(b,capB),defA=def(a,capA),defB=def(b,capB),midA=mid(a,capA),midB=mid(b,capB);
- var xgA=Math.max(0.2,1.25+(atkA-defB)*0.13+(rnd()*0.4-0.2));
- var xgB=Math.max(0.2,1.25+(atkB-defA)*0.13+(rnd()*0.4-0.2));
+ var _sA=atkA-defB,_sB=atkB-defA,_dd=(_sA-_sB)*0.5,_nz=(rnd()*0.30-0.15);
+ var xgA=Math.max(0.35,Math.min(3.4,1.30+_dd*0.085+_nz));
+ var xgB=Math.max(0.35,Math.min(3.4,1.30-_dd*0.085-_nz));
  var g0=poisson(xgA),g1=poisson(xgB);
  var poss=Math.round(50+(midA-midB)*1.7);poss=Math.max(28,Math.min(72,poss));
  var shotsA=Math.max(g0,Math.round(xgA*3.6+rnd()*3)),shotsB=Math.max(g1,Math.round(xgB*3.6+rnd()*3));
@@ -10749,6 +10750,274 @@ setInterval(function(){
   conn.send({type:'hostready',name:myName()});
  }catch(e){}
 },1200);
+</script>
+
+<!-- ================= v8: أداء أخف + تصنيف ونقاط جديدة + XP محسّن + تروفيهات ================= -->
+<style>
+/* ===== v8: تخفيف إضافي للأداء على الموبايل والبيسي ===== */
+.tl-item,.lb-row,.gp-row,.h2h-row,.mp,.pcard,.box-item{content-visibility:auto;contain-intrinsic-size:auto 46px}
+#lbList,.tl,.log,.chat{contain:content}
+.mz-trophy{display:inline-block;font-size:14px;line-height:1;margin-left:4px;vertical-align:-1px}
+.mz-trophy.t1{filter:drop-shadow(0 0 2px rgba(227,179,65,.9))}
+.mz-trophy.t2{filter:grayscale(1) brightness(1.45)}
+.mz-trophy.t3{filter:sepia(1) saturate(2.4) hue-rotate(-18deg) brightness(.86)}
+#mzStrip{display:flex;justify-content:space-between;gap:8px;background:var(--card2);border:1px solid var(--line);
+ border-radius:10px;padding:6px 10px;margin-bottom:8px;font-size:12.5px;font-weight:900}
+#mzStrip .s{display:flex;align-items:center;gap:4px;min-width:0}
+#mzStrip .s span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mz-next{font-size:11px;color:var(--dim);font-weight:800;margin-top:3px}
+.mz-ptsbox{margin-top:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mz-ptsbox b{color:var(--gold)}
+.mz-ptsbox .r{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;margin-top:5px}
+</style>
+<script>
+/* ============ v8 ============
+   1) نقاط مختلفة لكل لعبة + حد أقصى 50 نقطة للمباراة الواحدة
+   2) التصنيف بيتصفّر كل 7 أيام (موجود) + تروفي للأول/التاني/التالت
+   3) نظام XP ومستويات جديد بيشجّع على استمرار اللعب
+   4) نتايج محاكاة الماتش بقت عادلة ومتماثلة بين الطرفين
+   5) تحسينات أداء                                            */
+(function(){
+"use strict";
+
+/* ---------- 1) نقاط كل لعبة ---------- */
+var MZ_MAX_MATCH_PTS=50;
+var MZ_GAME_PTS={
+ auction:      {n:'⚽ مزاد النجوم',   w:30, xp:120},
+ blind:        {n:'🕶️ المزاد الأعمى', w:26, xp:105},
+ transferprice:{n:'💰 راجع سعرك',     w:22, xp:90},
+ boxes:        {n:'🎁 صناديق الحظ',   w:20, xp:80},
+ auction5:     {n:'🖐️ المزاد الخماسي',w:18, xp:70},
+ guessplayer:  {n:'🕵️ تخمين اللاعب',  w:16, xp:65}
+};
+function gCfg(){return MZ_GAME_PTS[window.gameType]||MZ_GAME_PTS.auction;}
+function inTour(){try{return !!(window.TOUR&&TOUR.code&&TOUR.matches&&TOUR.matches.length&&!TOUR.champion);}catch(e){return false;}}
+window.MZ_GAME_PTS=MZ_GAME_PTS;
+window.MZ_MAX_MATCH_PTS=MZ_MAX_MATCH_PTS;
+
+/* تسجيل نتيجة المباراة: نقط مختلفة حسب اللعبة، بونص بطولة، حد أقصى 50،
+   ومفيش أي خصم — الخاسر بياخد نقط مشاركة بسيطة عشان يفضل يلعب */
+window.recordMatchResult=function(name0,g0,name1,g1){
+ window.lbLastDelta=null;
+ try{
+  if(window.mode===1)return;              /* ضد الحاسوب: مش محسوب */
+  if(!name0||!name1)return;
+  var cfg=gCfg(),tour=inTour();
+  var base=tour?Math.round(cfg.w*1.35):cfg.w;
+  var tbl=lbLoad();
+  var drew=(g0===g1),diff=Math.abs(g0-g1),p0,p1,won0=false,won1=false;
+  if(drew){
+   p0=p1=Math.min(20,Math.round(base*0.4)+Math.min(4,g0||0));
+  }else{
+   var wName=g0>g1?name0:name1;
+   var wStreak=((tbl[wName]||{}).streak)||0;
+   var bonus=Math.min(10,wStreak*2)+Math.min(8,(diff-1)*2);
+   var gain=Math.min(MZ_MAX_MATCH_PTS,base+bonus);
+   var cons=Math.max(2,Math.round(base*0.15));
+   if(g0>g1){p0=gain;p1=cons;won0=true;}else{p1=gain;p0=cons;won1=true;}
+  }
+  var b0=tierOf((tbl[name0]||{}).points||0),b1=tierOf((tbl[name1]||{}).points||0);
+  var r0=lbMergeOne(tbl,name0,p0,won0,drew,name1);
+  var r1=lbMergeOne(tbl,name1,p1,won1,drew,name0);
+  lbSave(tbl);lbEnsureChannel();
+  setTimeout(function(){lbBroadcastRow(name0);lbBroadcastRow(name1);},400);
+  window.lbLastDelta={name0:name0,p0:p0,name1:name1,p1:p1,drew:drew,label:cfg.n,tour:tour,max:MZ_MAX_MATCH_PTS};
+  mzTrophyRefresh();
+  var myN=(function(){try{return $('name1').value.trim();}catch(e){return '';}})();
+  var after=myN===name0?tierOf(r0.row.points):(myN===name1?tierOf(r1.row.points):null);
+  var before=myN===name0?b0:(myN===name1?b1:null);
+  if(after&&before&&after.id!==before.id&&TIERS.indexOf(after)>TIERS.indexOf(before))window.pendingPromo=after;
+ }catch(e){}
+};
+
+window.pointsSummaryHTML=function(){
+ var d=window.lbLastDelta;if(!d)return '';
+ return '<div class="mz-ptsbox"><b>📊 نقاط التصنيف — '+(d.label||'')+(d.tour?' <span style="color:var(--purple)">🏆 بطولة ×1.35</span>':'')+'</b>'+
+  '<div class="r"><span>'+mzNameTag(d.name0)+'</span><span>+'+d.p0+' نقطة</span></div>'+
+  '<div class="r"><span>'+mzNameTag(d.name1)+'</span><span>+'+d.p1+' نقطة</span></div>'+
+  '<div class="mz-next">الحد الأقصى للمباراة الواحدة '+(d.max||50)+' نقطة • التصنيف بيتصفّر كل 7 أيام</div></div>';
+};
+
+/* ---------- 2) تروفي المراكز الثلاثة ---------- */
+var mzTop3={};
+function mzTrophyRefresh(){
+ try{
+  var tbl=lbLoad(),rows=[],k;
+  for(k in tbl)if(tbl.hasOwnProperty(k))rows.push(tbl[k]);
+  rows.sort(function(a,b){return (b.points||0)-(a.points||0);});
+  mzTop3={};
+  for(var i=0;i<Math.min(3,rows.length);i++)if((rows[i].points||0)>0)mzTop3[rows[i].name]=i+1;
+ }catch(e){mzTop3={};}
+}
+function mzTrophy(rank){
+ if(!rank)return '';
+ var cls=rank===1?'t1':(rank===2?'t2':'t3');
+ var ttl=rank===1?'المركز الأول':(rank===2?'المركز الثاني':'المركز الثالث');
+ return '<span class="mz-trophy '+cls+'" title="'+ttl+'">🏆</span>';
+}
+window.mzTrophyHTML=function(name){return mzTrophy(mzTop3[name]);};
+window.mzNameTag=function(name){return mzTrophy(mzTop3[name])+(name||'');};
+window.mzTrophyRefresh=mzTrophyRefresh;
+mzTrophyRefresh();
+
+/* صف التصنيف: تروفي + رتبة + نقط */
+window.lbRowHTML=function(r,i,useSeasonPts){
+ var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)));
+ var pts=useSeasonPts?(r.seasonPoints||0):(r.points||0);
+ var streakTag=(r.streak||0)>=2?'<span class="lb-streak">🔥×'+r.streak+'</span>':'';
+ var tro=i<3?mzTrophy(i+1):'';
+ return '<div class="lb-row"><div class="lb-rank">'+medal+'</div>'+tierBadgeHTML(r.points||0)+
+  '<div><div class="lb-name">'+streakTag+(r.name||'')+tro+'</div><div class="lb-sub">'+(r.matches||0)+' مباراة • '+(r.wins||0)+' فوز • '+(r.draws||0)+' تعادل • '+(r.losses||0)+' خسارة • أطول ستريك '+(r.bestStreak||0)+'🔥</div></div>'+
+  '<div class="lb-pts">'+pts+' نقطة</div></div>';
+};
+var _loadLb=window.loadLeaderboard;
+window.loadLeaderboard=function(){mzTrophyRefresh();return _loadLb.apply(this,arguments);};
+
+/* شريط اللاعبين جوه الجيم (بيبان فيه التروفي) */
+function mzStrip(){
+ try{
+  var g=document.getElementById('game');
+  if(!g||g.classList.contains('hidden')||!window.P||!P[0]||!P[1]){
+   var old=document.getElementById('mzStrip');if(old)old.remove();return;
+  }
+  var el=document.getElementById('mzStrip');
+  if(!el){
+   var tb=g.querySelector('.top-bar');if(!tb)return;
+   el=document.createElement('div');el.id='mzStrip';
+   tb.parentNode.insertBefore(el,tb.nextSibling);
+  }
+  var html='<div class="s">'+mzTrophy(mzTop3[P[0].name])+'<span>'+P[0].name+'</span></div>'+
+           '<div class="s">'+mzTrophy(mzTop3[P[1].name])+'<span>'+P[1].name+'</span></div>';
+  if(el.innerHTML!==html)el.innerHTML=html;
+ }catch(e){}
+}
+var _render=window.render;
+if(typeof _render==='function'){
+ window.render=function(){var v=_render.apply(this,arguments);mzStrip();return v;};
+}
+
+/* تشكيلة الملعب: التروفي جنب الاسم */
+if(typeof window.renderSquads==='function'){
+ window.renderSquads=function(){
+  if(!P[0]||!P[1])return;
+  var me=window.online?window.mySeat:0,other=1-me;
+  $('viewSquads').innerHTML=pitchHTML(me,'تشكيلتك: '+mzNameTag(P[me].name))+pitchHTML(other,'تشكيلة الخصم: '+mzNameTag(P[other].name));
+ };
+}
+
+/* ---------- 3) نظام XP والمستويات (v2) ---------- */
+/* منحنى متدرّج: كل مستوى بيحتاج أكتر شوية، فبتفضل تحس بتقدّم من غير ما يبقى مستحيل */
+window.mzXpNeed=function(l){return 180+(l-1)*90;};
+window.mzLevel=function(xp){
+ xp=Math.max(0,xp||0);var l=1;
+ while(l<300){var need=mzXpNeed(l);if(xp<need)break;xp-=need;l++;}
+ return l;
+};
+window.mzLevelInfo=function(xp){
+ xp=Math.max(0,xp||0);var l=1,need=mzXpNeed(1);
+ while(l<300&&xp>=need){xp-=need;l++;need=mzXpNeed(l);}
+ return {lv:l,inLv:Math.round(xp),need:need,pct:Math.max(0,Math.min(100,Math.round(xp/need*100)))};
+};
+window.mzTier=function(l){
+ if(l>=30)return 'خرافي';
+ if(l>=20)return 'أسطورة';
+ if(l>=15)return 'نجم';
+ if(l>=10)return 'محترف';
+ if(l>=5)return 'ناشئ';
+ return 'مبتدئ';
+};
+window.mzLevelPerk=function(l){
+ if(l>=30)return '👑 لقب خرافي';
+ if(l>=20)return '🔥 لقب أسطورة';
+ if(l>=15)return '⭐ لقب نجم';
+ if(l>=10)return '🎖️ لقب محترف';
+ if(l>=5)return '🥈 لقب ناشئ';
+ return '🥉 لقب مبتدئ';
+};
+
+/* XP نهاية اللعبة: مختلف حسب اللعبة + بونص فوز/بطولة/ستريك دخول،
+   والخاسر بياخد XP محترم عشان يكمل لعب */
+window.mzGameEnd=function(champ,kind){
+ try{
+  var mine=(window.online?window.mySeat:0);
+  var won=(champ===mine),drew=(champ===-1);
+  var m=mzLoad();
+  var lvBefore=mzLevel(m.xp||0);
+  var cfg=MZ_GAME_PTS[window.gameType]||MZ_GAME_PTS.auction;
+  var gain=won?cfg.xp:(drew?Math.round(cfg.xp*0.6):Math.round(cfg.xp*0.45));
+  if(inTour())gain=Math.round(gain*1.3);
+  var dayStreak=Math.min(5,(m.streak||1));
+  gain+=dayStreak*5;                                  /* بونص دخول يومي */
+  m.games=(m.games||0)+1;
+  if(won){m.wins=(m.wins||0)+1;if(kind==='blind')m.blindWins=(m.blindWins||0)+1;}
+  if((m.games%5)===0)gain+=60;                        /* بونص كل 5 ألعاب */
+  m.xp=(m.xp||0)+gain;
+  mzSave(m);
+  setTimeout(function(){try{toast('✨ +'+gain+' XP — '+cfg.n);}catch(e){}},600);
+  var lvAfter=mzLevel(m.xp);
+  if(lvAfter>lvBefore)setTimeout(function(){try{toast('🎖️ اترقيت للمستوى '+lvAfter+' — '+mzTier(lvAfter)+' '+mzLevelPerk(lvAfter));}catch(e){}},1600);
+  mzEvent('play');
+  if(won)mzEvent('win');
+  if(kind)mzEvent(kind);
+  mzSyncBadges();renderMeta();
+ }catch(e){}
+};
+
+window.renderMeta=function(){
+ try{
+  var el=$('metaCard');if(!el)return;
+  var m=mzLoad(),inf=mzLevelInfo(m.xp||0);
+  var ms=(m.missions||[]);
+  var doneN=ms.filter(function(x){return x.done;}).length;
+  el.innerHTML=
+   '<div class="mz-top"><div class="mz-lv">🎖️ مستوى '+inf.lv+' <small>'+mzTier(inf.lv)+'</small></div>'+
+   '<div class="mz-streak">🔥 '+(m.streak||1)+' يوم متتالي</div></div>'+
+   '<div class="mz-bar"><i style="width:'+inf.pct+'%"></i></div>'+
+   '<div class="mz-xp">'+inf.inLv+' / '+inf.need+' XP للمستوى '+(inf.lv+1)+' — إجمالي '+(m.xp||0)+' XP</div>'+
+   '<div class="mz-next">🎯 مهام اليوم: '+doneN+'/'+(ms.length||3)+' • فوزك الجاي '+(MZ_GAME_PTS[window.gameType]||MZ_GAME_PTS.auction).xp+'+ XP • مكافأة كل 5 ألعاب +60 XP</div>';
+ }catch(e){}
+};
+try{renderMeta();}catch(e){}
+
+/* ---------- 4) عدالة نتائج المحاكاة ---------- */
+/* الخطوط الناقصة كانت بتتحسب 70 ثابت وده كان بيظلم فرق كاملة —
+   دلوقتي بنرجع لمتوسط الفريق نفسه */
+window.lineAvg=function(sq,which){
+ var g={GK:['GK'],DEF:['CB','LB','RB'],MID:['CDM','CM','CAM'],ATT:['ST','CF','LW','RW','LM','RM']};
+ sq=sq||[];
+ var list=sq.filter(function(p){return g[which].indexOf(p.pos)>=0;});
+ if(!list.length){
+  if(!sq.length)return 74;
+  var s=0;sq.forEach(function(p){s+=(p.r||74);});
+  return (s/sq.length)-2;
+ }
+ var t=0;list.forEach(function(p){t+=(p.r||74);});
+ return t/list.length;
+};
+
+/* ---------- 5) أداء ---------- */
+try{
+ /* تحميل كسول لكل الصور + فك ترميز غير متزامن */
+ var lazify=function(root){
+  try{
+   (root||document).querySelectorAll('img:not([data-mzl])').forEach(function(im){
+    im.setAttribute('data-mzl','1');
+    if(!im.getAttribute('loading'))im.setAttribute('loading','lazy');
+    im.setAttribute('decoding','async');
+   });
+  }catch(e){}
+ };
+ lazify();
+ var lazT=null;
+ var mo=new MutationObserver(function(){if(lazT)return;lazT=setTimeout(function(){lazT=null;lazify();},600);});
+ mo.observe(document.body,{childList:true,subtree:true});
+ /* إيقاف أي مؤقتات/أصوات تقيلة لما الصفحة تبقى في الخلفية */
+ document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'){try{lbStopCountdown();}catch(e){}}
+ });
+}catch(e){}
+
+})();
 </script>
 
 </body>
