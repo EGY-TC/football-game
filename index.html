@@ -12,7 +12,8 @@
    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   })(window, document, "clarity", "script", "xzcxp2drrt");
  }
- function go(){if(window.requestIdleCallback)requestIdleCallback(loadClarity,{timeout:4000});else setTimeout(loadClarity,2500);}
+ /* التحليلات بقت بتتأخر أكتر (بعد ما اللاعب يبدأ يستخدم الموقع فعلاً) عشان ما تاخدش من المعالج في أول الدخول */
+ function go(){setTimeout(function(){if(window.requestIdleCallback)requestIdleCallback(loadClarity,{timeout:9000});else setTimeout(loadClarity,1000);},6000);}
  if(document.readyState==='complete')go();else window.addEventListener('load',go);
 })();
 </script>
@@ -57,7 +58,7 @@
 <link rel="preconnect" href="https://en.wikipedia.org" crossorigin>
 <link rel="preconnect" href="https://commons.wikimedia.org" crossorigin>
 <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
-<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js">
+<!-- preload المكتبة اتشال: كان بيزاحم صورة الواجهة على أول ثانية من التحميل -->
 <!-- مكتبات الاتصال (PeerJS/Supabase) بقت بتتحمّل فورًا من أول ما الصفحة تفتح
      (async، من غير ما توقف رسم الصفحة) عشان الاتصال يبقى جاهز بأسرع وقت
      ولا يفضل الزرار عالق مستني تحميل المكتبة لما اللاعب يدوس عليه. -->
@@ -73,7 +74,13 @@
   };
   document.head.appendChild(s);
  }
- LIBS.forEach(load);
+ function boot(){LIBS.forEach(load);}
+ /* بقت بتتحمّل بعد أول رسم للصفحة (idle) مش وقت فتح الموقع، فالواجهة بتفضل
+    مستجيبة من أول لحظة والمكتبة بتجهز في الخلفية قبل أي ضغطة اتصال. */
+ if(document.readyState==='complete'){setTimeout(boot,0);}
+ else window.addEventListener('load',function(){
+  if(window.requestIdleCallback)requestIdleCallback(boot,{timeout:1200});else setTimeout(boot,300);
+ },{once:true});
 })();
 </script>
 <style>
@@ -785,6 +792,20 @@ input[type=range]{accent-color:var(--acc)}
 </style>
 </head>
 <body>
+<script>
+/* ===== مُجدول المهام الثقيلة: بيأجل أي تشغيل غير ضروري لبعد أول رسم للصفحة
+   عشان الشاشة الرئيسية تبقى قابلة للضغط فورًا من أول ثانية ===== */
+window.mzIdle=function(fn,delay){
+ var ran=false;
+ function go(){if(ran)return;ran=true;try{fn();}catch(e){}}
+ function sched(){
+  if(window.requestIdleCallback)requestIdleCallback(go,{timeout:(delay||600)});
+  else setTimeout(go,delay||600);
+ }
+ if(document.readyState==='complete')sched();
+ else window.addEventListener('load',sched,{once:true});
+};
+</script>
 <div id="bootGate">
  <div class="bg-logo">⚽</div>
  <div class="bg-ring"></div>
@@ -803,7 +824,7 @@ input[type=range]{accent-color:var(--acc)}
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);
  else hide();
- setTimeout(hide,350);
+ setTimeout(hide,120);
 })();
 </script>
 <div class="salawat">🌙 صلِّ على النبي ﷺ <span class="s2">اللهم صلِّ وسلم عليه</span></div>
@@ -3482,12 +3503,14 @@ function bindWikiAll(){try{document.querySelectorAll('img[data-en]').forEach(wik
   try{
    new MutationObserver(function(){
     clearTimeout(window._wikiT);
-    window._wikiT=setTimeout(bindWikiAll,80);
+    window._wikiT=setTimeout(bindWikiAll,400);
    }).observe(document.body,{childList:true,subtree:true});
   }catch(e){}
-  setInterval(bindWikiAll,1500);
+  /* اتشال setInterval كل 1.5 ثانية: كان بيفضل يمشي على الصفحة كلها للأبد
+     ويعمل تهنيج مستمر. الـ MutationObserver لوحده كفاية. */
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+ if(window.mzIdle)window.mzIdle(start,800);
+ else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 function makeCodeRaw(){var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -3718,7 +3741,7 @@ function sbWarm(){
  if(!c){sbWarmT=setTimeout(sbWarm,300);return;}
  try{if(c.realtime&&!c.realtime.isConnected())c.realtime.connect();}catch(e){}
 }
-try{sbWarm();window.addEventListener('online',sbWarm);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')sbWarm();});}catch(e){}
+try{(window.mzIdle?window.mzIdle(sbWarm,900):sbWarm());window.addEventListener('online',sbWarm);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')sbWarm();});}catch(e){}
 /* ========= تصنيف المتصدرين (Leaderboard) =========
    كل فوز حقيقي (مش ضد الحاسوب) في مزاد النجوم أو صناديق الحظ بيسجل نقط.
    ما بيحتاجش أي إعداد أو جدول تعمله بنفسك: النقط بتتخزن على جهازك
@@ -3760,6 +3783,7 @@ function lbCheckCycle(){
   var cur=lbCycleKey(),saved=localStorage.getItem(LB_CYCLE_KEY);
   if(saved!==cur){
    localStorage.removeItem(LB_KEY);
+   try{_lbCache=null;if(_lbWriteT){clearTimeout(_lbWriteT);_lbWriteT=0;}}catch(e){}
    localStorage.setItem(LB_CYCLE_KEY,cur);
    lbJustReset=!!saved;
    lbTakenNames={};
@@ -3817,13 +3841,28 @@ function matchPoints(myGoals,oppGoals){
  if(pts<10)pts=10;
  return pts;
 }
+/* التصنيف بقى محفوظ في الذاكرة: قبل كده كل صف جديد جاي من السيرفر كان بيعمل
+   JSON.parse + JSON.stringify للجدول كامل (سبب رئيسي لتهنيج أول الدخول).
+   دلوقتي القراءة من الذاكرة، والكتابة على localStorage بتتجمّع وتحصل مرة واحدة. */
+var _lbCache=null,_lbWriteT=0;
+function _lbFlush(){
+ if(_lbWriteT){clearTimeout(_lbWriteT);_lbWriteT=0;}
+ if(!_lbCache)return;
+ try{localStorage.setItem(LB_KEY,JSON.stringify(_lbCache));}catch(e){}
+}
 function lbLoad(){
  lbCheckCycle();
- try{var raw=localStorage.getItem(LB_KEY);return raw?JSON.parse(raw):{};}catch(e){return {};}
+ if(_lbCache)return _lbCache;
+ try{var raw=localStorage.getItem(LB_KEY);_lbCache=raw?JSON.parse(raw):{};}catch(e){_lbCache={};}
+ return _lbCache;
 }
 function lbSave(obj){
- try{localStorage.setItem(LB_KEY,JSON.stringify(obj));}catch(e){}
+ _lbCache=obj||{};
+ if(_lbWriteT)return;
+ _lbWriteT=setTimeout(function(){_lbWriteT=0;_lbFlush();},500);
 }
+try{window.addEventListener('pagehide',_lbFlush);window.addEventListener('beforeunload',_lbFlush);
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')_lbFlush();});}catch(e){}
 function lbFreshRow(name,owner){
  return {name:name,points:0,matches:0,wins:0,losses:0,draws:0,streak:0,bestStreak:0,season:currentSeasonKey(),cycle:lbCycleKey(),seasonPoints:0,h2h:{},owner:owner||''};
 
@@ -4766,7 +4805,7 @@ setInterval(function(){
    }catch(e){}
   }
  }catch(e){}
-},600);
+},1200);
 function retryConn(){
  $('reconn').classList.add('hidden');toast('جارٍ إعادة الاتصال…');
  rejoinTries=0;connectToHost(savedCode,false);
@@ -6386,11 +6425,14 @@ document.addEventListener('DOMContentLoaded',function(){
   $('mb3').onclick=function(){pickMode(3);};
   $('mb4').onclick=function(){pickMode(4);};
   updateSfxBtn();
-  if($('name1').value)initUserPeer();
-  lbEnsureChannel();
-
-  mzInit();
-  try{tourUpdateResumeBar();setTimeout(tourAutoReconnect,1500);}catch(e){}
+  /* كل حاجة تقيلة (اتصال + مزامنة + مكافآت الدخول) بقت بعد أول رسم للصفحة */
+  var heavy=function(){
+   try{if($('name1').value)initUserPeer();}catch(e){}
+   try{lbEnsureChannel();}catch(e){}
+   try{mzInit();}catch(e){}
+   try{tourUpdateResumeBar();setTimeout(tourAutoReconnect,2500);}catch(e){}
+  };
+  if(window.mzIdle)window.mzIdle(heavy,700);else setTimeout(heavy,700);
  }catch(e){}
 });
 function dismissOnbTip(){
@@ -7333,11 +7375,7 @@ function lbDbRowIn(d){
   owner:d.owner||'',h2h:d.h2h||{},season:lbCycleKey(),cycle:lbCycleKey()};
 }
 function lbDbPush(name){
- try{
-  var t=sbTbl('leaderboard');if(!t)return;
-  var row=lbLoad()[name];if(!row)return;
-  t.upsert(lbRowToDb(row),{onConflict:'cycle,name'}).then(function(){},function(){});
- }catch(e){}
+ try{lbDbPushRow(lbLoad()[name]);}catch(e){}
 }
 function lbDbRefreshUI(){
  try{if($('lbOv')&&!$('lbOv').classList.contains('hidden'))loadLeaderboard();}catch(e){}
@@ -7364,7 +7402,21 @@ function lbDbPull(){
  }catch(e){}
 }
 function lbDbPushAll(){
- try{var tbl=lbLoad();Object.keys(tbl).forEach(function(n){lbDbPush(n);});}catch(e){}
+ try{
+  var tbl=lbLoad(),names=Object.keys(tbl),i=0;
+  /* بترفع الصفوف على دفعات صغيرة بدل ما ترفعها كلها مرة واحدة وتهنّج الجهاز */
+  (function step(){
+   var end=Math.min(names.length,i+10);
+   for(;i<end;i++){try{lbDbPushRow(tbl[names[i]]);}catch(e){}}
+   if(i<names.length)setTimeout(step,120);
+  })();
+ }catch(e){}
+}
+function lbDbPushRow(row){
+ try{
+  var t=sbTbl('leaderboard');if(!t||!row)return;
+  t.upsert(lbRowToDb(row),{onConflict:'cycle,name'}).then(function(){},function(){});
+ }catch(e){}
 }
 var lbDbCh=null;
 function lbDbWatch(){
@@ -7518,11 +7570,11 @@ tourLeave=function(){
 };
 
 /* تشغيل المزامنة أول ما السيرفر يجهز */
-sbWhenReady(function(){
+(window.mzIdle?window.mzIdle:function(f){f();})(function(){sbWhenReady(function(){
  lbDbWatch();lbDbPull();lbDbPushAll();
  setInterval(function(){lbDbPull();},60000);
  setTimeout(function(){if(TOUR&&TOUR.host)tourDbSave(true);},3000);
-});
+});},1200);
 
 /* ---------- ربط مع نظام اللعبة الأصلي ---------- */
 (function(){
@@ -7985,7 +8037,7 @@ setInterval(function(){
   if(t<0)t=0;
   if(t!==timeLeft){timeLeft=t;renderTimerBar();}
  }catch(e){}
-},250);
+},400);
 
 /* ---------- أدوات مساعدة ---------- */
 function nameMine(){try{return myName();}catch(e){return '';}}
@@ -8055,7 +8107,7 @@ function liveSave(){
  }catch(e){}
 }
 function liveClear(){try{localStorage.removeItem(LIVE_KEY);}catch(e){}}
-setInterval(liveSave,1000);
+setInterval(function(){try{if(inLiveMatch())liveSave();}catch(e){}},1000);
 try{window.addEventListener('pagehide',liveSave);window.addEventListener('beforeunload',liveSave);}catch(e){}
 
 function liveResume(o){
