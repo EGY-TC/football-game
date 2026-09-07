@@ -6454,33 +6454,7 @@ function dismissOnbTip(){
 ">
   Developed by <strong>Mohamed Mustafa</strong>
 </footer>
- <script>
-  // منع زر الفأرة الأيمن
-  document.addEventListener('contextmenu', function(e){
-    var t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-    e.preventDefault();
-  });
 
-  // منع تحديد النصوص وقصها أو نسخها
-  document.addEventListener('selectstart', function(e){
-    var t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-    e.preventDefault();
-  });
-
-  // منع اختصارات لوحة المفاتيح المخصصة للنسخ وفتح أدوات المطور
-  document.onkeydown = function(e) {
-    // F12
-    if (e.keyCode === 123) return false;
-    // Ctrl+U (عرض المصدر)
-    if (e.ctrlKey && e.keyCode === 85) return false;
-    // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (أدوات المطور)
-    if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) return false;
-    // Ctrl+S (حفظ الصفحة)
-    if (e.ctrlKey && e.keyCode === 83) return false;
-  };
-</script>
 <style>
 .t-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .t-pl{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;align-items:center;gap:8px}
